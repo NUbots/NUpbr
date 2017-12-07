@@ -112,4 +112,46 @@ node_list = field_node_tree.nodes           # iterable list of nodes
 node_diffuse = node_list['Diffuse BSDF']    # get diffuse node
 node_mat_out = node_list['Material Output'] # get material output node
 node_mix_shader = node_list.new('ShaderNodeMixShader')        # add a mix shader node
-field_node_tree.links.new(node_diffuse.outputs['BSDF'], node_mix_shader.inputs['Shader']) # link diffuse bsdf and mix shader
+
+# TODO: make linking between two nodes into a function
+field_node_tree.links.new(node_diffuse.outputs['BSDF'], node_mix_shader.inputs[1]) # link diffuse bsdf and mix shader 1
+field_node_tree.links.new(node_mix_shader.outputs['Shader'], node_mat_out.inputs['Surface']) # link mix shader to material output's Surface
+
+# TODO: make unlinking between two nodes into a function
+# iterate over links, because links are number indexed, 
+# coz im not sure if the index of the new link are the same,
+# so search by to_node instead, then delete
+for link in node_diffuse.outputs['BSDF'].links:
+    if link.to_node.name == 'Material Output':
+        field_node_tree.links.remove(link)  # remove the link from diffuse to material output
+
+# add Glossy BSDF shader
+node_glossy = node_list.new('ShaderNodeBsdfGlossy')
+node_glossy.distribution = 'BECKMANN' # set glossy shader distribution to BECKMANN
+field_node_tree.links.new(node_glossy.outputs['BSDF'], node_mix_shader.inputs[2])    # link glossy shader to mix shader 2
+
+# add Texture image shader
+node_tex = node_list.new('ShaderNodeTexImage')
+turf_file_path = './turf.jpg'
+# bpy.ops.image.open(filepath=turf_file_path) # open texture image file
+turf_image = bpy.data.images.load(filepath=turf_file_path, check_existing=True)
+node_tex.image = turf_image # add the image to image texture node
+field_node_tree.links.new(node_tex.outputs['Color'], node_mat_out.inputs['Displacement']) # link texture image and material output nodes
+field_node_tree.links.new(node_tex.outputs['Color'], node_diffuse.inputs['Color'])  # link texture image and diffuse nodes
+
+# optional: unwrap the mesh and edit corner points to be the same as the loaded image in image texture node
+# have to increase occlusion
+# add a sun lamp
+bpy.ops.uv.unwrap() # unwrap the mesh to the loaded image # TODO: non bpy.ops of doing this? probably directly to bpy.data
+
+bpy.ops.object.mode_set(mode='OBJECT')        # set field back to object mode
+for area in bpy.context.screen.areas:
+    print(area.type)
+    if area.type == 'VIEW_3D':
+        print('area view_3d')
+        for space in area.spaces:
+            if space.type == 'VIEW_3D':
+                print('space view_3d')
+                space.viewport_shade = 'RENDERED'
+# from here on, we can add another particle system to the field, but of different height
+# and add a material for that specific particle system
