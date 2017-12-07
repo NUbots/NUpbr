@@ -2,3 +2,4 @@ textures
 *.json
 *.hdr
 *.png
+__pycache__
