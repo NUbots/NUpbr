@@ -79,7 +79,7 @@ def generateTurfField(fieldX=3, fieldY=3, locX=0, locY=0, locZ=0):
 
     # add material to field
     bpy.ops.object.material_slot_add()
-    bpy.ops.material.new()
+    bpy.ops.material.new()  # TODO: use bpy.data.materials.new instead
     material = bpy.data.materials['Material.001']
     grassMaterialName = 'GrassMaterial'
     # field_material_grass = field.active_material
@@ -241,7 +241,7 @@ setRenderResolution()
 # # add a sun lamp
 # bpy.ops.uv.unwrap() # unwrap the mesh to the loaded image # TODO: non bpy.ops of doing this? probably directly to bpy.data
 
-# ield = generateTurfField()
+# field = generateTurfField()
 
 
 # set default screen to rendered
