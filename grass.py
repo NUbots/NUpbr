@@ -2,7 +2,7 @@
 import bpy
 import os
 # import bisect
-# import math
+from mathutils import Vector
 # import random
 # import json
 
@@ -153,25 +153,11 @@ def generateTurfField(fieldX=3, fieldY=3, locX=0, locY=0, locZ=0):
     field_node_tree.links.new(node_mix_shader.outputs['Shader'], node_final_mixer.inputs[1])
     field_node_tree.links.new(node_final_mixer.outputs['Shader'], node_mat_out.inputs['Surface'])
 
-    # TODO: unwrap and set apply scale
-    bpy.ops.uv.unwrap() # unwrap the mesh to the loaded image # TODO: non bpy.ops of doing this? probably directly to bpy.data
-    # scaling the field line image texture
-    for area in bpy.context.screen.areas:
-        if area.type == 'VIEW_3D':
-            area.spaces[0].viewport_shade = 'TEXTURED'
-            area.type = 'IMAGE_EDITOR'
-    bpy.data.screens['UV Editing'].areas[1].spaces[0].image = bpy.data.images['field_line.png']
-    bpy.ops.uv.unwrap()
-    # bpy.ops.uv.select_all(action='TOGGLE')
-    # bpy.ops.transform.resize(value=(0.200, 0.200, 0.200), constraint_axis=(False, False, False), constraint_orientation='GLOBAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-    #edit the object
-    bpy.ops.transform.resize(value=(0.1, 0.1, 0.1))
-    #edit the image's selected part size
-    bpy.ops.uv.smart_project(island_margin=0.4)
-    #come object to first status
-    bpy.ops.transform.resize(value=(10, 10, 10))
-
     bpy.ops.object.mode_set(mode='OBJECT')        # set field back to object mode
+
+    # apply smart unwrap and project
+    bpy.ops.uv.smart_project()
+
     return field
 
 if __name__ == "__main__":
