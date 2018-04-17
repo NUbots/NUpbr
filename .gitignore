@@ -1,4 +1,7 @@
-textures
+# textures
 *.json
 *.hdr
 __pycache__
+
+# uv maps
+*/images/** 
