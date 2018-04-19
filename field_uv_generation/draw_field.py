@@ -1,4 +1,4 @@
-import config as cfg
+import field_config as cfg
 from PIL import Image, ImageDraw
 
 def draw_shape(
