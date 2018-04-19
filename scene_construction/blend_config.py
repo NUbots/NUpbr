@@ -74,4 +74,15 @@ field = {
             'close_tip': True,
         }
     },
+    'noise': {
+        'type': 'VORONOI',
+        'contrast': 0.5,
+        'noise_scale': 0.1,
+        'nabla': 0.03,
+        'mapping_coords': 'ORCO',
+        'influence': {
+            'use_hair_length': True,
+            'hair_length_factor': 0.8,
+        }
+    }
 }

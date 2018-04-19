@@ -69,28 +69,76 @@ def setup_render():
     # Disable splash screen
     context.user_preferences.view.show_splash = False
 
-# # Setup field object
+# Create material for the field
+def create_field_mat():
+    x = 1
+
+# Create noise texture for grass length variation
+def generate_field_noise(n_cfg):
+    # Add our noise texture
+    bpy.ops.texture.new()
+    noise_tex = bpy.data.textures.new('Noise', type=n_cfg['type'])
+    # Configure noise parameters
+    noise_tex.type = n_cfg['type']
+    noise_tex.contrast = n_cfg['contrast']
+    noise_tex.noise_scale = n_cfg['noise_scale']
+    noise_tex.nabla = n_cfg['nabla']
+    return noise_tex
+
+# Construct particle system with p_settings, given p_cfg config file
+def construct_particle_system(p_cfg, p_settings):
+    # Set general particle settings
+    p_settings.type = p_cfg['type']
+    p_settings.use_advanced_hair = p_cfg['use_adv_hair']
+
+    # Set emission settings
+    p_settings.count = p_cfg['emission']['count']
+    p_settings.hair_length = p_cfg['emission']['hair_length']
+    p_settings.emit_from = p_cfg['emission']['emit_from']
+    p_settings.use_emit_random = p_cfg['emission']['emit_random']
+    p_settings.use_even_distribution = p_cfg['emission']['even_dist']
+
+    # Set physics settings
+    p_settings.physics_type = p_cfg['physics']['type']
+    p_settings.brownian_factor = p_cfg['physics']['brownian_factor']
+    p_settings.timestep = p_cfg['physics']['timestep']
+    p_settings.subframes = p_cfg['physics']['subframes']
+
+    # Set hair render settings
+    p_settings.use_render_emitter = p_cfg['render']['emitter']
+    p_settings.use_parent_particles = p_cfg['render']['parents']
+
+    # Set children settings
+    p_settings.child_type = p_cfg['children']['child_type']
+    p_settings.child_nbr = p_cfg['children']['child_num']
+    p_settings.rendered_child_count = p_cfg['children']['rendered_children']
+    p_settings.child_length = p_cfg['children']['length']
+
+    # Set cycles hair settings
+    p_settings.cycles.shape = p_cfg['cycles_hair']['shape']
+    p_settings.cycles.root_width = p_cfg['cycles_hair']['root']
+    p_settings.cycles.tip_width = p_cfg['cycles_hair']['tip']
+    p_settings.cycles.radius_scale = p_cfg['cycles_hair']['scaling']
+    p_settings.cycles.use_closetip = p_cfg['cycles_hair']['close_tip']
+
+# Setup field object
 def construct_field():
     # Add plane for field
     bpy.ops.mesh.primitive_plane_add()
     field = bpy.data.objects['Plane']
     field.name = 'Field'
 
-    # Define location
+    # Define location and dimensions of field
     field.location = (0, 0, 0)
-
-    # Select our field object
-    field.select = True
-    bpy.context.scene.objects.active = field
-
-    # Define dimensions from config
     field.dimensions = (
         2. * field_cfg.field['border_width'] + field_cfg.field['length'],
         2. * field_cfg.field['border_width'] + field_cfg.field['width'],
         0.,
     )
 
-    # Create the particle system for grass
+    # Define material for field
+
+    # Define the particle system for grass
     bpy.ops.object.particle_system_add()
     field.particle_systems['ParticleSystem'].name = 'Grass'
     field_particle = field.particle_systems['Grass']
@@ -99,34 +147,17 @@ def construct_field():
     p_cfg = blend_cfg.field['particle']
     p_settings = field_particle.settings
 
-    # Set general particle settings
-    p_settings.type = p_cfg['type']
-    p_settings.use_advanced_hair = p_cfg['use_adv_hair']
-    # Set emission settings
-    p_settings.count = p_cfg['emission']['count']
-    p_settings.hair_length = p_cfg['emission']['hair_length']
-    p_settings.emit_from = p_cfg['emission']['emit_from']
-    p_settings.use_emit_random = p_cfg['emission']['emit_random']
-    p_settings.use_even_distribution = p_cfg['emission']['even_dist']
-    # Set physics settings
-    p_settings.physics_type = p_cfg['physics']['type']
-    p_settings.brownian_factor = p_cfg['physics']['brownian_factor']
-    p_settings.timestep = p_cfg['physics']['timestep']
-    p_settings.subframes = p_cfg['physics']['subframes']
-    # Set hair render settings
-    p_settings.use_render_emitter = p_cfg['render']['emitter']
-    p_settings.use_parent_particles = p_cfg['render']['parents']
-    # Set children settings
-    p_settings.child_type = p_cfg['children']['child_type']
-    p_settings.child_nbr = p_cfg['children']['child_num']
-    p_settings.rendered_child_count = p_cfg['children']['rendered_children']
-    p_settings.child_length = p_cfg['children']['length']
-    # Set cycles hair settings
-    p_settings.cycles.shape = p_cfg['cycles_hair']['shape']
-    p_settings.cycles.root_width = p_cfg['cycles_hair']['root']
-    p_settings.cycles.tip_width = p_cfg['cycles_hair']['tip']
-    p_settings.cycles.radius_scale = p_cfg['cycles_hair']['scaling']
-    p_settings.cycles.use_closetip = p_cfg['cycles_hair']['close_tip']
+    # Construct our particle settings for grass
+    construct_particle_system(p_cfg, p_settings)
+
+    # Generate our noise texture and link it to the grass
+    noise_tex_slot = p_settings.texture_slots.add()
+    noise_tex_slot.texture = generate_field_noise(blend_cfg.field['noise'])
+
+    # Adjust impact of texture on grass now that the two are linked
+    noise_tex_slot.texture_coords = blend_cfg.field['noise']['mapping_coords']
+    noise_tex_slot.use_map_length = blend_cfg.field['noise']['influence']['use_hair_length']
+    noise_tex_slot.length_factor = blend_cfg.field['noise']['influence']['hair_length_factor']
 
 def main():
     # Change directories so we are where this file is
@@ -138,6 +169,7 @@ def main():
     setup_render()
 
     # Construct our grass field
+    create_field_mat()
     construct_field()
 
     # Construct our ball
