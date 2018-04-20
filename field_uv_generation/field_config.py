@@ -38,5 +38,7 @@ image = {
     'type': '.png',
     'mode': 'RGBA',
     'pixels_per_metre': 100,
-    'path': path.join('images', 'field_UV'),
+    'path': path.abspath(path.join('..', 'uv')),
+    'name': 'default',
+    'orientation': 'portrait',
 }

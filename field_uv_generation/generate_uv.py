@@ -43,8 +43,12 @@ def main():
     # Draw our field lines
     draw_field.draw(field_img)
 
+    # Modify image depending on desired orientation
+    if cfg.image['orientation'] == 'portrait':
+        field_img = field_img.rotate(90, expand=True)
+
     # Store our field image
-    field_img.save(path.join(cfg.image['path'] + cfg.image['type']))
+    field_img.save(path.join(cfg.image['path'], cfg.image['name'] + cfg.image['type']))
 
 if __name__ == "__main__":
     main()
