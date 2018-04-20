@@ -1,11 +1,11 @@
-import field_config as cfg
+import scene_config as cfg
 from PIL import Image, ImageDraw
 
 def draw_shape(
         image,
         bounds,
         shape='rectangle',
-        width=cfg.field['field_line_width'] * cfg.image['pixels_per_metre'],
+        width=cfg.field['field_line_width'] * cfg.field_uv['pixels_per_metre'],
         colour='white',
         antialias=4
 ):
@@ -31,7 +31,7 @@ def get_px_measurements(d):
     field_px = {}
     for f in d:
         if type(d[f]) is int or type(d[f]) is float:
-            field_px[f] = d[f] * cfg.image['pixels_per_metre']
+            field_px[f] = d[f] * cfg.field_uv['pixels_per_metre']
         elif type(d[f]) is dict:
             field_px[f] = get_px_measurements(d[f])
 

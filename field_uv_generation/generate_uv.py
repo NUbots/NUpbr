@@ -4,14 +4,6 @@ import draw_field
 from PIL import Image
 from os import path
 
-# Utility function for printing the config file
-def print_config():
-    print('Field: {0}'.format(cfg.field))
-    print('Goal: {0}'.format(cfg.goal))
-    print('Ball: {0}'.format(cfg.ball))
-    print('Camera: {0}'.format(cfg.camera))
-    print('Image: {0}'.format(cfg.image))
-
 # Function for checking errors which would make the UV map unrealisable
 def error_check():
     isError = False
@@ -33,22 +25,22 @@ def main():
 
     # Determines image size based on field dimensions and image resolution
     image_size = {
-        'width': (2 * cfg.field['border_width'] + cfg.field['width']) * cfg.image['pixels_per_metre'],
-        'height': (2 * cfg.field['border_width'] + cfg.field['length']) * cfg.image['pixels_per_metre'],
+        'width': (2 * cfg.field['border_width'] + cfg.field['width']) * cfg.field_uv['pixels_per_metre'],
+        'height': (2 * cfg.field['border_width'] + cfg.field['length']) * cfg.field_uv['pixels_per_metre'],
     }
 
     # Create our new image
-    field_img = Image.new(cfg.image['mode'], (int(image_size['height']), int(image_size['width'])))
+    field_img = Image.new(cfg.field_uv['mode'], (int(image_size['height']), int(image_size['width'])))
 
     # Draw our field lines
     draw_field.draw(field_img)
 
     # Modify image depending on desired orientation
-    if cfg.image['orientation'] == 'portrait':
+    if cfg.field_uv['orientation'] == 'portrait':
         field_img = field_img.rotate(90, expand=True)
 
     # Store our field image
-    field_img.save(path.join(cfg.image['path'], cfg.image['name'] + cfg.image['type']))
+    field_img.save(path.join(cfg.field_uv['uv_path'], cfg.field_uv['name'] + cfg.field_uv['type']))
 
 if __name__ == "__main__":
     main()
