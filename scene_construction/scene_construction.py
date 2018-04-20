@@ -70,8 +70,138 @@ def setup_render():
     context.user_preferences.view.show_splash = False
 
 # Create material for the field
-def create_field_mat():
-    x = 1
+def create_field_mat(f_object, m_cfg):
+    # print(dir(bpy.data.materials))
+    f_mat = bpy.data.materials.new('Field_Mat')
+    # print(dir(f_mat))
+    # Enable use of material nodes
+    f_mat.use_nodes = True
+
+    # Get our node list to construct our material
+    node_list = f_mat.node_tree.nodes
+
+    # Clear node tree of default settings
+    for node in node_list:
+        node_list.remove(node)
+
+    # Construct node tree
+    # Get texture and object coordinates from object
+    n_tex_coord = node_list.new('ShaderNodeTexCoord')
+    n_tex_coord.object = f_object
+
+    # Create mapping to transform object coordinates for grass height
+    n_mapping = node_list.new('ShaderNodeMapping')
+    n_mapping.translation = m_cfg['mapping']['translation']
+    n_mapping.rotation = m_cfg['mapping']['rotation']
+    n_mapping.scale = m_cfg['mapping']['scale']
+
+    # Create gradient texture to transform our mapping into RGB gradient
+    n_grad_tex = node_list.new('ShaderNodeTexGradient')
+    # Create RGB mixer to produce lower grass colours (earth/green)
+    n_mix_lower_grass = node_list.new('ShaderNodeMixRGB')
+    n_mix_lower_grass.inputs[1].default_value = m_cfg['mix_lower_grass']['inp1']
+    n_mix_lower_grass.inputs[2].default_value = m_cfg['mix_lower_grass']['inp2']
+
+    # Create RGB mixer to produce upper grass colours (light green/yellow)
+    n_mix_upper_grass = node_list.new('ShaderNodeMixRGB')
+    n_mix_upper_grass.inputs[1].default_value = m_cfg['mix_upper_grass']['inp1']
+    n_mix_upper_grass.inputs[2].default_value = m_cfg['mix_upper_grass']['inp2']
+
+    # Create noise texture to give random variance to top colour
+    n_noise_tex = node_list.new('ShaderNodeTexNoise')
+    [
+        n_noise_tex.inputs[1].default_value,
+        n_noise_tex.inputs[2].default_value,
+        n_noise_tex.inputs[3].default_value,
+    ] = m_cfg['noise']['inp']
+
+    # Create Hue Saturation Value shader to transform noise into tone noise exclusively
+    n_hsv = node_list.new('ShaderNodeHueSaturation')
+    [
+        n_hsv.inputs[0].default_value,
+        n_hsv.inputs[1].default_value,
+        n_hsv.inputs[2].default_value,
+        n_hsv.inputs[3].default_value,
+    ] = m_cfg['hsv']['inp']
+
+    # Mix RGB colour of upper grass with generated noise
+    n_mix_up_grass_hsv = node_list.new('ShaderNodeMixRGB')
+    n_mix_up_grass_hsv.inputs[0].default_value = m_cfg['mix_up_grass_hsv']['inp0']
+
+    # Create texture image of field UV map
+    n_field_lines = node_list.new('ShaderNodeTexImage')
+    img_path = os.path.join(field_cfg.image['path'], field_cfg.image['name'] + field_cfg.image['type'])
+    try:
+        img = bpy.data.images.load(img_path)
+    except:
+        raise NameError('Cannot load image {0}'.format(img_path))
+    n_field_lines.image = img
+
+    n_mix_low_grass_field_lines = node_list.new('ShaderNodeMixRGB')
+    n_mix_low_grass_field_lines.inputs[0].default_value = m_cfg['mix_low_grass_field_lines']['inp0']
+
+    n_ao = node_list.new('ShaderNodeAmbientOcclusion')
+    n_translucent = node_list.new('ShaderNodeBsdfTranslucent')
+    n_mix_ao_transluc = node_list.new('ShaderNodeMixShader')
+    n_mix_ao_transluc.inputs[0].default_value = m_cfg['mix_ao_transluc']['inp0']
+
+    n_diffuse = node_list.new('ShaderNodeBsdfDiffuse')
+
+    n_mix_shaders = node_list.new('ShaderNodeMixShader')
+    n_mix_shaders.inputs[0].default_value = m_cfg['mix_shaders']['inp0']
+
+    n_output = node_list.new('ShaderNodeOutputMaterial')
+
+    # Link shaders
+    tl = f_mat.node_tree.links
+
+    # Link texture coordinates
+    tl.new(n_tex_coord.outputs['UV'], n_field_lines.inputs[0])
+    tl.new(n_tex_coord.outputs['Object'], n_mapping.inputs[0])
+
+    # Link image texture (field lines uv map)
+    tl.new(n_field_lines.outputs['Color'], n_mix_low_grass_field_lines.inputs['Color1'])
+
+    # Link Mapping
+    tl.new(n_mapping.outputs[0], n_grad_tex.inputs[0])
+
+    # Link gradient texture
+    tl.new(n_grad_tex.outputs[1], n_mix_lower_grass.inputs[0])
+    tl.new(n_grad_tex.outputs[1], n_mix_upper_grass.inputs[0])
+
+    # Link noise texture
+    tl.new(n_noise_tex.outputs[0], n_hsv.inputs[4])
+
+    # Link lower grass mix
+    tl.new(n_mix_lower_grass.outputs[0], n_mix_low_grass_field_lines.inputs['Color2'])
+    tl.new(n_mix_lower_grass.outputs[0], n_ao.inputs[0])
+
+    # Link upper grass mix
+    tl.new(n_mix_upper_grass.outputs[0], n_mix_up_grass_hsv.inputs[1])
+
+    # Link hsv
+    tl.new(n_hsv.outputs[0], n_mix_up_grass_hsv.inputs[2])
+
+    # Link translucent
+    tl.new(n_mix_up_grass_hsv.outputs[0], n_translucent.inputs[0])
+
+    # Link field uv and lower grass mix
+    tl.new(n_mix_low_grass_field_lines.outputs[0], n_diffuse.inputs[0])
+
+    # Link ao
+    tl.new(n_ao.outputs[0], n_mix_ao_transluc.inputs[1])
+
+    # Link translucent
+    tl.new(n_translucent.outputs[0], n_mix_ao_transluc.inputs[2])
+
+    # Link shaders
+    tl.new(n_diffuse.outputs[0], n_mix_shaders.inputs[1])
+    tl.new(n_mix_ao_transluc.outputs[0], n_mix_shaders.inputs[2])
+
+    # Link output
+    tl.new(n_mix_shaders.outputs[0], n_output.inputs[0])
+
+    return f_mat
 
 # Create noise texture for grass length variation
 def generate_field_noise(n_cfg):
@@ -136,7 +266,8 @@ def construct_field():
         0.,
     )
 
-    # Define material for field
+    # Add material to field material slots
+    field.data.materials.append(create_field_mat(field, blend_cfg.field['material']))
 
     # Define the particle system for grass
     bpy.ops.object.particle_system_add()
@@ -159,6 +290,9 @@ def construct_field():
     noise_tex_slot.use_map_length = blend_cfg.field['noise']['influence']['use_hair_length']
     noise_tex_slot.length_factor = blend_cfg.field['noise']['influence']['hair_length_factor']
 
+    # Apply UV mapping to grass
+    bpy.ops.uv.smart_project()
+
 def main():
     # Change directories so we are where this file is
     script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -169,7 +303,6 @@ def main():
     setup_render()
 
     # Construct our grass field
-    create_field_mat()
     construct_field()
 
     # Construct our ball

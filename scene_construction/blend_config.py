@@ -40,6 +40,42 @@ scene = {
 }
 
 field = {
+    'material': {
+        'mapping': {
+            'translation': (0., 0.05, 0.),
+            'rotation': (0., -90., 0.),
+            'scale': (1., 0.6, 1.),
+        },
+        'mix_lower_grass': {
+            'inp1': (0.02, 0.188, 0.05, 1.),
+            'inp2': (0.110, 0.066, 0., 1.),
+        },
+        'mix_upper_grass': {
+            'inp1': (0.335, 0.549, 0.006, 1),
+            'inp2': (0.272, 0.175, 0.002, 1),
+        },
+        'noise': {
+            'inp': [5., 2., 0.],
+        },
+        'hsv': {
+            'inp': [0., 0., 1.9, 1.],
+        },
+        'mix_up_grass_hsv': {
+            'inp0': 0.455,
+        },
+        'mix_low_grass_field_lines': {
+            'inp0': 0.4,
+        },
+        'diffuse': {
+            'inp1': 0.217,
+        },
+        'mix_ao_transluc': {
+            'inp0': 0.827,
+        },
+        'mix_shaders': {
+            'inp0': 0.273,
+        },
+    },
     'particle': {
         'use_adv_hair': True,
         'type': 'HAIR',
@@ -84,5 +120,5 @@ field = {
             'use_hair_length': True,
             'hair_length_factor': 0.8,
         }
-    }
+    },
 }
