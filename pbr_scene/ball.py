@@ -10,6 +10,7 @@ import random as rand
 sys.path.insert(0, '.')
 sys.path.insert(0, '../field_uv_generation/')
 
+import environment as env
 import scene_config as scene_cfg
 import blend_config as blend_cfg
 
@@ -96,3 +97,14 @@ class Ball:
             self.obj.location[1] + loc[1],
             self.obj.location[2] + loc[2],
         )
+
+if __name__ == '__main__':
+    # Clear default environment
+    env.clear_env()
+    # Setup render settings
+    env.setup_render()
+    # Setup HRDI environment
+    env.setup_hdri_env()
+
+    b = Ball()
+    b.construct_ball()

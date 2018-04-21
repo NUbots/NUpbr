@@ -49,7 +49,7 @@ field = {
             'scale': (1., 0.6, 1.),
         },
         'mix_lower_grass': {
-            'inp1': (0.02, 0.188, 0.05, 1.),
+            'inp1': (0.002, 0.032, 0.004, 1.),
             'inp2': (0.110, 0.066, 0., 1.),
         },
         'mix_upper_grass': {
@@ -100,8 +100,8 @@ field = {
         },
         'children': {
             'child_type': 'INTERPOLATED',
-            'child_num': 100,
-            'rendered_children': 100,
+            'child_num': 1,
+            'rendered_children': 75,
             'length': 0.5,
         },
         'cycles_hair': {
@@ -137,6 +137,17 @@ ball = {
     },
     'subsurf_mod': {
         'levels': 1,
-        'rend_levels': 5,
+        'rend_levels': 4,
+    },
+}
+
+goal = {
+    'initial_cond': {
+        'vertices': 16,
+        'calc_uvs': True,
+    },
+    'corner': {
+        'divisions': 10,
+        'curve': {},
     },
 }

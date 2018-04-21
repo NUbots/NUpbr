@@ -9,6 +9,7 @@ import sys
 sys.path.insert(0, '.')
 sys.path.insert(0, '../field_uv_generation/')
 
+import environment as env
 import scene_config as scene_cfg
 import blend_config as blend_cfg
 
@@ -257,3 +258,14 @@ class Field:
 
         # Apply UV mapping to grass
         bpy.ops.uv.smart_project()
+
+if __name__ == '__main__':
+    # Clear default environment
+    env.clear_env()
+    # Setup render settings
+    env.setup_render()
+    # Setup HRDI environment
+    env.setup_hdri_env()
+
+    f = Field()
+    f.construct_field()
