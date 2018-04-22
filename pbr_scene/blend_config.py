@@ -56,6 +56,9 @@ field = {
             'rotation': (0., -pi / 2., 0.),
             'scale': (1., 0.6, 1.),
         },
+        'lower_plane': {
+            'colour': (0.001, 0.010, 0.002, 0.9),
+        },
         'mix_lower_grass': {
             'inp1': (0.002, 0.032, 0.004, 1.),
             'inp2': (0.110, 0.066, 0., 1.),
@@ -91,7 +94,7 @@ field = {
         'type': 'HAIR',
         'emission': {
             'count': 5000,
-            'hair_length': 0.2,
+            'hair_length': 0.15,
             'emit_from': 'FACE',
             'emit_random': False,
             'even_dist': False,
@@ -99,7 +102,7 @@ field = {
         'physics': {
             'type': 'NEWTON',
             'brownian_factor': 0.03,
-            'timestep': 0.04,
+            'timestep': 0.025,
             'subframes': 1
         },
         'render': {

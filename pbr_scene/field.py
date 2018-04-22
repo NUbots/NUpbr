@@ -214,8 +214,8 @@ class Field:
         lp_mat.use_nodes = True
 
         # Get our node list to construct our material
-        lp_mat.node_tree.nodes['Diffuse BSDF'].inputs[0].default_value = blend_cfg.field['material']['mix_lower_grass'
-                                                                                                     ]['inp1']
+        lp_mat.node_tree.nodes['Diffuse BSDF'].inputs[0].default_value = blend_cfg.field['material']['lower_plane'
+                                                                                                     ]['colour']
 
         lower_plane.data.materials.append(lp_mat)
 

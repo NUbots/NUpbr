@@ -1,4 +1,4 @@
-import field_config as cfg
+import scene_config as cfg
 import draw_field
 
 from PIL import Image

@@ -156,7 +156,7 @@ class Goal:
         # Create second goal post
         goal_post_copy = bpy.data.objects[goal_post.name + '.001']
         goal_post_copy.name = 'Goal_Post_copy'
-        goal_post_copy.location = (0., scene_cfg.goal['width'] + 2. * corner_radius, 0.)
+        goal_post_copy.location = (0., scene_cfg.goal['width'], 0.)
         goal_post_copy.rotation_euler = (0., 0., pi)
 
         # Create crossbar
@@ -164,7 +164,7 @@ class Goal:
             name='Crossbar',
             loc=(0., corner_radius, scene_cfg.goal['height'] + corner_radius),
             rot=(pi / 2., 0., 0.),
-            extrude=(0., scene_cfg.goal['width'], 0.),
+            extrude=(0., scene_cfg.goal['width'] - 2 * corner_radius, 0.),
         )
 
         # Create goals with posts and crossbar
