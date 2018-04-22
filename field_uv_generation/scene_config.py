@@ -24,6 +24,7 @@ goal = {
     'height': 1.8,
     'post_width': 0.12,
     'shape': 'circular',
+    'net_height': 1.2,
 }
 
 ball = {
