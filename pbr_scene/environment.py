@@ -34,10 +34,13 @@ def setup_render():
 
     # Set render settings
     # Cycles rendering and establish our scene
-    bpy.context.scene.render.engine = rend_cfg['render_engine']
+    context.scene.render.engine = rend_cfg['render_engine']
 
     # Set render submenu settings
     scene.cycles.device = rend_cfg['render']['cycles_device']
+
+    # Set denoising settings
+    context.scene.render.layers[0].cycles.use_denoising = blend_cfg.layers['denoising']['use_denoising']
 
     # Set dimensions settings
     [scene.render.resolution_x, scene.render.resolution_y] = rend_cfg['dimensions']['resolution']

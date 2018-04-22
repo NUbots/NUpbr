@@ -1,3 +1,5 @@
+# Blender-specific Configuration Settings
+
 from math import pi
 
 render = {
@@ -10,7 +12,7 @@ render = {
         'percentage': 50.0,
     },
     'sampling': {
-        'cycles_samples': 32,
+        'cycles_samples': 16,
         'cycles_preview_samples': 16,
     },
     'light_paths': {
@@ -39,6 +41,12 @@ scene = {
         'length_units': 'METRIC',
         'rotation_units': 'DEGREES',
     }
+}
+
+layers = {
+    'denoising': {
+        'use_denoising': False,
+    },
 }
 
 field = {
@@ -143,11 +151,19 @@ ball = {
 
 goal = {
     'initial_cond': {
-        'vertices': 16,
+        'vertices': 32,
         'calc_uvs': True,
     },
-    'corner': {
-        'divisions': 10,
-        'curve': {},
+    'corner_curve': {
+        'fill': 'FULL',
+    },
+    'material': {
+        'metallic': 0.,
+        'roughness': 0.35,
+        'colour': (0.8, 0.8, 0.8, 1.)
+    },
+    'subsurf_mod': {
+        'levels': 1,
+        'rend_levels': 4,
     },
 }
