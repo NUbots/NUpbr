@@ -84,7 +84,7 @@ class Goal:
         p1.handle_right = (0., scene_cfg.goal['post_width'], scene_cfg.goal['height'] + corner_radius)
 
         # Move origin to centre of geometry
-        bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
+        # bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
 
         return curve
 
@@ -131,6 +131,128 @@ class Goal:
         bpy.ops.object.join(context)
         bpy.data.objects[objs[0].name].select = True
 
+    def copy_obj(self, obj, name, loc, rot):
+        obj_copy = obj.copy()
+        obj_copy.data = obj.data.copy()
+        obj_copy.name = name
+        obj_copy.location = loc
+        obj_copy.rotation_euler = rot
+        obj_copy.animation_data_clear()
+        bpy.context.scene.objects.link(obj_copy)
+
+        bpy.data.objects[obj.name].select = False
+        bpy.data.objects[obj_copy.name].select = False
+
+        return obj_copy
+
+    def create_goal_rear(self, curve):
+        # Define corner radius to avoid extra multiplications
+        corner_radius = scene_cfg.goal['post_width'] / 2.
+        # Left bottom
+        lb_curve = self.copy_obj(
+            curve,
+            name='LT_Curve',
+            loc=(scene_cfg.goal['depth'], corner_radius / 4., corner_radius),
+            rot=(0., pi / 2., 0.),
+        )
+        lb_post = self.create_post(
+            name='LB_Post',
+            loc=(0., 0., corner_radius),
+            rot=(0., -pi / 2., 0.),
+            extrude=(scene_cfg.goal['depth'] - corner_radius / 2., 0., 0.),
+        )
+        # Left top
+        lt_curve = self.copy_obj(
+            curve,
+            name='LB_Curve',
+            loc=(scene_cfg.goal['depth'], corner_radius / 4., scene_cfg.goal['net_height']),
+            rot=(0., pi / 2., 0.),
+        )
+        lt_post = self.create_post(
+            name='LT_Post',
+            loc=(0., 0., scene_cfg.goal['net_height']),
+            rot=(0., -pi / 2., 0.),
+            extrude=(scene_cfg.goal['depth'] - corner_radius / 2., 0., 0.),
+        )
+
+        # Right bottom
+        rb_curve = self.copy_obj(
+            curve,
+            name='RB_Curve',
+            loc=(scene_cfg.goal['depth'], scene_cfg.goal['width'] - corner_radius / 4., corner_radius),
+            rot=(0., pi / 2., pi / 2.),
+        )
+        rb_post = self.create_post(
+            name='RB_Post',
+            loc=(0., scene_cfg.goal['width'], corner_radius),
+            rot=(0., -pi / 2., 0.),
+            extrude=(scene_cfg.goal['depth'] - corner_radius / 2., 0., 0.),
+        )
+        # Right top
+        rt_curve = self.copy_obj(
+            curve,
+            name='RT_Curve',
+            loc=(scene_cfg.goal['depth'], scene_cfg.goal['width'] - corner_radius / 4., scene_cfg.goal['net_height']),
+            rot=(0., pi / 2., pi / 2.),
+        )
+        rt_post = self.create_post(
+            name='RT_Post',
+            loc=(0., scene_cfg.goal['width'], scene_cfg.goal['net_height']),
+            rot=(0., -pi / 2., 0.),
+            extrude=(scene_cfg.goal['depth'] - corner_radius / 2., 0., 0.),
+        )
+
+        # Back bottom
+        bb_post = self.create_post(
+            name='BB_Post',
+            loc=(scene_cfg.goal['depth'] + corner_radius / 4., corner_radius / 2., scene_cfg.goal['net_height']),
+            rot=(pi / 2., 0., 0.),
+            extrude=(0., scene_cfg.goal['width'] - corner_radius, 0.),
+        )
+        bt_post = self.create_post(
+            name='BT_Post',
+            loc=(scene_cfg.goal['depth'] + corner_radius / 4., corner_radius / 2., corner_radius),
+            rot=(pi / 2., 0., 0.),
+            extrude=(0., scene_cfg.goal['width'] - corner_radius, 0.),
+        )
+
+        # Back verticals
+        lv_post = self.create_post(
+            name='BB_Post',
+            loc=(scene_cfg.goal['depth'], corner_radius / 4., corner_radius),
+            extrude=(0., 0., scene_cfg.goal['net_height'] - corner_radius),
+        )
+        rv_post = self.create_post(
+            name='BB_Post',
+            loc=(scene_cfg.goal['depth'], scene_cfg.goal['width'] - corner_radius / 4., corner_radius),
+            extrude=(0., 0., scene_cfg.goal['net_height'] - corner_radius),
+        )
+
+        # Make single goal back object
+        self.join_objs([
+            lb_curve,
+            lb_post,
+            lt_curve,
+            lt_post,
+            rb_curve,
+            rb_post,
+            rt_curve,
+            rt_post,
+            bb_post,
+            bt_post,
+            lv_post,
+            rv_post,
+        ])
+
+        # Rename the object for clarity
+        goal_back = lb_curve
+        goal_back.name = 'Goal_Back'
+
+        return goal_back
+
+    def get_num_objs(self):
+        print(len(bpy.data.objects))
+
     # Setup field object
     def construct_goal(self):
         # Define corner radius to avoid extra multiplications
@@ -146,18 +268,20 @@ class Goal:
         # Convert curve to mesh
         bpy.ops.object.convert(target='MESH', keep_original=False)
 
+        bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
+
+        # Create our goal rear to join after we have created the front of the goals
+        goal_rear = self.create_goal_rear(curve)
+
         self.join_objs([goal_post, curve])
 
-        # Select our goal post for duplication
-        bpy.data.objects[goal_post.name].select = True
-        # Duplicate the object
-        bpy.ops.object.duplicate(linked=0, mode='TRANSLATION')
-
         # Create second goal post
-        goal_post_copy = bpy.data.objects[goal_post.name + '.001']
-        goal_post_copy.name = 'Goal_Post_copy'
-        goal_post_copy.location = (0., scene_cfg.goal['width'], 0.)
-        goal_post_copy.rotation_euler = (0., 0., pi)
+        goal_post_copy = self.copy_obj(
+            goal_post,
+            name='Goal_Post_copy',
+            loc=(0., scene_cfg.goal['width'], 0.),
+            rot=(0., 0., pi),
+        )
 
         # Create crossbar
         crossbar = self.create_post(
@@ -169,6 +293,8 @@ class Goal:
 
         # Create goals with posts and crossbar
         self.join_objs([goal_post, goal_post_copy, crossbar])
+        # Create goals with front and back
+        self.join_objs([goal_post, goal_rear])
 
         # Redefine name to be goal instead of goal post for clarity
         goal = goal_post
@@ -196,6 +322,10 @@ class Goal:
             self.obj.location[2] + loc[2],
         )
 
+    def rotate_goal(self, rot):
+        self.rot = rot
+        self.obj.rotation_euler = rot
+
 if __name__ == '__main__':
     # Clear default environment
     env.clear_env()
@@ -210,4 +340,7 @@ if __name__ == '__main__':
 
     g2 = Goal()
     g2.construct_goal()
-    g2.move_goal((-scene_cfg.field['length'] / 2., 0., 0.))
+    g2.move_goal(
+        (-scene_cfg.field['length'] / 2. - 1.5 * scene_cfg.goal['depth'] + scene_cfg.goal['post_width'], 0., 0.)
+    )
+    g2.rotate_goal((0., 0., pi))

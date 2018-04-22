@@ -10,6 +10,7 @@ sys.path.insert(0, '../field_uv_generation')
 import environment as env
 import scene_config as scene_cfg
 
+from math import pi
 from field import Field
 from ball import Ball
 from goal import Goal
@@ -36,7 +37,10 @@ def main():
     g[0].move_goal((scene_cfg.field['length'] / 2., 0., 0.))
 
     g[1].construct_goal()
-    g[1].move_goal((-scene_cfg.field['length'] / 2., 0., 0.))
+    g[1].move_goal(
+        (-scene_cfg.field['length'] / 2. - 1.5 * scene_cfg.goal['depth'] + scene_cfg.goal['post_width'], 0., 0.)
+    )
+    g[1].rotate_goal((0., 0., pi))
 
 if __name__ == '__main__':
     main()
