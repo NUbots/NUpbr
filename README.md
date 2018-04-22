@@ -2,7 +2,7 @@
 This repository holds code to generate a Physically-Based Rendered (PBR) and configurable football field.
 
 # Example
-![Field Example](./docs/outputs/field_example.gif)
+![Field Example](./docs/outputs/scene_example.gif)
 
 # Requirements
 + [Blender](https://www.blender.org/download/) (2.79+)
