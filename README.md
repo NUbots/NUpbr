@@ -1,7 +1,6 @@
 # NUpbr
-This repository holds code to generate a Physically-Based Rendered (PBR) and configurable football field.
+This repository holds code to generate a configurable, Physically Based Rendered (PBR) football field.
 
-# Example
 ![Field Example](./docs/outputs/scene_example.gif)
 
 # Requirements
@@ -21,13 +20,13 @@ The ball UV map and HRDI environment image are randomly selected from the respec
 To build only the goal, ball or field, run `blender --python <script>` where `<script>` is either `goal`, `ball` or `field` from the `pbr_scene` directory.
 
 ## Custom UV Maps and HRDI Environment
-The resources used for texturing the ball and field by default are found in [`resources/ball_uv`](./resources/ball_uv) and [`resources/field_uv`](./resources/field_uv) respectively. There is no default HDRI environment directory within the repository, but will attempt to be read from  `resources/scene_hdr`. The directory to look for these resources can be modified in [`scene_config.py`](./field_uv_generation/scene_config.py) under `field_uv['uv_path']`, `ball['uv_path']` and `scene_hdr['path']`.
+The resources used for texturing the ball, field and environment by default are found in [`resources/ball_uv`](./resources/ball_uv), [`resources/field_uv`](./resources/field_uv) and [`resources/scene_hdr`](./resources/scene_hdr) respectively.  The directory to look for these resources can be modified in [`scene_config.py`](./field_uv_generation/scene_config.py) under `field_uv['uv_path']`, `ball['uv_path']` and `scene_hdr['path']`.
 
 ### Field
-A new field UV map and construction can be configured in [`scene_config.py`](./field_uv_generation/scene_config.py).
+A new field UV map and construction can be configured in [`scene_config.py`](./field_uv_generation/scene_config.py) (by default saved in [`resources/field_uv`](./resources/field_uv)).
 
 ### Ball
 Custom UV maps to be considered for selection when generating the scene can be placed in the ball UV directory (by default [`resources/ball_uv`](./resources/ball_uv)). 
 
 ### Environment
-Similarly to the ball UV maps, a random HRDI environment image is selected from the pool of images within the scene HDR directory.
+Similarly to the ball UV maps, a random HRDI environment image is selected from the pool of images within the scene HDR directory (by default [`resources/scene_hdr`](./resources/scene_hdr)).
