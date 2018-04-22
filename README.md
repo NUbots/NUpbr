@@ -1,7 +1,7 @@
 # NUpbr
 This repository holds code to generate a configurable, Physically Based Rendered (PBR) football field.
 
-![Field Example](./docs/outputs/scene_example.gif)
+![Field Example](.docs/goals_example.gif)
 
 # Requirements
 + [Blender](https://www.blender.org/download/) (2.79+)
