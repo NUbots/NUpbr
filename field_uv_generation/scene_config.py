@@ -1,8 +1,8 @@
+# Field-specific Configuration Settings
+#   * All measurements are in metres
+
 from math import pi
 from os import path
-
-### Configuration File for Generation of Soccer Field UV Map ###
-# (All measurements in metres)
 
 field = {
     'length': 9,
