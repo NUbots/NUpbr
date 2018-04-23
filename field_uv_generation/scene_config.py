@@ -29,6 +29,10 @@ goal = {
 
 ball = {
     'radius': 0.5969 / (2 * pi),
+    'uv_img_types': [
+        '.jpg',
+        '.png',
+    ],
     'uv_path': path.abspath(path.join(path.join('..', 'resources'), 'ball_uv')),
 }
 
