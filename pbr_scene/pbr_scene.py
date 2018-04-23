@@ -1,4 +1,4 @@
-#!C:\"Program Files"\"Blender Foundation"\Blender\blender -P
+#!/usr/local/blender -P
 
 import sys
 
