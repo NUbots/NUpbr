@@ -111,7 +111,7 @@ field = {
         },
         'children': {
             'child_type': 'INTERPOLATED',
-            'child_num': 40,
+            'child_num': 10,
             'rendered_children': 75,
             'length': 0.5,
         },
