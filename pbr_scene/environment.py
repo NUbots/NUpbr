@@ -85,6 +85,8 @@ def setup_hdri_env():
     # Load our HDRI image and store in environment texture shader
     n_env_tex = node_list.new('ShaderNodeTexEnvironment')
     scene_hdrs = os.listdir(scene_cfg.scene_hdr['path'])
+    # Make sure we're only loading .hdr files
+    scene_hdrs = [x for x in scene_hdrs if x[x.rfind('.'):] == '.hdr']
     img_path = os.path.join(scene_cfg.scene_hdr['path'], scene_hdrs[rand.randint(0, len(scene_hdrs) - 1)])
     try:
         img = bpy.data.images.load(img_path)

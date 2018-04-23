@@ -39,6 +39,9 @@ class Ball:
         # Create texture image of field UV map
         n_uv_map = node_list.new('ShaderNodeTexImage')
         uv_maps = os.listdir(scene_cfg.ball['uv_path'])
+        # Ensure only .jpg or .png files are read
+        uv_maps = [x for x in uv_maps if x[x.rfind('.'):] in scene_cfg.ball['uv_img_types']]
+
         img_path = os.path.join(scene_cfg.ball['uv_path'], uv_maps[rand.randint(0, len(uv_maps) - 1)])
         try:
             img = bpy.data.images.load(img_path)
