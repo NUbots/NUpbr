@@ -80,7 +80,7 @@ field = {
             'inp0': 0.391,
         },
         'principled': {
-            'roughness' : 0.625,
+            'roughness': 0.625,
         }
     },
     'particle': {
@@ -119,6 +119,8 @@ field = {
     },
     'lower_plane': {
         'colour': (0.003, 0.04, 0., 1.),
+        'specular': 0.225,
+        'roughness': 1.,
     },
     'noise': {
         'type': 'VORONOI',

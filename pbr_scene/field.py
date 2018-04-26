@@ -32,6 +32,9 @@ class Field:
         n_rgb.outputs[0].default_value = p_cfg['colour']
 
         n_princ = node_list.new('ShaderNodeBsdfPrincipled')
+        n_princ.inputs[5].default_value = p_cfg['specular']
+        n_princ.inputs[7].default_value = p_cfg['roughness']
+
         n_output = node_list.new('ShaderNodeOutputMaterial')
 
         # Link shaders
@@ -40,7 +43,6 @@ class Field:
         tl.new(n_princ.outputs[0], n_output.inputs[0])
 
         return lp_mat
-
 
     # Create material for the field
     def create_field_mat(self, f_object, m_cfg):
