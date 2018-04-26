@@ -15,10 +15,11 @@ import scene_config as scene_cfg
 import blend_config as blend_cfg
 
 class Ball:
-    def __init__(self):
+    def __init__(self, class_index):
         self.loc = (0., 0., 0.)
         self.mat = None
         self.obj = None
+        self.pass_index = class_index
 
     # Create material for the field
     def create_ball_mat(self, b_object, m_cfg):
@@ -79,6 +80,7 @@ class Ball:
         ball.name = 'Ball'
         ball.scale = (scene_cfg.ball['radius'], scene_cfg.ball['radius'], scene_cfg.ball['radius'])
         ball.location = (0., 0., 1 * scene_cfg.ball['radius'])
+        ball.pass_index = self.pass_index
 
         # Add material to ball material slots
         self.mat = self.create_ball_mat(ball, blend_cfg.ball['material'])

@@ -14,6 +14,12 @@ import scene_config as scene_cfg
 import blend_config as blend_cfg
 
 class Field:
+    def __init__(self, class_index):
+        self.loc = (0., 0., 0.)
+        self.mat = None
+        self.obj = None
+        self.pass_index = class_index
+
     # Create material for the lower plane
     def create_lower_plane_mat(self, p_cfg):
         lp_mat = bpy.data.materials.new('Lower_Plane_Mat')
@@ -216,6 +222,7 @@ class Field:
         bpy.ops.mesh.primitive_plane_add()
         lower_plane = bpy.data.objects['Plane']
         lower_plane.name = 'Lower_Plane'
+        lower_plane.pass_index = self.pass_index
 
         # Define location and dimensions of field
         lower_plane.location = (0, 0, 0)
@@ -231,6 +238,7 @@ class Field:
         bpy.ops.mesh.primitive_plane_add()
         field = bpy.data.objects['Plane']
         field.name = 'Field'
+        field.pass_index = self.pass_index
 
         # Define location and dimensions of field
         field.location = (0, 0, 0)
@@ -275,5 +283,5 @@ if __name__ == '__main__':
     # Setup HRDI environment
     env.setup_hdri_env()
 
-    f = Field()
+    f = Field(0)
     f.construct_field()

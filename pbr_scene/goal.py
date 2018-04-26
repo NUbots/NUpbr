@@ -16,10 +16,11 @@ import scene_config as scene_cfg
 import blend_config as blend_cfg
 
 class Goal:
-    def __init__(self):
+    def __init__(self, class_index):
         self.loc = (0., 0., 0.)
         self.mat = None
         self.obj = None
+        self.pass_index = class_index
 
     # Create material for the field
     def create_goal_mat(self, g_object, m_cfg):
@@ -304,6 +305,7 @@ class Goal:
             goal.location[1] - scene_cfg.goal['width'] / 2.,
             goal.location[2] + 0.,
         )
+        goal.pass_index = self.pass_index
 
         # Reset origin to centre of geometry
         bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
@@ -334,11 +336,11 @@ if __name__ == '__main__':
     # Setup HRDI environment
     env.setup_hdri_env()
 
-    g1 = Goal()
+    g1 = Goal(0)
     g1.construct_goal()
     g1.move_goal((scene_cfg.field['length'] / 2., 0., 0.))
 
-    g2 = Goal()
+    g2 = Goal(0)
     g2.construct_goal()
     g2.move_goal(
         (-scene_cfg.field['length'] / 2. - 1.5 * scene_cfg.goal['depth'] + scene_cfg.goal['post_width'], 0., 0.)

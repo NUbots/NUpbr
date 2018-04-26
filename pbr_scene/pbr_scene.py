@@ -23,16 +23,20 @@ def main():
     # Setup HRDI environment
     env.setup_hdri_env()
 
+    classes = ['ball', 'goal', 'field']
+
+    env.setup_segmentation_render_layers(len(classes))
+
     # Construct our grass field
-    f = Field()
+    f = Field(3)
     f.construct_field()
 
     # Construct our ball
-    b = Ball()
+    b = Ball(1)
     b.construct_ball()
 
     # Construct our goals
-    g = [Goal(), Goal()]
+    g = [Goal(2), Goal(2)]
     g[0].construct_goal()
     g[0].move_goal((scene_cfg.field['length'] / 2., 0., 0.))
 

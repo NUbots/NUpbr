@@ -101,3 +101,160 @@ def setup_hdri_env():
     tl.new(n_env_tex.outputs[0], node_list['Background'].inputs[0])
     # Link background to output
     tl.new(node_list['Background'].outputs[0], node_list['World Output'].inputs[0])
+
+def setup_image_seg_mat(total_classes):
+    seg_mat = bpy.data.materials.new('Image_Seg')
+    # Enable material nodes
+    seg_mat.use_nodes = True
+    # Get our node list
+    node_list = seg_mat.node_tree.nodes
+
+    # Clear nodes
+    for node in node_list:
+        node_list.remove(node)
+
+    # Create our nodes
+    # Create node to get object index
+    n_obj_info = node_list.new('ShaderNodeObjectInfo')
+    # Create division node
+    n_div = node_list.new('ShaderNodeMath')
+    n_div.operation = 'DIVIDE'
+    n_div.inputs[1].default_value = total_classes
+    # Create Colour Ramp node
+    n_col_ramp = node_list.new('ShaderNodeValToRGB')
+    # Create emission node
+    n_emission = node_list.new('ShaderNodeEmission')
+    # Create output node
+    n_output = node_list.new('ShaderNodeOutputMaterial')
+
+    # Link our shaders
+    tl = seg_mat.node_tree.links
+    # Link object index to divide node
+    tl.new(n_obj_info.outputs[1], n_div.inputs[0])
+    # Link divide to colour ramp factor
+    tl.new(n_div.outputs[0], n_col_ramp.inputs[0])
+    # Link colour ramp output to emission
+    tl.new(n_col_ramp.outputs[0], n_emission.inputs[0])
+    # Link emission to output
+    tl.new(n_emission.outputs[0], n_output.inputs[0])
+
+    return seg_mat
+
+def setup_field_seg_mat(index, total_classes):
+    seg_mat = bpy.data.materials.new('Field_Seg')
+    # Enable material nodes
+    seg_mat.use_nodes = True
+    # Get our node list
+    node_list = seg_mat.node_tree.nodes
+
+    # Clear nodes
+    for node in node_list:
+        node_list.remove(node)
+
+    # Create our nodes
+    # Create node to get object index
+    n_obj_info = node_list.new('ShaderNodeObjectInfo')
+    # Create node texture image of field UV map
+    n_field_lines = node_list.new('ShaderNodeTexImage')
+    img_path = os.path.join(scene_cfg.field_uv['uv_path'], scene_cfg.field_uv['name'] + scene_cfg.field_uv['type'])
+    try:
+        img = bpy.data.images.load(img_path)
+    except:
+        raise NameError('Cannot load image {0}'.format(img_path))
+    n_field_lines.image = img
+    # Create division node
+    n_gt = node_list.new('ShaderNodeMath')
+    n_gt.operation = 'GREATER_THAN'
+    n_gt.inputs[1].default_value = index - (0.5 / float(total_classes))
+    n_gt.use_clamp = True
+    # Create holdout node
+    n_holdout = node_list.new('ShaderNodeHoldout')
+    # Create emission node
+    n_emission = node_list.new('ShaderNodeEmission')
+    # Mix shader
+    n_shaders = node_list.new('ShaderNodeMixShader')
+    # Output
+    n_output = node_list.new('ShaderNodeOutputMaterial')
+
+    # Link our shaders
+    tl = seg_mat.node_tree.links
+    # Link obj index to division
+    tl.new(n_obj_info.outputs[1], n_gt.inputs[0])
+    # Link image texture output and strength to emission
+    tl.new(n_field_lines.outputs[0], n_emission.inputs[0])
+    tl.new(n_field_lines.outputs[1], n_emission.inputs[1])
+    # Link greater than, holdout, emission to mix shader
+    tl.new(n_gt.outputs[0], n_shaders.inputs[0])
+    tl.new(n_holdout.outputs[0], n_shaders.inputs[1])
+    tl.new(n_emission.outputs[0], n_shaders.inputs[2])
+    # Link mix shader to output
+    tl.new(n_shaders.outputs[0], n_output.inputs[0])
+
+    return seg_mat
+
+def setup_scene_composite(field_line_val, l_image_seg, l_field_seg):
+    # Enable compositing nodes
+    bpy.context.scene.use_nodes = True
+    # Get our node list
+    node_list = bpy.context.scene.node_tree.nodes
+
+    # Clear nodes
+    for node in node_list:
+        node_list.remove(node)
+
+    # Render layer for image segment
+    n_img_seg_rl = node_list.new('CompositorNodeRLayers')
+    n_img_seg_rl.layer = l_image_seg.name
+    # Render layer for field segment
+    n_field_seg_rl = node_list.new('CompositorNodeRLayers')
+    n_field_seg_rl.layer = l_field_seg.name
+    # Color key node
+    n_col_key = node_list.new('CompositorNodeColorMatte')
+    n_col_key.color_hue = 0.0001
+    n_col_key.color_saturation = 0.0001
+    n_col_key.color_value = 0.0001
+    n_col_key.inputs[1].default_value = (0., 0., 0., 1.)
+    # Mix node
+    n_mix = node_list.new('CompositorNodeMixRGB')
+    n_mix.inputs[2].default_value = (field_line_val, field_line_val, field_line_val, 1.)
+    # Alpha over
+    n_alpha = node_list.new('CompositorNodeAlphaOver')
+    # Composite
+    n_comp = node_list.new('CompositorNodeComposite')
+
+    # Link shaders
+    tl = bpy.context.scene.node_tree.links
+    # Link image segment render layer
+    tl.new(n_img_seg_rl.outputs[0], n_alpha.inputs[1])
+    # Link field segment render layer
+    tl.new(n_field_seg_rl.outputs[0], n_col_key.inputs[0])
+    # Link color key node
+    tl.new(n_col_key.outputs[0], n_mix.inputs[1])
+    tl.new(n_col_key.outputs[1], n_mix.inputs[0])
+    # Link mix to alpha
+    tl.new(n_mix.outputs[0], n_alpha.inputs[2])
+    # Link alpha to composite
+    tl.new(n_alpha.outputs[0], n_comp.inputs[0])
+
+def setup_segmentation_render_layers(num_objects):
+    scene = bpy.context.scene
+    render_layers = scene.render.layers
+    print('Rend layers:')
+    for d in dir(render_layers):
+        print('\t{0}'.format(d))
+
+    l_image_seg = render_layers.new('Image_Seg')
+    l_image_seg.use_sky = False
+    l_image_seg.samples = 1
+    image_seg_mat = setup_image_seg_mat(num_objects + 1)
+    l_image_seg.material_override = image_seg_mat
+
+    l_field_seg = render_layers.new('Field_Seg')
+    l_field_seg.use_sky = False
+    l_field_seg.samples = 1
+    field_seg_mat = setup_field_seg_mat(num_objects, num_objects + 1)
+    l_field_seg.material_override = field_seg_mat
+
+    setup_scene_composite(num_objects / float(num_objects), l_image_seg, l_field_seg)
+
+    return image_seg_mat, field_seg_mat
