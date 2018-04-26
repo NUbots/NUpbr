@@ -14,6 +14,34 @@ import scene_config as scene_cfg
 import blend_config as blend_cfg
 
 class Field:
+    # Create material for the lower plane
+    def create_lower_plane_mat(self, p_cfg):
+        lp_mat = bpy.data.materials.new('Lower_Plane_Mat')
+        # Enable use of material nodes
+        lp_mat.use_nodes = True
+
+        # Get our node list to construct our material
+        node_list = lp_mat.node_tree.nodes
+
+        # Clear node tree of default settings
+        for node in node_list:
+            node_list.remove(node)
+
+        # Create RGB, principled and output nodes
+        n_rgb = node_list.new('ShaderNodeRGB')
+        n_rgb.outputs[0].default_value = p_cfg['colour']
+
+        n_princ = node_list.new('ShaderNodeBsdfPrincipled')
+        n_output = node_list.new('ShaderNodeOutputMaterial')
+
+        # Link shaders
+        tl = lp_mat.node_tree.links
+        tl.new(n_rgb.outputs[0], n_princ.inputs[0])
+        tl.new(n_princ.outputs[0], n_output.inputs[0])
+
+        return lp_mat
+
+
     # Create material for the field
     def create_field_mat(self, f_object, m_cfg):
         f_mat = bpy.data.materials.new('Field_Mat')
@@ -83,15 +111,11 @@ class Field:
         n_mix_low_grass_field_lines = node_list.new('ShaderNodeMixRGB')
         n_mix_low_grass_field_lines.inputs[0].default_value = m_cfg['mix_low_grass_field_lines']['inp0']
 
-        n_ao = node_list.new('ShaderNodeAmbientOcclusion')
-        n_translucent = node_list.new('ShaderNodeBsdfTranslucent')
-        n_mix_ao_transluc = node_list.new('ShaderNodeMixShader')
-        n_mix_ao_transluc.inputs[0].default_value = m_cfg['mix_ao_transluc']['inp0']
+        n_mix_grass = node_list.new('ShaderNodeMixRGB')
+        n_mix_grass.inputs[0].default_value = m_cfg['mix_grass']['inp0']
 
-        n_diffuse = node_list.new('ShaderNodeBsdfDiffuse')
-
-        n_mix_shaders = node_list.new('ShaderNodeMixShader')
-        n_mix_shaders.inputs[0].default_value = m_cfg['mix_shaders']['inp0']
+        n_princ = node_list.new('ShaderNodeBsdfPrincipled')
+        n_princ.inputs[7].default_value = m_cfg['principled']['roughness']
 
         n_output = node_list.new('ShaderNodeOutputMaterial')
 
@@ -117,7 +141,6 @@ class Field:
 
         # Link lower grass mix
         tl.new(n_mix_lower_grass.outputs[0], n_mix_low_grass_field_lines.inputs['Color2'])
-        tl.new(n_mix_lower_grass.outputs[0], n_ao.inputs[0])
 
         # Link upper grass mix
         tl.new(n_mix_upper_grass.outputs[0], n_mix_up_grass_hsv.inputs[1])
@@ -125,24 +148,15 @@ class Field:
         # Link hsv
         tl.new(n_hsv.outputs[0], n_mix_up_grass_hsv.inputs[2])
 
-        # Link translucent
-        tl.new(n_mix_up_grass_hsv.outputs[0], n_translucent.inputs[0])
+        # Link grass mix
+        tl.new(n_mix_low_grass_field_lines.outputs[0], n_mix_grass.inputs[1])
+        tl.new(n_mix_up_grass_hsv.outputs[0], n_mix_grass.inputs[2])
 
-        # Link field uv and lower grass mix
-        tl.new(n_mix_low_grass_field_lines.outputs[0], n_diffuse.inputs[0])
-
-        # Link ao
-        tl.new(n_ao.outputs[0], n_mix_ao_transluc.inputs[1])
-
-        # Link translucent
-        tl.new(n_translucent.outputs[0], n_mix_ao_transluc.inputs[2])
-
-        # Link shaders
-        tl.new(n_diffuse.outputs[0], n_mix_shaders.inputs[1])
-        tl.new(n_mix_ao_transluc.outputs[0], n_mix_shaders.inputs[2])
+        # Link principled
+        tl.new(n_mix_grass.outputs[0], n_princ.inputs[0])
 
         # Link output
-        tl.new(n_mix_shaders.outputs[0], n_output.inputs[0])
+        tl.new(n_princ.outputs[0], n_output.inputs[0])
 
         return f_mat
 
@@ -209,15 +223,7 @@ class Field:
             0.,
         )
 
-        lp_mat = bpy.data.materials.new('Lower_Plane_Mat')
-        # Enable use of material nodes
-        lp_mat.use_nodes = True
-
-        # Get our node list to construct our material
-        lp_mat.node_tree.nodes['Diffuse BSDF'].inputs[0].default_value = blend_cfg.field['material']['lower_plane'
-                                                                                                     ]['colour']
-
-        lower_plane.data.materials.append(lp_mat)
+        lower_plane.data.materials.append(self.create_lower_plane_mat(blend_cfg.field['lower_plane']))
 
         # Add plane for field
         bpy.ops.mesh.primitive_plane_add()

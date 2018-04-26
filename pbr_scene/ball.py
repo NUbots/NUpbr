@@ -78,7 +78,7 @@ class Ball:
         ball = bpy.data.objects['Sphere']
         ball.name = 'Ball'
         ball.scale = (scene_cfg.ball['radius'], scene_cfg.ball['radius'], scene_cfg.ball['radius'])
-        ball.location = (0., 0., 1.5 * scene_cfg.ball['radius'])
+        ball.location = (0., 0., 1 * scene_cfg.ball['radius'])
 
         # Add material to ball material slots
         self.mat = self.create_ball_mat(ball, blend_cfg.ball['material'])

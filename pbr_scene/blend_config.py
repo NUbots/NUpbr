@@ -8,11 +8,11 @@ render = {
         'cycles_device': 'GPU',
     },
     'dimensions': {
-        'resolution': [1920, 1080],
-        'percentage': 50.0,
+        'resolution': [1280, 720],
+        'percentage': 100.0,
     },
     'sampling': {
-        'cycles_samples': 16,
+        'cycles_samples': 64,
         'cycles_preview_samples': 16,
     },
     'light_paths': {
@@ -56,16 +56,13 @@ field = {
             'rotation': (0., -pi / 2., 0.),
             'scale': (1., 0.6, 1.),
         },
-        'lower_plane': {
-            'colour': (0.001, 0.010, 0.002, 0.9),
-        },
         'mix_lower_grass': {
-            'inp1': (0.002, 0.032, 0.004, 1.),
-            'inp2': (0.110, 0.066, 0., 1.),
+            'inp1': (0.000, 0.012, 0.00076, 1.),
+            'inp2': (0.020, 0.011, 0., 1.),
         },
         'mix_upper_grass': {
-            'inp1': (0.335, 0.549, 0.006, 1),
-            'inp2': (0.272, 0.175, 0.002, 1),
+            'inp1': (0.247, 0.549, 0., 1),
+            'inp2': (0.257, 0.272, 0., 1),
         },
         'noise': {
             'inp': [5., 2., 0.],
@@ -79,15 +76,12 @@ field = {
         'mix_low_grass_field_lines': {
             'inp0': 0.4,
         },
-        'diffuse': {
-            'inp1': 0.217,
+        'mix_grass': {
+            'inp0': 0.391,
         },
-        'mix_ao_transluc': {
-            'inp0': 0.518,
-        },
-        'mix_shaders': {
-            'inp0': 0.273,
-        },
+        'principled': {
+            'roughness' : 0.625,
+        }
     },
     'particle': {
         'use_adv_hair': True,
@@ -122,6 +116,9 @@ field = {
             'scaling': 0.05,
             'close_tip': True,
         }
+    },
+    'lower_plane': {
+        'colour': (0.003, 0.04, 0., 1.),
     },
     'noise': {
         'type': 'VORONOI',
