@@ -34,6 +34,10 @@ render = {
     'performance': {
         'render_tile': [512, 512],
     },
+    'layers': {
+        'use_sky': False,
+        'use_hair': True,
+    },
 }
 
 scene = {
