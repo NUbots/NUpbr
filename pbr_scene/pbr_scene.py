@@ -3,20 +3,19 @@
 import os
 import sys
 
-# TODO: Remove hacky include
-# Add our current position to path to include our config files
-sys.path.insert(0, '.')
-sys.path.insert(0, os.path.join('..', 'field_uv'))
+# Add our current position to path to include package
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
-import scene_config as scene_cfg
+from math import pi, sqrt
 
-from math import pi
+from config import scene_config as scene_cfg
 
 from scene import environment as env
 from scene.ball import Ball
 from scene.field import Field
 from scene.goal import Goal
 from scene.camera import Camera
+from scene.camera_anchor import CameraAnchor
 
 def main():
     # Clear default environment
@@ -32,11 +31,18 @@ def main():
     # Setup render layers (visual, segmentation and field lines)
     env.setup_segmentation_render_layers(len(classes))
 
-    # Construct camera
-    c = Camera()
+    # Construct camera anchor
+    a = CameraAnchor()
+    a.move((0., 0., scene_cfg.ball['radius']))
+
+    # Construct camera (requires camera anchor object as parent)
+    c = Camera(a.obj)
+    c.rotate((45. * (pi / 180.), 0., 0.))
+    c.move((0., -(1. / sqrt(2)), 1. / sqrt(2)))
 
     # Construct our ball in class 1
     b = Ball(1)
+    b.move((0., 0., scene_cfg.ball['radius']))
 
     # Construct our goals both in class 2
     g = [Goal(2), Goal(2)]
