@@ -1,19 +1,21 @@
 #!/usr/local/blender -P
 
+import os
 import sys
 
 # TODO: Remove hacky include
 # Add our current position to path to include our config files
 sys.path.insert(0, '.')
-sys.path.insert(0, '../field_uv_generation')
+sys.path.insert(0, os.path.join('..', 'field_uv'))
 
-import environment as env
 import scene_config as scene_cfg
 
 from math import pi
-from field import Field
-from ball import Ball
-from goal import Goal
+
+from scene import environment as env
+from scene.field import Field
+from scene.ball import Ball
+from scene.goal import Goal
 
 def main():
     # Clear default environment
