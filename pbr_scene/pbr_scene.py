@@ -17,7 +17,12 @@ from scene.goal import Goal
 from scene.camera import Camera
 from scene.camera_anchor import CameraAnchor
 
+from field_uv import generate_uv
+
 def main():
+    # Make UV map
+    generate_uv.main()
+
     # Clear default environment
     env.clear_env()
     # Setup render settings
