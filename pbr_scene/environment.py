@@ -239,18 +239,17 @@ def setup_scene_composite(field_line_val, l_image_seg, l_field_seg):
 def setup_segmentation_render_layers(num_objects):
     scene = bpy.context.scene
     render_layers = scene.render.layers
-    print('Rend layers:')
-    for d in dir(render_layers):
-        print('\t{0}'.format(d))
 
     l_image_seg = render_layers.new('Image_Seg')
-    l_image_seg.use_sky = False
+    l_image_seg.use_sky = blend_cfg.render['layers']['use_sky']
+    l_image_seg.use_strand = blend_cfg.render['layers']['use_hair']
     l_image_seg.samples = 1
     image_seg_mat = setup_image_seg_mat(num_objects + 1)
     l_image_seg.material_override = image_seg_mat
 
     l_field_seg = render_layers.new('Field_Seg')
-    l_field_seg.use_sky = False
+    l_field_seg.use_sky = blend_cfg.render['layers']['use_sky']
+    l_field_seg.use_strand = blend_cfg.render['layers']['use_hair']
     l_field_seg.samples = 1
     field_seg_mat = setup_field_seg_mat(num_objects, num_objects + 1)
     l_field_seg.material_override = field_seg_mat

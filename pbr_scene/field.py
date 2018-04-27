@@ -234,6 +234,9 @@ class Field:
 
         lower_plane.data.materials.append(self.create_lower_plane_mat(blend_cfg.field['lower_plane']))
 
+        # Apply UV mapping to grass
+        bpy.ops.uv.smart_project()
+
         # Add plane for field
         bpy.ops.mesh.primitive_plane_add()
         field = bpy.data.objects['Plane']
