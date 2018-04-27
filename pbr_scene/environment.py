@@ -241,14 +241,14 @@ def setup_segmentation_render_layers(num_objects):
     render_layers = scene.render.layers
 
     l_image_seg = render_layers.new('Image_Seg')
-    l_image_seg.use_sky = blend_cfg.render['layers']['use_sky']
+    l_image_seg.use_sky = False
     l_image_seg.use_strand = blend_cfg.render['layers']['use_hair']
     l_image_seg.samples = 1
     image_seg_mat = setup_image_seg_mat(num_objects + 1)
     l_image_seg.material_override = image_seg_mat
 
     l_field_seg = render_layers.new('Field_Seg')
-    l_field_seg.use_sky = blend_cfg.render['layers']['use_sky']
+    l_field_seg.use_sky = False
     l_field_seg.use_strand = blend_cfg.render['layers']['use_hair']
     l_field_seg.samples = 1
     field_seg_mat = setup_field_seg_mat(num_objects, num_objects + 1)

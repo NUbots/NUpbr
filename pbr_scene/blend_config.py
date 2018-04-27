@@ -35,7 +35,6 @@ render = {
         'render_tile': [512, 512],
     },
     'layers': {
-        'use_sky': False,
         'use_hair': False,
     },
 }
