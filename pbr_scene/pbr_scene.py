@@ -13,9 +13,10 @@ import scene_config as scene_cfg
 from math import pi
 
 from scene import environment as env
-from scene.field import Field
 from scene.ball import Ball
+from scene.field import Field
 from scene.goal import Goal
+from scene.camera import Camera
 
 def main():
     # Clear default environment
@@ -25,28 +26,27 @@ def main():
     # Setup HRDI environment
     env.setup_hdri_env()
 
+    # Setup class indices
     classes = ['ball', 'goal', 'field']
 
+    # Setup render layers (visual, segmentation and field lines)
     env.setup_segmentation_render_layers(len(classes))
 
-    # Construct our grass field
-    f = Field(3)
-    f.construct_field()
+    # Construct camera
+    c = Camera()
 
-    # Construct our ball
+    # Construct our ball in class 1
     b = Ball(1)
-    b.construct_ball()
 
-    # Construct our goals
+    # Construct our goals both in class 2
     g = [Goal(2), Goal(2)]
-    g[0].construct_goal()
-    g[0].move_goal((scene_cfg.field['length'] / 2., 0., 0.))
+    g[0].move((scene_cfg.field['length'] / 2., 0., 0.))
 
-    g[1].construct_goal()
-    g[1].move_goal(
-        (-scene_cfg.field['length'] / 2. - 1.5 * scene_cfg.goal['depth'] + scene_cfg.goal['post_width'], 0., 0.)
-    )
-    g[1].rotate_goal((0., 0., pi))
+    g[1].move((-scene_cfg.field['length'] / 2. - 1.5 * scene_cfg.goal['depth'] + scene_cfg.goal['post_width'], 0., 0.))
+    g[1].rotate((0., 0., pi))
+
+    # Construct our grass field in class 3 (where field lines will be class 4)
+    f = Field(3)
 
 if __name__ == '__main__':
     main()
