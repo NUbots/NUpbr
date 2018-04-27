@@ -36,7 +36,7 @@ render = {
     },
     'layers': {
         'use_sky': False,
-        'use_hair': True,
+        'use_hair': False,
     },
 }
 
