@@ -26,16 +26,24 @@ def main():
 
     # Populate list of hdr scenes
     scene_hdrs = os.listdir(scene_cfg.scene_hdr['path'])
+    # Populate list of ball images and meshes
+    uv_maps = os.listdir(scene_cfg.ball['uv_path'])
+
     # Make sure we're only loading .hdr files
     scene_hdrs = [x for x in scene_hdrs if x[x.rfind('.'):] == '.hdr']
-    img_path = os.path.join(scene_cfg.scene_hdr['path'], scene_hdrs[rand.randint(0, len(scene_hdrs) - 1)])
+    hdr_path = os.path.join(scene_cfg.scene_hdr['path'], scene_hdrs[rand.randint(0, len(scene_hdrs) - 1)])
+
+    # Ensure only .jpg or .png files are read
+    # TODO: Move check to ball class where ball will be constructed depending on import type
+    uv_maps = [x for x in uv_maps if x[x.rfind('.'):] in scene_cfg.ball['uv_img_types']]
+    ball_path = os.path.join(scene_cfg.ball['uv_path'], uv_maps[rand.randint(0, len(uv_maps) - 1)])
 
     # Clear default environment
     env.clear_env()
     # Setup render settings
     env.setup_render()
     # Setup HRDI environment
-    env.setup_hdri_env(img_path)
+    env.setup_hdri_env(hdr_path)
 
     # Setup render layers (visual, segmentation and field lines)
     env.setup_segmentation_render_layers(len(scene_cfg.classes))
