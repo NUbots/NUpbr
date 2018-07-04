@@ -2,7 +2,6 @@
 
 import os
 import bpy
-import random as rand
 
 from config import scene_config as scene_cfg
 from config import blend_config as blend_cfg
@@ -66,7 +65,7 @@ def setup_render():
     context.user_preferences.view.show_splash = False
 
 # Setup background HDRI environment
-def setup_hdri_env():
+def setup_hdri_env(img_path):
     # Get world
     world = bpy.data.worlds['World']
     world.name = 'World_HDR'
@@ -77,10 +76,7 @@ def setup_hdri_env():
 
     # Load our HDRI image and store in environment texture shader
     n_env_tex = node_list.new('ShaderNodeTexEnvironment')
-    scene_hdrs = os.listdir(scene_cfg.scene_hdr['path'])
-    # Make sure we're only loading .hdr files
-    scene_hdrs = [x for x in scene_hdrs if x[x.rfind('.'):] == '.hdr']
-    img_path = os.path.join(scene_cfg.scene_hdr['path'], scene_hdrs[rand.randint(0, len(scene_hdrs) - 1)])
+
     try:
         img = bpy.data.images.load(img_path)
     except:
@@ -112,9 +108,19 @@ def setup_image_seg_mat(total_classes):
     # Create division node
     n_div = node_list.new('ShaderNodeMath')
     n_div.operation = 'DIVIDE'
-    n_div.inputs[1].default_value = total_classes
+    n_div.inputs[1].default_value = len(scene_cfg.classes)
     # Create Colour Ramp node
     n_col_ramp = node_list.new('ShaderNodeValToRGB')
+    n_col_ramp.color_ramp.interpolation = 'CONSTANT'
+
+    # Iterate through classes and create colour regions in colour ramp for each class
+    for obj_class in scene_cfg.classes:
+        elem = n_col_ramp.color_ramp.elements.new(
+            position=(scene_cfg.classes[obj_class]['index'] / (len(scene_cfg.classes))) - 0.5 /
+            (len(scene_cfg.classes))
+        )
+        elem.color = scene_cfg.classes[obj_class]['colour']
+
     # Create emission node
     n_emission = node_list.new('ShaderNodeEmission')
     # Create output node
@@ -155,11 +161,16 @@ def setup_field_seg_mat(index, total_classes):
     except:
         raise NameError('Cannot load image {0}'.format(img_path))
     n_field_lines.image = img
-    # Create division node
-    n_gt = node_list.new('ShaderNodeMath')
-    n_gt.operation = 'GREATER_THAN'
-    n_gt.inputs[1].default_value = index - (0.5 / float(total_classes))
-    n_gt.use_clamp = True
+    # Create modulo node
+    n_mod = node_list.new('ShaderNodeMath')
+    n_mod.operation = 'MODULO'
+    n_mod.inputs[1].default_value = scene_cfg.classes['field']['index']
+    n_mod.use_clamp = True
+    # Create subtraction node
+    n_sub = node_list.new('ShaderNodeMath')
+    n_sub.operation = 'SUBTRACT'
+    n_sub.inputs[0].default_value = 1.
+    n_sub.use_clamp = True
     # Create holdout node
     n_holdout = node_list.new('ShaderNodeHoldout')
     # Create emission node
@@ -172,12 +183,12 @@ def setup_field_seg_mat(index, total_classes):
     # Link our shaders
     tl = seg_mat.node_tree.links
     # Link obj index to division
-    tl.new(n_obj_info.outputs[1], n_gt.inputs[0])
-    # Link image texture output and strength to emission
-    tl.new(n_field_lines.outputs[0], n_emission.inputs[0])
+    tl.new(n_obj_info.outputs[1], n_mod.inputs[0])
+    # Link image strength to emission
     tl.new(n_field_lines.outputs[1], n_emission.inputs[1])
     # Link greater than, holdout, emission to mix shader
-    tl.new(n_gt.outputs[0], n_shaders.inputs[0])
+    tl.new(n_mod.outputs[0], n_sub.inputs[1])
+    tl.new(n_sub.outputs[0], n_shaders.inputs[0])
     tl.new(n_holdout.outputs[0], n_shaders.inputs[1])
     tl.new(n_emission.outputs[0], n_shaders.inputs[2])
     # Link mix shader to output
@@ -209,7 +220,7 @@ def setup_scene_composite(field_line_val, l_image_seg, l_field_seg):
     n_col_key.inputs[1].default_value = (0., 0., 0., 1.)
     # Mix node
     n_mix = node_list.new('CompositorNodeMixRGB')
-    n_mix.inputs[2].default_value = (field_line_val, field_line_val, field_line_val, 1.)
+    n_mix.inputs[2].default_value = scene_cfg.classes['field']['field_lines_colour']
     # Alpha over
     n_alpha = node_list.new('CompositorNodeAlphaOver')
     # Composite
@@ -237,14 +248,14 @@ def setup_segmentation_render_layers(num_objects):
     l_image_seg.use_sky = False
     l_image_seg.use_strand = blend_cfg.render['layers']['use_hair']
     l_image_seg.samples = 1
-    image_seg_mat = setup_image_seg_mat(num_objects + 1)
+    image_seg_mat = setup_image_seg_mat(num_objects)
     l_image_seg.material_override = image_seg_mat
 
     l_field_seg = render_layers.new('Field_Seg')
     l_field_seg.use_sky = False
     l_field_seg.use_strand = blend_cfg.render['layers']['use_hair']
     l_field_seg.samples = 1
-    field_seg_mat = setup_field_seg_mat(num_objects, num_objects + 1)
+    field_seg_mat = setup_field_seg_mat(num_objects - 1, num_objects)
     l_field_seg.material_override = field_seg_mat
 
     setup_scene_composite(num_objects / float(num_objects), l_image_seg, l_field_seg)
