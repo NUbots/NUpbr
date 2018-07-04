@@ -3,6 +3,7 @@
 import os
 import sys
 import random as rand
+import bpy
 
 # Add our current position to path to include package
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
@@ -36,6 +37,7 @@ def main():
     # Make sure we're only loading .hdr files
     scene_hdrs = [x for x in scene_hdrs if x[x.rfind('.'):] == '.hdr']
     hdr_path = os.path.join(scene_cfg.scene_hdr['path'], scene_hdrs[rand.randint(0, len(scene_hdrs) - 1)])
+    mask_path = hdr_path  # TODO
 
     # Ensure only .jpg or .png files are read
     # TODO: Move check to ball class where ball will be constructed depending on import type
@@ -51,7 +53,7 @@ def main():
     # Setup render settings
     env.setup_render()
     # Setup HRDI environment
-    env.setup_hdri_env(hdr_path)
+    world = env.setup_hdri_env(hdr_path)
 
     # Setup render layers (visual, segmentation and field lines)
     env.setup_segmentation_render_layers(len(scene_cfg.classes))
@@ -96,6 +98,31 @@ def main():
     ##############################################
     ##                  RENDER                  ##
     ##############################################
+
+    # Render for each camera
+    for cam in [{'obj': cam_l.obj, 'str': '_L'}, {'obj': cam_r.obj, 'str': '_R'}]:
+        bpy.context.scene.camera = cam['obj']
+        render_layers = bpy.context.scene.render.layers
+
+        # Turn off all render layers
+        for l in render_layers:
+            l.use = False
+
+        # Render raw image
+        render_layers['RenderLayer'].use = True
+        env.update_hdri_env(world, hdr_path)
+        bpy.data.scenes['Scene'].render.filepath = 'raw_path' + cam['str']
+        # bpy.ops.render.render(write_still=True)
+
+        # Turn off all render layers
+        for l in render_layers:
+            l.use = True
+
+        # Render mask image
+        render_layers['RenderLayer'].use = False
+        env.update_hdri_env(world, mask_path)
+        bpy.data.scenes['Scene'].render.filepath = 'seg_path' + cam['str']
+        # bpy.ops.render.render(write_still=True)
 
 if __name__ == '__main__':
     main()

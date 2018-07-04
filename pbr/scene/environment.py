@@ -77,11 +77,8 @@ def setup_hdri_env(img_path):
     # Load our HDRI image and store in environment texture shader
     n_env_tex = node_list.new('ShaderNodeTexEnvironment')
 
-    try:
-        img = bpy.data.images.load(img_path)
-    except:
-        raise NameError('Cannot load image {0}'.format(img_path))
-    n_env_tex.image = img
+    # Update the HDRI environment with the texture
+    update_hdri_env(world, img_path)
 
     # Link our nodes
     tl = world.node_tree.links
@@ -90,6 +87,17 @@ def setup_hdri_env(img_path):
     tl.new(n_env_tex.outputs[0], node_list['Background'].inputs[0])
     # Link background to output
     tl.new(node_list['Background'].outputs[0], node_list['World Output'].inputs[0])
+
+    return world
+
+def update_hdri_env(world, img_path):
+    n_env_tex = world.node_tree.nodes['Environment Texture']
+
+    try:
+        img = bpy.data.images.load(img_path)
+    except:
+        raise NameError('Cannot load image {0}'.format(img_path))
+    n_env_tex.image = img
 
 def setup_image_seg_mat(total_classes):
     seg_mat = bpy.data.materials.new('Image_Seg')
