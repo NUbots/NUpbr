@@ -66,6 +66,9 @@ camera = {
     },
     'focal_length': 10.5,
     'fov': pi,
+    'stereo': {
+        'cam_dist': 0.1
+    },
 }
 
 field_uv = {

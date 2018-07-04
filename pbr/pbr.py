@@ -24,6 +24,10 @@ def main():
     # Make UV map
     # generate_uv.main()
 
+    ##############################################
+    ##                  ASSETS                  ##
+    ##############################################
+
     # Populate list of hdr scenes
     scene_hdrs = os.listdir(scene_cfg.scene_hdr['path'])
     # Populate list of ball images and meshes
@@ -38,6 +42,10 @@ def main():
     uv_maps = [x for x in uv_maps if x[x.rfind('.'):] in scene_cfg.ball['uv_img_types']]
     ball_path = os.path.join(scene_cfg.ball['uv_path'], uv_maps[rand.randint(0, len(uv_maps) - 1)])
 
+    ##############################################
+    ##                ENVIRONMENT               ##
+    ##############################################
+
     # Clear default environment
     env.clear_env()
     # Setup render settings
@@ -48,17 +56,29 @@ def main():
     # Setup render layers (visual, segmentation and field lines)
     env.setup_segmentation_render_layers(len(scene_cfg.classes))
 
+    ##############################################
+    ##                  SCENE                   ##
+    ##############################################
+
     # Construct camera anchor
     a = CameraAnchor()
     a.move((0., 0., scene_cfg.ball['radius']))
 
-    # Construct camera (requires camera anchor object as parent)
-    c = Camera(a.obj)
-    c.rotate((45. * (pi / 180.), 0., 0.))
-    c.move((0., -(1. / sqrt(2)), 1. / sqrt(2)))
+    # Construct cameras (requires camera anchor object as parent)
+    cam_l = Camera('Camera_L')
+    cam_l.rotate((45. * (pi / 180.), 0., 0.))
+    cam_l.move((-scene_cfg.camera['stereo']['cam_dist'] / 2., -(1. / sqrt(2)), 1. / sqrt(2)))
+
+    cam_r = Camera('Camera_R')
+    cam_r.rotate((45. * (pi / 180.), 0., 0.))
+    cam_r.move((scene_cfg.camera['stereo']['cam_dist'] / 2., -(1. / sqrt(2)), 1. / sqrt(2)))
+
+    # Anchor cameras to anchor point
+    cam_l.anchor(a.obj)
+    cam_r.anchor(a.obj)
 
     # Construct our ball in class 1
-    b = Ball(scene_cfg.classes['ball']['index'])
+    b = Ball('Ball', scene_cfg.classes['ball']['index'], ball_path)
     b.move((0., 0., scene_cfg.ball['radius']))
 
     # Construct our goals both in class 2
@@ -72,6 +92,10 @@ def main():
 
     # Construct our grass field in class 3 (where field lines will be class 4)
     f = Field(scene_cfg.classes['field']['index'])
+
+    ##############################################
+    ##                  RENDER                  ##
+    ##############################################
 
 if __name__ == '__main__':
     main()
