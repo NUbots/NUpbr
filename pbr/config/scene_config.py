@@ -7,6 +7,26 @@ from os import path, pardir
 # Get project path
 proj_path = path.abspath(path.join(path.join(path.dirname(path.realpath(__file__)), pardir), pardir))
 
+classes = {
+    'unclassified': {
+        'index': 0,
+        'colour': (0., 0., 0., 1.)
+    },
+    'ball': {
+        'index': 1,
+        'colour': (1., 0., 0., 1.)
+    },
+    'field': {
+        'index': 2,
+        'colour': (0., 1., 0., 1.),
+        'field_lines_colour': (1., 1., 1., 1.)
+    },
+    'goal': {
+        'index': 3,
+        'colour': (1., 1., 0., 1.)
+    },
+}
+
 field = {
     'length': 9,
     'width': 6,
