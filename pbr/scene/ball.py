@@ -2,17 +2,17 @@
 
 import os
 import bpy
-import random as rand
 
 from config import scene_config as scene_cfg
 from config import blend_config as blend_cfg
 
 class Ball:
-    def __init__(self, class_index):
+    def __init__(self, name, class_index, path):
         self.mat = None
         self.obj = None
         self.pass_index = class_index
-        self.construct()
+        self.name = name
+        self.construct(path)
 
     # Move relative to field origin
     def move(self, loc):
@@ -31,7 +31,7 @@ class Ball:
         self.obj.rotation_euler = rot
 
     # Setup field object
-    def construct(self):
+    def construct(self, img_path):
         # Add plane for field
         ball_mesh = bpy.ops.mesh.primitive_uv_sphere_add(
             segments=blend_cfg.ball['initial_cond']['segments'],
@@ -40,13 +40,13 @@ class Ball:
         )
         # Add UV sphere for ball
         ball = bpy.data.objects['Sphere']
-        ball.name = 'Ball'
+        ball.name = self.name
         ball.scale = (scene_cfg.ball['radius'], scene_cfg.ball['radius'], scene_cfg.ball['radius'])
         ball.location = (0., 0., 0.)
         ball.pass_index = self.pass_index
 
         # Add material to ball material slots
-        self.mat = self.create_mat(blend_cfg.ball['material'])
+        self.mat = self.create_mat(blend_cfg.ball['material'], img_path)
         ball.data.materials.append(self.mat)
 
         # Create subdiv surface modifiers
@@ -59,7 +59,7 @@ class Ball:
         self.obj = ball
 
     # Create material for the field
-    def create_mat(self, m_cfg):
+    def create_mat(self, m_cfg, img_path):
         b_mat = bpy.data.materials.new('Ball_Mat')
 
         # Enable use of material nodes
@@ -76,11 +76,7 @@ class Ball:
 
         # Create texture image of field UV map
         n_uv_map = node_list.new('ShaderNodeTexImage')
-        uv_maps = os.listdir(scene_cfg.ball['uv_path'])
-        # Ensure only .jpg or .png files are read
-        uv_maps = [x for x in uv_maps if x[x.rfind('.'):] in scene_cfg.ball['uv_img_types']]
 
-        img_path = os.path.join(scene_cfg.ball['uv_path'], uv_maps[rand.randint(0, len(uv_maps) - 1)])
         try:
             img = bpy.data.images.load(img_path)
         except:
