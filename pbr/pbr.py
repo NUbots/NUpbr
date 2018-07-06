@@ -92,7 +92,7 @@ def main():
     )
     g[1].rotate((0., 0., pi))
 
-    # Construct our grass field in class 3 (where field lines will be class 4)
+    # Construct our grass field in class 3
     f = Field(scene_cfg.classes['field']['index'])
 
     ##############################################
@@ -114,7 +114,7 @@ def main():
         bpy.data.scenes['Scene'].render.filepath = 'raw_path' + cam['str']
         # bpy.ops.render.render(write_still=True)
 
-        # Turn off all render layers
+        # Turn on all render layers
         for l in render_layers:
             l.use = True
 
