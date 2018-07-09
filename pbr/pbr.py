@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 from math import pi, sqrt
 
 from config import scene_config as scene_cfg
+from config import output_config as out_cfg
 
 from scene import environment as env
 from scene.ball import Ball
@@ -21,12 +22,14 @@ from scene.camera_anchor import CameraAnchor
 
 # from field_uv import generate_uv
 
+DEG_TO_RAD = pi / 180.
+
 def main():
     # Make UV map
     # generate_uv.main()
 
     ##############################################
-    ##                  ASSETS                  ##
+    ##              ASSET LOADING               ##
     ##############################################
 
     # Populate list of hdr scenes
@@ -45,7 +48,7 @@ def main():
     ball_path = os.path.join(scene_cfg.ball['uv_path'], uv_maps[rand.randint(0, len(uv_maps) - 1)])
 
     ##############################################
-    ##                ENVIRONMENT               ##
+    ##             ENVIRONMENT SETUP            ##
     ##############################################
 
     # Clear default environment
@@ -56,34 +59,34 @@ def main():
     world = env.setup_hdri_env(hdr_path)
 
     # Setup render layers (visual, segmentation and field lines)
-    env.setup_segmentation_render_layers(len(scene_cfg.classes))
+    render_layer_toggle = env.setup_segmentation_render_layers(len(scene_cfg.classes))
 
     ##############################################
-    ##                  SCENE                   ##
+    ##            SCENE CONSTRUCTION            ##
     ##############################################
 
     # Construct camera anchor
     a = CameraAnchor()
     a.move((0., 0., scene_cfg.ball['radius']))
 
-    # Construct cameras (requires camera anchor object as parent)
+    # Construct cameras
     cam_l = Camera('Camera_L')
-    cam_l.rotate((45. * (pi / 180.), 0., 0.))
+    cam_l.rotate((45. * DEG_TO_RAD, 0., 0.))
     cam_l.move((-scene_cfg.camera['stereo']['cam_dist'] / 2., -(1. / sqrt(2)), 1. / sqrt(2)))
 
     cam_r = Camera('Camera_R')
-    cam_r.rotate((45. * (pi / 180.), 0., 0.))
+    cam_r.rotate((45. * DEG_TO_RAD, 0., 0.))
     cam_r.move((scene_cfg.camera['stereo']['cam_dist'] / 2., -(1. / sqrt(2)), 1. / sqrt(2)))
 
-    # Anchor cameras to anchor point
+    # Anchor cameras to anchor point for rotation about point of focus
     cam_l.anchor(a.obj)
     cam_r.anchor(a.obj)
 
-    # Construct our ball in class 1
+    # Construct our UV sphere ball
     b = Ball('Ball', scene_cfg.classes['ball']['index'], ball_path)
     b.move((0., 0., scene_cfg.ball['radius']))
 
-    # Construct our goals both in class 2
+    # Construct our goals
     g = [Goal(scene_cfg.classes['goal']['index']), Goal(scene_cfg.classes['goal']['index'])]
     g[0].offset((scene_cfg.field['length'] / 2., 0., 0.))
 
@@ -92,37 +95,89 @@ def main():
     )
     g[1].rotate((0., 0., pi))
 
-    # Construct our grass field in class 3
+    # Construct our grass field
     f = Field(scene_cfg.classes['field']['index'])
 
+    # Initialise frame number
+    frame_num = 0
+
     ##############################################
-    ##                  RENDER                  ##
+    ##               SCENE UPDATE               ##
     ##############################################
 
-    # Render for each camera
-    for cam in [{'obj': cam_l.obj, 'str': '_L'}, {'obj': cam_r.obj, 'str': '_R'}]:
-        bpy.context.scene.camera = cam['obj']
-        render_layers = bpy.context.scene.render.layers
+    cam_limits = scene_cfg.camera['limits']
+    ball_limits = scene_cfg.ball['limits']
 
-        # Turn off all render layers
-        for l in render_layers:
-            l.use = False
+    for frame_num in range(0, out_cfg.num_images):
+        # Move ball
+        b.move((
+            rand.uniform(ball_limits['position']['x'][0], ball_limits['position']['x'][1]),
+            rand.uniform(ball_limits['position']['y'][0], ball_limits['position']['y'][1]),
+            rand.uniform(ball_limits['position']['z'][0], ball_limits['position']['z'][1]),
+        ))
+        # Rotate ball
+        a.rotate((
+            rand.uniform(ball_limits['rotation']['pitch'][0], ball_limits['rotation']['pitch'][1]) * DEG_TO_RAD,
+            rand.uniform(ball_limits['rotation']['yaw'][0], ball_limits['rotation']['yaw'][1]) * DEG_TO_RAD,
+            rand.uniform(ball_limits['rotation']['roll'][0], ball_limits['rotation']['roll'][1]) * DEG_TO_RAD,
+        ))
+        # Move camera anchor to within ball position with offset
+        a.move((
+            b.obj.location[0] + rand.uniform(cam_limits['offset']['x'][0], cam_limits['offset']['x'][1]),
+            b.obj.location[1] + rand.uniform(cam_limits['offset']['y'][0], cam_limits['offset']['y'][1]),
+            b.obj.location[2] + rand.uniform(cam_limits['offset']['z'][0], cam_limits['offset']['z'][1]),
+        ))
+        # Rotate camera anchor
+        a.rotate((
+            rand.uniform(cam_limits['rotation']['pitch'][0], cam_limits['rotation']['pitch'][1]) * DEG_TO_RAD,
+            rand.uniform(cam_limits['rotation']['yaw'][0], cam_limits['rotation']['yaw'][1]) * DEG_TO_RAD,
+            rand.uniform(cam_limits['rotation']['roll'][0], cam_limits['rotation']['roll'][1]) * DEG_TO_RAD,
+        ))
+        print('Frame {0}'.format(frame_num))
+        print('\tBall position: {0}'.format(b.obj.location))
+        print('\tBall rotation: {0}'.format(b.obj.rotation_euler))
+        print('\tAnchor position: {0}'.format(a.obj.location))
+        print('\tAnchor rotation: {0}'.format(a.obj.rotation_euler))
 
-        # Render raw image
-        render_layers['RenderLayer'].use = True
-        env.update_hdri_env(world, hdr_path)
-        bpy.data.scenes['Scene'].render.filepath = 'raw_path' + cam['str']
-        # bpy.ops.render.render(write_still=True)
+        ##############################################
+        ##                RENDERING                 ##
+        ##############################################
 
-        # Turn on all render layers
-        for l in render_layers:
-            l.use = True
+        filename = '{0:010}'.format(frame_num)
 
-        # Render mask image
-        render_layers['RenderLayer'].use = False
-        env.update_hdri_env(world, mask_path)
-        bpy.data.scenes['Scene'].render.filepath = 'seg_path' + cam['str']
-        # bpy.ops.render.render(write_still=True)
+        # Establish camera list for either stereo or mono output
+        cam_list = None
+        if not out_cfg.output_stereo:
+            cam_list = [{'obj': cam_l.obj, 'str': ''}]
+        else:
+            cam_list = [{'obj': cam_l.obj, 'str': '_L'}, {'obj': cam_r.obj, 'str': '_R'}]
+
+        # Render for each camera
+        for cam in cam_list:
+            bpy.context.scene.camera = cam['obj']
+            render_layers = bpy.context.scene.render.layers
+
+            # Turn off all render layers
+            for l in render_layers:
+                l.use = False
+
+            # Render raw image
+            render_layers['RenderLayer'].use = True
+            render_layer_toggle.check = False
+            env.update_hdri_env(world, hdr_path)
+            bpy.data.scenes['Scene'].render.filepath = os.path.join(out_cfg.image_dir, filename + cam['str'])
+            bpy.ops.render.render(write_still=True)
+
+            # Turn on all render layers
+            for l in render_layers:
+                l.use = True
+
+            # Render mask image
+            render_layers['RenderLayer'].use = False
+            render_layer_toggle.check = True
+            env.update_hdri_env(world, mask_path)
+            bpy.data.scenes['Scene'].render.filepath = os.path.join(out_cfg.mask_dir, filename + cam['str'])
+            bpy.ops.render.render(write_still=True)
 
 if __name__ == '__main__':
     main()

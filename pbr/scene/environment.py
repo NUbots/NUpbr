@@ -54,8 +54,7 @@ def setup_render():
     scene.cycles.caustics_reflective = rend_cfg['light_paths']['reflective_caustics']
     scene.cycles.caustics_refractive = rend_cfg['light_paths']['refractive_caustics']
 
-    # Object indexing for segmentation
-    scene.render.layers['RenderLayer'].use_pass_object_index = True
+    # Enable nodes for scene render layers
     scene.use_nodes = True
 
     # Set performance Settings
@@ -204,7 +203,7 @@ def setup_field_seg_mat(index, total_classes):
 
     return seg_mat
 
-def setup_scene_composite(field_line_val, l_image_seg, l_field_seg):
+def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     # Enable compositing nodes
     bpy.context.scene.use_nodes = True
     # Get our node list
@@ -215,11 +214,17 @@ def setup_scene_composite(field_line_val, l_image_seg, l_field_seg):
         node_list.remove(node)
 
     # Render layer for image segment
+    n_image_rl = node_list.new('CompositorNodeRLayers')
+    n_image_rl.layer = l_image_raw.name
+
+    # Render layer for image segment
     n_img_seg_rl = node_list.new('CompositorNodeRLayers')
     n_img_seg_rl.layer = l_image_seg.name
+
     # Render layer for field segment
     n_field_seg_rl = node_list.new('CompositorNodeRLayers')
     n_field_seg_rl.layer = l_field_seg.name
+
     # Color key node
     n_col_key = node_list.new('CompositorNodeColorMatte')
     n_col_key.color_hue = 0.0001
@@ -231,11 +236,15 @@ def setup_scene_composite(field_line_val, l_image_seg, l_field_seg):
     n_mix.inputs[2].default_value = scene_cfg.classes['field']['field_lines_colour']
     # Alpha over
     n_alpha = node_list.new('CompositorNodeAlphaOver')
+    # Switch (to switch between raw image and segmentation)
+    n_switch = node_list.new('CompositorNodeSwitch')
     # Composite
     n_comp = node_list.new('CompositorNodeComposite')
 
     # Link shaders
     tl = bpy.context.scene.node_tree.links
+    # Link raw image render layer to switch
+    tl.new(n_image_rl.outputs[0], n_switch.inputs[0])
     # Link image segment render layer
     tl.new(n_img_seg_rl.outputs[0], n_alpha.inputs[1])
     # Link field segment render layer
@@ -245,13 +254,23 @@ def setup_scene_composite(field_line_val, l_image_seg, l_field_seg):
     tl.new(n_col_key.outputs[1], n_mix.inputs[0])
     # Link mix to alpha
     tl.new(n_mix.outputs[0], n_alpha.inputs[2])
-    # Link alpha to composite
-    tl.new(n_alpha.outputs[0], n_comp.inputs[0])
+    # Link alpha to switch
+    tl.new(n_alpha.outputs[0], n_switch.inputs[1])
+    # Link switch to composite output
+    tl.new(n_switch.outputs[0], n_comp.inputs[0])
+
+    # Return switch node to toggle composite output
+    return n_switch
 
 def setup_segmentation_render_layers(num_objects):
     scene = bpy.context.scene
     render_layers = scene.render.layers
 
+    # Setup raw image render layer
+    render_layers['RenderLayer'].use_pass_object_index = True
+    render_layers['RenderLayer'].use_pass_combined = False
+
+    # Setup image segmentation (without field lines) render layer
     l_image_seg = render_layers.new('Image_Seg')
     l_image_seg.use_sky = False
     l_image_seg.use_strand = blend_cfg.render['layers']['use_hair']
@@ -259,6 +278,7 @@ def setup_segmentation_render_layers(num_objects):
     image_seg_mat = setup_image_seg_mat(num_objects)
     l_image_seg.material_override = image_seg_mat
 
+    # Setup field line segmentation render layer
     l_field_seg = render_layers.new('Field_Seg')
     l_field_seg.use_sky = False
     l_field_seg.use_strand = blend_cfg.render['layers']['use_hair']
@@ -266,6 +286,5 @@ def setup_segmentation_render_layers(num_objects):
     field_seg_mat = setup_field_seg_mat(num_objects - 1, num_objects)
     l_field_seg.material_override = field_seg_mat
 
-    setup_scene_composite(num_objects / float(num_objects), l_image_seg, l_field_seg)
-
-    return image_seg_mat, field_seg_mat
+    # Setup scene render layer composite and return switch to control raw image or mask
+    return setup_scene_composite(render_layers['RenderLayer'], l_image_seg, l_field_seg)

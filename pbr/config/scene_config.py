@@ -50,13 +50,27 @@ goal = {
     'net_height': 1.2,
 }
 
+ball_radius = 0.5969 / (2 * pi)
+
 ball = {
-    'radius': 0.5969 / (2 * pi),
+    'radius': ball_radius,
     'uv_img_types': [
         '.jpg',
         '.png',
     ],
     'uv_path': path.abspath(path.join(path.join(proj_path, 'resources'), 'ball_uv')),
+    'limits': {
+        'position': {
+            'x': [-field['length'] / 2., field['length'] / 2.],
+            'y': [-field['width'] / 2., field['width'] / 2.],
+            'z': [ball_radius, ball_radius],
+        },
+        'rotation': {
+            'pitch': [-180., 180.],
+            'roll': [-180., 180.],
+            'yaw': [-180., 180.],
+        },
+    }
 }
 
 camera = {
@@ -68,6 +82,20 @@ camera = {
     'fov': pi,
     'stereo': {
         'cam_dist': 0.1
+    },
+    'limits': {
+        # Offset limits (metres)
+        'offset': {
+            'x': [0., 0.],
+            'y': [0., 0.],
+            'z': [0., 0.],
+        },
+        # Rotation limits (degrees)
+        'rotation': {
+            'pitch': [-10., 10.],
+            'roll': [-180., 180.],
+            'yaw': [-45., 45.],
+        },
     },
 }
 
