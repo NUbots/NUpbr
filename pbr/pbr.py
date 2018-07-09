@@ -116,7 +116,7 @@ def main():
             rand.uniform(ball_limits['position']['z'][0], ball_limits['position']['z'][1]),
         ))
         # Rotate ball
-        a.rotate((
+        b.rotate((
             rand.uniform(ball_limits['rotation']['pitch'][0], ball_limits['rotation']['pitch'][1]) * DEG_TO_RAD,
             rand.uniform(ball_limits['rotation']['yaw'][0], ball_limits['rotation']['yaw'][1]) * DEG_TO_RAD,
             rand.uniform(ball_limits['rotation']['roll'][0], ball_limits['rotation']['roll'][1]) * DEG_TO_RAD,
