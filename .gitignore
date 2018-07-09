@@ -5,3 +5,8 @@ __pycache__
 
 # uv maps
 */images/** 
+
+# image types
+*.jpg
+*.png
+*.hdr
