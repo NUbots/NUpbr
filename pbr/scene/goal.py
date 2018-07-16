@@ -8,29 +8,16 @@ from math import pi
 from config import scene_config as scene_cfg
 from config import blend_config as blend_cfg
 
-class Goal:
+from scene.blender_object import BlenderObject
+
+
+class Goal(BlenderObject):
     def __init__(self, class_index):
         self.loc = (0., 0., 0.)
         self.mat = None
         self.obj = None
         self.pass_index = class_index
         self.construct()
-
-    # Move relative to field origin
-    def move(self, loc):
-        self.obj.location = loc
-
-    # Move relative to current position
-    def offset(self, loc):
-        self.obj.location = (
-            self.obj.location[0] + loc[0],
-            self.obj.location[1] + loc[1],
-            self.obj.location[2] + loc[2],
-        )
-
-    def rotate(self, rot):
-        self.rot = rot
-        self.obj.rotation_euler = rot
 
     # Setup field object
     def construct(self):
@@ -102,7 +89,9 @@ class Goal:
         context['active_object'] = objs[0]
         context['selected_objects'] = objs
         # Select all of our available editable bases
-        context['selected_editable_bases'] = [bpy.context.scene.object_bases[obj.name] for obj in objs]
+        context['selected_editable_bases'] = [
+            bpy.context.scene.object_bases[obj.name] for obj in objs
+        ]
         # Join objects
         bpy.ops.object.join(context)
         bpy.data.objects[objs[0].name].select = True
@@ -139,9 +128,12 @@ class Goal:
         # Construct node tree
         # Create principled node
         n_principled = node_list.new('ShaderNodeBsdfPrincipled')
-        n_principled.inputs[0].default_value = blend_cfg.goal['material']['colour']
-        n_principled.inputs[4].default_value = blend_cfg.goal['material']['metallic']
-        n_principled.inputs[7].default_value = blend_cfg.goal['material']['roughness']
+        n_principled.inputs[0].default_value = blend_cfg.goal['material'][
+            'colour']
+        n_principled.inputs[4].default_value = blend_cfg.goal['material'][
+            'metallic']
+        n_principled.inputs[7].default_value = blend_cfg.goal['material'][
+            'roughness']
 
         # Create output node
         n_output = node_list.new('ShaderNodeOutputMaterial')
@@ -168,7 +160,8 @@ class Goal:
         curve.name = 'Goal_Corner_Curve'
         curve.data.fill_mode = blend_cfg.goal['corner_curve']['fill']
         curve.data.bevel_depth = corner_radius
-        curve.data.bevel_resolution = int(blend_cfg.goal['initial_cond']['vertices'] / 2.)
+        curve.data.bevel_resolution = int(
+            blend_cfg.goal['initial_cond']['vertices'] / 2.)
 
         [p0, p1] = [
             curve.data.splines.active.bezier_points[0],
@@ -182,7 +175,8 @@ class Goal:
         # Set second point
         p1.co = (0., corner_radius, scene_cfg.goal['height'] + corner_radius)
         p1.handle_left = (0., 0., scene_cfg.goal['height'] + corner_radius)
-        p1.handle_right = (0., scene_cfg.goal['post_width'], scene_cfg.goal['height'] + corner_radius)
+        p1.handle_right = (0., scene_cfg.goal['post_width'],
+                           scene_cfg.goal['height'] + corner_radius)
 
         # Move origin to centre of geometry
         # bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
@@ -190,7 +184,11 @@ class Goal:
         return curve
 
     # Create goal post
-    def create_post(self, name, loc=(0., 0., 0.), rot=(0., 0., 0.), extrude=(0., 0., 0.)):
+    def create_post(self,
+                    name,
+                    loc=(0., 0., 0.),
+                    rot=(0., 0., 0.),
+                    extrude=(0., 0., 0.)):
         # Define corner radius to avoid extra multiplications
         corner_radius = scene_cfg.goal['post_width'] / 2.
 
@@ -240,7 +238,8 @@ class Goal:
         lt_curve = self.copy_obj(
             curve,
             name='LB_Curve',
-            loc=(scene_cfg.goal['depth'], corner_radius / 4., scene_cfg.goal['net_height']),
+            loc=(scene_cfg.goal['depth'], corner_radius / 4.,
+                 scene_cfg.goal['net_height']),
             rot=(0., pi / 2., 0.),
         )
         lt_post = self.create_post(
@@ -254,7 +253,8 @@ class Goal:
         rb_curve = self.copy_obj(
             curve,
             name='RB_Curve',
-            loc=(scene_cfg.goal['depth'], scene_cfg.goal['width'] - corner_radius / 4., corner_radius),
+            loc=(scene_cfg.goal['depth'],
+                 scene_cfg.goal['width'] - corner_radius / 4., corner_radius),
             rot=(0., pi / 2., pi / 2.),
         )
         rb_post = self.create_post(
@@ -267,7 +267,9 @@ class Goal:
         rt_curve = self.copy_obj(
             curve,
             name='RT_Curve',
-            loc=(scene_cfg.goal['depth'], scene_cfg.goal['width'] - corner_radius / 4., scene_cfg.goal['net_height']),
+            loc=(scene_cfg.goal['depth'],
+                 scene_cfg.goal['width'] - corner_radius / 4.,
+                 scene_cfg.goal['net_height']),
             rot=(0., pi / 2., pi / 2.),
         )
         rt_post = self.create_post(
@@ -280,13 +282,15 @@ class Goal:
         # Back bottom
         bb_post = self.create_post(
             name='BB_Post',
-            loc=(scene_cfg.goal['depth'] + corner_radius / 4., corner_radius / 2., scene_cfg.goal['net_height']),
+            loc=(scene_cfg.goal['depth'] + corner_radius / 4.,
+                 corner_radius / 2., scene_cfg.goal['net_height']),
             rot=(pi / 2., 0., 0.),
             extrude=(0., scene_cfg.goal['width'] - corner_radius, 0.),
         )
         bt_post = self.create_post(
             name='BT_Post',
-            loc=(scene_cfg.goal['depth'] + corner_radius / 4., corner_radius / 2., corner_radius),
+            loc=(scene_cfg.goal['depth'] + corner_radius / 4.,
+                 corner_radius / 2., corner_radius),
             rot=(pi / 2., 0., 0.),
             extrude=(0., scene_cfg.goal['width'] - corner_radius, 0.),
         )
@@ -299,7 +303,8 @@ class Goal:
         )
         rv_post = self.create_post(
             name='BB_Post',
-            loc=(scene_cfg.goal['depth'], scene_cfg.goal['width'] - corner_radius / 4., corner_radius),
+            loc=(scene_cfg.goal['depth'],
+                 scene_cfg.goal['width'] - corner_radius / 4., corner_radius),
             extrude=(0., 0., scene_cfg.goal['net_height'] - corner_radius),
         )
 

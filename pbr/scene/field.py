@@ -6,29 +6,16 @@ import bpy
 from config import scene_config as scene_cfg
 from config import blend_config as blend_cfg
 
-class Field:
+from scene.blender_object import BlenderObject
+
+
+class Field(BlenderObject):
     def __init__(self, class_index):
         self.loc = (0., 0., 0.)
         self.mat = None
         self.obj = None
         self.pass_index = class_index
         self.construct()
-
-    # Move relative to field origin
-    def move(self, loc):
-        self.obj.location = loc
-
-    # Move relative to current position
-    def offset(self, loc):
-        self.obj.location = (
-            self.obj.location[0] + loc[0],
-            self.obj.location[1] + loc[1],
-            self.obj.location[2] + loc[2],
-        )
-
-    def rotate(self, rot):
-        self.rot = rot
-        self.obj.rotation_euler = rot
 
     # Setup field object
     def construct(self):
@@ -46,7 +33,8 @@ class Field:
             0.,
         )
 
-        lower_plane.data.materials.append(self.create_lower_plane_mat(blend_cfg.field['lower_plane']))
+        lower_plane.data.materials.append(
+            self.create_lower_plane_mat(blend_cfg.field['lower_plane']))
 
         # Apply UV mapping to grass
         bpy.ops.uv.smart_project()
@@ -66,7 +54,8 @@ class Field:
         )
 
         # Add material to field material slots
-        field.data.materials.append(self.create_field_mat(field, blend_cfg.field['material']))
+        field.data.materials.append(
+            self.create_field_mat(field, blend_cfg.field['material']))
 
         # Define the particle system for grass
         bpy.ops.object.particle_system_add()
@@ -82,12 +71,16 @@ class Field:
 
         # Generate our noise texture and link it to the grass
         noise_tex_slot = p_settings.texture_slots.add()
-        noise_tex_slot.texture = self.generate_field_noise(blend_cfg.field['noise'])
+        noise_tex_slot.texture = self.generate_field_noise(
+            blend_cfg.field['noise'])
 
         # Adjust impact of texture on grass now that the two are linked
-        noise_tex_slot.texture_coords = blend_cfg.field['noise']['mapping_coords']
-        noise_tex_slot.use_map_length = blend_cfg.field['noise']['influence']['use_hair_length']
-        noise_tex_slot.length_factor = blend_cfg.field['noise']['influence']['hair_length_factor']
+        noise_tex_slot.texture_coords = blend_cfg.field['noise'][
+            'mapping_coords']
+        noise_tex_slot.use_map_length = blend_cfg.field['noise']['influence'][
+            'use_hair_length']
+        noise_tex_slot.length_factor = blend_cfg.field['noise']['influence'][
+            'hair_length_factor']
 
         # Apply UV mapping to grass
         bpy.ops.uv.smart_project()
@@ -150,13 +143,17 @@ class Field:
         n_grad_tex = node_list.new('ShaderNodeTexGradient')
         # Create RGB mixer to produce lower grass colours (earth/green)
         n_mix_lower_grass = node_list.new('ShaderNodeMixRGB')
-        n_mix_lower_grass.inputs[1].default_value = m_cfg['mix_lower_grass']['inp1']
-        n_mix_lower_grass.inputs[2].default_value = m_cfg['mix_lower_grass']['inp2']
+        n_mix_lower_grass.inputs[1].default_value = m_cfg['mix_lower_grass'][
+            'inp1']
+        n_mix_lower_grass.inputs[2].default_value = m_cfg['mix_lower_grass'][
+            'inp2']
 
         # Create RGB mixer to produce upper grass colours (light green/yellow)
         n_mix_upper_grass = node_list.new('ShaderNodeMixRGB')
-        n_mix_upper_grass.inputs[1].default_value = m_cfg['mix_upper_grass']['inp1']
-        n_mix_upper_grass.inputs[2].default_value = m_cfg['mix_upper_grass']['inp2']
+        n_mix_upper_grass.inputs[1].default_value = m_cfg['mix_upper_grass'][
+            'inp1']
+        n_mix_upper_grass.inputs[2].default_value = m_cfg['mix_upper_grass'][
+            'inp2']
 
         # Create noise texture to give random variance to top colour
         n_noise_tex = node_list.new('ShaderNodeTexNoise')
@@ -177,11 +174,14 @@ class Field:
 
         # Mix RGB colour of upper grass with generated noise
         n_mix_up_grass_hsv = node_list.new('ShaderNodeMixRGB')
-        n_mix_up_grass_hsv.inputs[0].default_value = m_cfg['mix_up_grass_hsv']['inp0']
+        n_mix_up_grass_hsv.inputs[0].default_value = m_cfg['mix_up_grass_hsv'][
+            'inp0']
 
         # Create texture image of field UV map
         n_field_lines = node_list.new('ShaderNodeTexImage')
-        img_path = os.path.join(scene_cfg.field_uv['uv_path'], scene_cfg.field_uv['name'] + scene_cfg.field_uv['type'])
+        img_path = os.path.join(
+            scene_cfg.field_uv['uv_path'],
+            scene_cfg.field_uv['name'] + scene_cfg.field_uv['type'])
         try:
             img = bpy.data.images.load(img_path)
         except:
@@ -189,7 +189,8 @@ class Field:
         n_field_lines.image = img
 
         n_mix_low_grass_field_lines = node_list.new('ShaderNodeMixRGB')
-        n_mix_low_grass_field_lines.inputs[0].default_value = m_cfg['mix_low_grass_field_lines']['inp0']
+        n_mix_low_grass_field_lines.inputs[0].default_value = m_cfg[
+            'mix_low_grass_field_lines']['inp0']
 
         n_mix_grass = node_list.new('ShaderNodeMixRGB')
         n_mix_grass.inputs[0].default_value = m_cfg['mix_grass']['inp0']
@@ -207,7 +208,8 @@ class Field:
         tl.new(n_tex_coord.outputs['Object'], n_mapping.inputs[0])
 
         # Link image texture (field lines uv map)
-        tl.new(n_field_lines.outputs['Color'], n_mix_low_grass_field_lines.inputs['Color1'])
+        tl.new(n_field_lines.outputs['Color'],
+               n_mix_low_grass_field_lines.inputs['Color1'])
 
         # Link Mapping
         tl.new(n_mapping.outputs[0], n_grad_tex.inputs[0])
@@ -220,7 +222,8 @@ class Field:
         tl.new(n_noise_tex.outputs[0], n_hsv.inputs[4])
 
         # Link lower grass mix
-        tl.new(n_mix_lower_grass.outputs[0], n_mix_low_grass_field_lines.inputs['Color2'])
+        tl.new(n_mix_lower_grass.outputs[0],
+               n_mix_low_grass_field_lines.inputs['Color2'])
 
         # Link upper grass mix
         tl.new(n_mix_upper_grass.outputs[0], n_mix_up_grass_hsv.inputs[1])
@@ -278,7 +281,8 @@ class Field:
         # Set children settings
         p_settings.child_type = p_cfg['children']['child_type']
         p_settings.child_nbr = p_cfg['children']['child_num']
-        p_settings.rendered_child_count = p_cfg['children']['rendered_children']
+        p_settings.rendered_child_count = p_cfg['children'][
+            'rendered_children']
         p_settings.child_length = p_cfg['children']['length']
 
         # Set cycles hair settings

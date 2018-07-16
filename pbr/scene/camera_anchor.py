@@ -2,27 +2,14 @@
 
 import bpy
 
-class CameraAnchor:
+from scene.blender_object import BlenderObject
+
+
+class CameraAnchor(BlenderObject):
     def __init__(self):
         self.loc = (0., 0., 0.)
         self.obj = None
         self.construct()
-
-    # Move relative to field origin
-    def move(self, loc):
-        self.obj.location = loc
-
-    # Move relative to current position
-    def offset(self, loc):
-        self.obj.location = (
-            self.obj.location[0] + loc[0],
-            self.obj.location[1] + loc[1],
-            self.obj.location[2] + loc[2],
-        )
-
-    def rotate(self, rot):
-        self.rot = rot
-        self.obj.rotation_euler = rot
 
     def construct(self):
         # Add camera anchor
