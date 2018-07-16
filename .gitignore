@@ -3,8 +3,8 @@
 *.hdr
 __pycache__
 
-# uv maps
-*/images/** 
+# resources
+*resources/** 
 
 # image types
 *.jpg
