@@ -8,7 +8,7 @@ render = {
         'cycles_device': 'GPU',
     },
     'dimensions': {
-        'resolution': [1280, 720],
+        'resolution': [1280, 1024],
         'percentage': 100.0,
     },
     'sampling': {
@@ -91,14 +91,14 @@ field = {
         'type': 'HAIR',
         'emission': {
             'count': 5000,
-            'hair_length': 0.15,
+            'hair_length': 0.09,
             'emit_from': 'FACE',
-            'emit_random': False,
+            'emit_random': True,
             'even_dist': False,
         },
         'physics': {
             'type': 'NEWTON',
-            'brownian_factor': 0.03,
+            'brownian_factor': 0.01,
             'timestep': 0.025,
             'subframes': 1
         },
@@ -109,14 +109,14 @@ field = {
         'children': {
             'child_type': 'INTERPOLATED',
             'child_num': 10,
-            'rendered_children': 75,
+            'rendered_children': 90,
             'length': 0.5,
         },
         'cycles_hair': {
-            'shape': 0.12,
+            'shape': -0.12,
             'root': 0.03,
             'tip': 0.0,
-            'scaling': 0.05,
+            'scaling': 0.08,
             'close_tip': True,
         }
     },
@@ -133,7 +133,7 @@ field = {
         'mapping_coords': 'ORCO',
         'influence': {
             'use_hair_length': True,
-            'hair_length_factor': 0.8,
+            'hair_length_factor': 3.5,
         }
     },
 }
