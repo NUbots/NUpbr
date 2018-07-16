@@ -5,7 +5,9 @@ from math import pi
 from os import path, pardir
 
 # Get project path
-proj_path = path.abspath(path.join(path.join(path.dirname(path.realpath(__file__)), pardir), pardir))
+proj_path = path.abspath(
+    path.join(
+        path.join(path.dirname(path.realpath(__file__)), pardir), pardir))
 
 classes = {
     'unclassified': {
@@ -53,12 +55,14 @@ goal = {
 ball_radius = 0.5969 / (2 * pi)
 
 ball = {
-    'radius': ball_radius,
+    'radius':
+    ball_radius,
     'uv_img_types': [
         '.jpg',
         '.png',
     ],
-    'uv_path': path.abspath(path.join(path.join(proj_path, 'resources'), 'ball_uv')),
+    'ball_dir':
+    path.abspath(path.join(path.join(proj_path, 'resources'), 'balls')),
     'limits': {
         'position': {
             'x': [-field['length'] / 2., field['length'] / 2.],
@@ -80,34 +84,39 @@ camera = {
     },
     'focal_length': 10.5,
     'fov': pi,
-    'stereo': {
-        'cam_dist': 0.1
-    },
+    'stereo_cam_dist': 0.1,
     'limits': {
-        # Offset limits (metres)
-        'offset': {
-            'x': [0., 0.],
-            'y': [0., 0.],
-            'z': [0., 0.],
+        # Defines possible random placement range of x, y and z positional components
+        'position': {
+            'x': [-field['length'] / 2., field['length'] / 2.],
+            'y': [-field['width'] / 2., field['width'] / 2.],
+            'z': [0.8, 1.0],
         },
         # Rotation limits (degrees)
         'rotation': {
-            'pitch': [-10., 10.],
-            'roll': [-180., 180.],
-            'yaw': [-45., 45.],
+            'pitch': [30., 70.],
+            'roll': [0., 360.],
+            'yaw': [0., 10.],
         },
     },
 }
 
 field_uv = {
-    'type': '.png',
-    'mode': 'RGBA',
-    'pixels_per_metre': 100,
-    'uv_path': path.abspath(path.join(path.join(proj_path, 'resources'), 'field_uv')),
-    'name': 'default',
-    'orientation': 'portrait',
+    'type':
+    '.png',
+    'mode':
+    'RGBA',
+    'pixels_per_metre':
+    100,
+    'uv_path':
+    path.abspath(path.join(path.join(proj_path, 'resources'), 'field_uv')),
+    'name':
+    'default',
+    'orientation':
+    'portrait',
 }
 
 scene_hdr = {
-    'path': path.abspath(path.join(path.join(proj_path, 'resources'), 'scene_hdr')),
+    'path':
+    path.abspath(path.join(path.join(proj_path, 'resources'), 'scene_hdr')),
 }
