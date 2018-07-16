@@ -12,9 +12,11 @@ output_stereo = False
 
 # Absolute output directory to hold the directories for output images and segmentation masks
 output_dir = os.path.join(
-    os.path.abspath(os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir), os.pardir)),
-    'outputs'
-)
+    os.path.abspath(
+        os.path.join(
+            os.path.join(
+                os.path.dirname(os.path.realpath(__file__)), os.pardir),
+            os.pardir)), 'outputs')
 
 # Directory names for both the RGB image outputs and the pixel-level segmentation masks
 # (Outputs will be stored in <output_dir>/<image_dirname> and <output_dir>/<mask_dirname>)
