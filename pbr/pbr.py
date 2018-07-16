@@ -33,43 +33,23 @@ def populate_balls(path):
 
     # Create container for ball entries
     # Where each ball entry is a dictionary containing:
-    #   colour image path,
-    #   normal image path (optional),
-    #   mesh file (optional)
+    #   'colour_path': colour image path,
+    #   'norm_path': normal image path (optional),
+    #   'mesh_path': mesh file path (optional)
     balls = []
 
-    # Get sorted list of ball UV maps
-    uv_maps = sorted([
-        x for x in files
-        if not os.path.isdir(os.path.join(path, x)) and x.rfind('.') != -1
-        and x[x.rfind('.'):] in scene_cfg.ball['uv_img_types']
-    ])
-
-    type_count = 0
-    image_suffix = ''
-    for img_type in scene_cfg.ball['uv_img_types']:
-        image_suffix += img_type
-        if type_count + 1 < len(scene_cfg.ball['uv_img_types']):
-            image_suffix += '|'
-        type_count += 1
-
-    norm_files = []
-    mesh_files = []
-    colour_files = []
-
-    norm_regex = r'(.*)norm(a?l?)(.*)'
-    col_regex = r'(.*)col(u?)or(s?)(.*)'
-    mesh_regex = r'(.*)fbx'
-
+    # Initialise paths as None if current folder does not contain one
     colour_path = None
     normal_path = None
     mesh_path = None
 
+    # Search through each file in folder to try to find colour, normal and mesh files
     for file in files:
-        normal = re.search(norm_regex, file, re.I)
-        colour = re.search(col_regex, file, re.I)
-        mesh = re.search(mesh_regex, file, re.I)
+        normal = re.search(scene_cfg.NORM_REGEX, file, re.I)
+        colour = re.search(scene_cfg.COL_REGEX, file, re.I)
+        mesh = re.search(scene_cfg.MESH_REGEX, file, re.I)
 
+        # If we have a colour, normal or mesh match
         if colour is not None:
             colour_path = os.path.join(path, colour.group())
         if normal is not None:
@@ -77,6 +57,7 @@ def populate_balls(path):
         if mesh is not None:
             mesh_path = os.path.join(path, mesh.group())
 
+    # If we have a colour UV map
     if colour_path is not None:
         balls.append({
             'colour_path': colour_path,
@@ -84,8 +65,6 @@ def populate_balls(path):
             'mesh_path': mesh_path,
         })
 
-    # Ensure only .jpg or .png files are read
-    # TODO: Move check to ball class where ball will be constructed depending on import type
     ball_subdirs = sorted(
         [x for x in files if os.path.isdir(os.path.join(path, x))])
 

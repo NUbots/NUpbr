@@ -57,10 +57,8 @@ ball_radius = 0.5969 / (2 * pi)
 ball = {
     'radius':
     ball_radius,
-    'uv_img_types': [
-        '.jpg',
-        '.png',
-    ],
+    'img_types': ['.jpg', '.png'],
+    'mesh_types': ['.fbx', '.obj'],
     'ball_dir':
     path.abspath(path.join(path.join(proj_path, 'resources'), 'balls')),
     'limits': {
@@ -120,3 +118,28 @@ scene_hdr = {
     'path':
     path.abspath(path.join(path.join(proj_path, 'resources'), 'scene_hdr')),
 }
+
+##############################################
+##         CONFIGURATION PROCESSING         ##
+##############################################
+
+# Create regex string suffix for image extensions
+IMG_EXT = '('
+for i in range(0, len(ball['img_types'])):
+    IMG_EXT += '({0})'.format(ball['img_types'][i])
+    if i + 1 < len(ball['img_types']):
+        IMG_EXT += '|'
+IMG_EXT += ')'
+
+# Create regex string suffix for mesh extensions
+MESH_EXT = '('
+for i in range(0, len(ball['mesh_types'])):
+    MESH_EXT += '({0})'.format(ball['mesh_types'][i])
+    if i + 1 < len(ball['mesh_types']):
+        MESH_EXT += '|'
+MESH_EXT += ')'
+
+# Establish regex strings for normals (norm, normal), colour (color(s), colour(s)) and mesh (*.fbx)
+NORM_REGEX = r'(.*)norm(a?l?)(.*)' + IMG_EXT
+COL_REGEX = r'(.*)col(u?)or(s?)(.*)' + IMG_EXT
+MESH_REGEX = r'(.*)' + MESH_EXT
