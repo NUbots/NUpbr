@@ -51,11 +51,11 @@ def populate_balls(path):
 
         # If we have a colour, normal or mesh match
         if colour is not None:
-            colour_path = os.path.join(path, colour.group())
+            colour_path = os.path.join(path, file)
         if normal is not None:
-            normal_path = os.path.join(path, normal.group())
+            normal_path = os.path.join(path, file)
         if mesh is not None:
-            mesh_path = os.path.join(path, mesh.group())
+            mesh_path = os.path.join(path, file)
 
     # If we have a colour UV map
     if colour_path is not None:

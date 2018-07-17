@@ -140,6 +140,6 @@ for i in range(0, len(ball['mesh_types'])):
 MESH_EXT += ')'
 
 # Establish regex strings for normals (norm, normal), colour (color(s), colour(s)) and mesh (*.fbx)
-NORM_REGEX = r'(.*)norm(a?l?)(.*)' + IMG_EXT
-COL_REGEX = r'(.*)col(u?)or(s?)(.*)' + IMG_EXT
-MESH_REGEX = r'(.*)' + MESH_EXT
+NORM_REGEX = r'norm(al)?' + IMG_EXT
+COL_REGEX = r'colou?rs?' + IMG_EXT
+MESH_REGEX = MESH_EXT
