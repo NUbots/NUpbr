@@ -1,12 +1,5 @@
-# textures
-*.json
-*.hdr
+# python extras
 __pycache__
 
-# resources
-*resources/** 
-
-# image types
-*.jpg
-*.png
-*.hdr
+# outputs
+outputs/*
