@@ -76,6 +76,8 @@ def setup_hdri_env(img_path):
     # Load our HDRI image and store in environment texture shader
     n_env_tex = node_list.new('ShaderNodeTexEnvironment')
 
+    node_list['Background'].inputs[0].default_value = scene_cfg.classes['unclassified']['colour']
+
     # Update the HDRI environment with the texture
     update_hdri_env(world, img_path)
 
@@ -90,13 +92,30 @@ def setup_hdri_env(img_path):
     return world
 
 def update_hdri_env(world, img_path):
-    n_env_tex = world.node_tree.nodes['Environment Texture']
+    node_list = bpy.data.worlds['World_HDR'].node_tree.nodes
 
-    try:
-        img = bpy.data.images.load(img_path)
-    except:
-        raise NameError('Cannot load image {0}'.format(img_path))
-    n_env_tex.image = img
+    n_env_tex = node_list['Environment Texture']
+    n_bg = node_list['Background']
+
+    tl = bpy.data.worlds['World_HDR'].node_tree.links
+
+    # Attempt to find link to remove if necessary
+    link = None
+    for l in tl:
+        if l.from_node == n_env_tex and l.to_node == n_bg:
+            link = l
+
+    # If we have a image to load, link environment texture to background
+    if img_path is not None:
+        if link is None:
+            tl.new(n_env_tex.outputs[0], n_bg.inputs[0])
+        try:
+            img = bpy.data.images.load(img_path)
+        except:
+            raise NameError('Cannot load image {0}'.format(img_path))
+        n_env_tex.image = img
+    elif link is not None:
+        tl.remove(link)
 
 def setup_image_seg_mat(total_classes):
     seg_mat = bpy.data.materials.new('Image_Seg')
@@ -272,7 +291,6 @@ def setup_segmentation_render_layers(num_objects):
 
     # Setup image segmentation (without field lines) render layer
     l_image_seg = render_layers.new('Image_Seg')
-    l_image_seg.use_sky = False
     l_image_seg.use_strand = blend_cfg.render['layers']['use_hair']
     l_image_seg.samples = 1
     image_seg_mat = setup_image_seg_mat(num_objects)
@@ -280,7 +298,6 @@ def setup_segmentation_render_layers(num_objects):
 
     # Setup field line segmentation render layer
     l_field_seg = render_layers.new('Field_Seg')
-    l_field_seg.use_sky = False
     l_field_seg.use_strand = blend_cfg.render['layers']['use_hair']
     l_field_seg.samples = 1
     field_seg_mat = setup_field_seg_mat(num_objects - 1, num_objects)

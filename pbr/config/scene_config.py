@@ -5,9 +5,7 @@ from math import pi
 from os import path, pardir
 
 # Get project path
-proj_path = path.abspath(
-    path.join(
-        path.join(path.dirname(path.realpath(__file__)), pardir), pardir))
+proj_path = path.abspath(path.join(path.join(path.dirname(path.realpath(__file__)), pardir), pardir))
 
 classes = {
     'unclassified': {
@@ -55,12 +53,10 @@ goal = {
 ball_radius = 0.5969 / (2 * pi)
 
 ball = {
-    'radius':
-    ball_radius,
+    'radius': ball_radius,
     'img_types': ['.jpg', '.png'],
     'mesh_types': ['.fbx', '.obj'],
-    'ball_dir':
-    path.abspath(path.join(path.join(proj_path, 'resources'), 'balls')),
+    'ball_dir': path.abspath(path.join(path.join(proj_path, 'resources'), 'balls')),
     'limits': {
         'position': {
             'x': [-field['length'] / 2., field['length'] / 2.],
@@ -100,46 +96,65 @@ camera = {
 }
 
 field_uv = {
-    'type':
-    '.png',
-    'mode':
-    'RGBA',
-    'pixels_per_metre':
-    100,
-    'uv_path':
-    path.abspath(path.join(path.join(proj_path, 'resources'), 'field_uv')),
-    'name':
-    'default',
-    'orientation':
-    'portrait',
+    'type': '.png',
+    'mode': 'RGBA',
+    'pixels_per_metre': 100,
+    'uv_path': path.abspath(path.join(path.join(proj_path, 'resources'), 'field_uv')),
+    'name': 'default',
+    'orientation': 'portrait',
 }
 
 scene_hdr = {
-    'path':
-    path.abspath(path.join(path.join(proj_path, 'resources'), 'scene_hdr')),
+    'path': path.abspath(path.join(path.join(proj_path, 'resources'), 'scene_hdr')),
+    'hdri_types': ['.hdr'],
+    'mask_types': ['.hdr', '.mask'],
 }
 
 ##############################################
 ##         CONFIGURATION PROCESSING         ##
 ##############################################
 
+################
+## BALL REGEX ##
+################
 # Create regex string suffix for image extensions
-IMG_EXT = '('
+BALL_IMG_EXT = '('
 for i in range(0, len(ball['img_types'])):
-    IMG_EXT += '({0})'.format(ball['img_types'][i])
+    BALL_IMG_EXT += '({0})'.format(ball['img_types'][i])
     if i + 1 < len(ball['img_types']):
-        IMG_EXT += '|'
-IMG_EXT += ')'
+        BALL_IMG_EXT += '|'
+BALL_IMG_EXT += ')'
 
 # Create regex string suffix for mesh extensions
-MESH_EXT = '('
+BALL_MESH_EXT = '('
 for i in range(0, len(ball['mesh_types'])):
-    MESH_EXT += '({0})'.format(ball['mesh_types'][i])
+    BALL_MESH_EXT += '({0})'.format(ball['mesh_types'][i])
     if i + 1 < len(ball['mesh_types']):
-        MESH_EXT += '|'
-MESH_EXT += ')'
+        BALL_MESH_EXT += '|'
+BALL_MESH_EXT += ')'
 
 # Establish regex strings for normals (norm, normal), colour (color(s), colour(s)) and mesh (*.fbx)
-NORM_REGEX = r'norm(al)?' + IMG_EXT
-COL_REGEX = r'colou?rs?' + IMG_EXT
-MESH_REGEX = MESH_EXT
+BALL_NORM_REGEX = r'norm(al)?(.*)' + BALL_IMG_EXT
+BALL_COL_REGEX = r'colou?rs?(.*)' + BALL_IMG_EXT
+BALL_MESH_REGEX = BALL_MESH_EXT
+
+################
+## HRDI REGEX ##
+################
+HDRI_RAW_EXT = '('
+for i in range(0, len(scene_hdr['hdri_types'])):
+    HDRI_RAW_EXT += '({0})'.format(scene_hdr['hdri_types'][i])
+    if i + 1 < len(scene_hdr['hdri_types']):
+        HDRI_RAW_EXT += '|'
+HDRI_RAW_EXT += ')'
+
+HDRI_MASK_EXT = '('
+for i in range(0, len(scene_hdr['mask_types'])):
+    HDRI_MASK_EXT += '({0})'.format(scene_hdr['mask_types'][i])
+    if i + 1 < len(scene_hdr['mask_types']):
+        HDRI_MASK_EXT += '|'
+HDRI_MASK_EXT += ')'
+
+# Establish regex strings for HDR images and HDR mask images
+HDRI_MASK_REGEX = r'mask(.*)' + HDRI_MASK_EXT
+HDRI_RAW_REGEX = r'raw(.*)' + HDRI_RAW_EXT

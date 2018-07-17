@@ -9,25 +9,19 @@ from config import blend_config as blend_cfg
 
 from scene.blender_object import BlenderObject
 
-
 class Ball(BlenderObject):
-    def __init__(self,
-                 name,
-                 class_index,
-                 colour_path,
-                 normal_path=None,
-                 mesh_path=None):
+    def __init__(self, name, class_index, ball_info):
         self.mat = None
         self.obj = None
         self.pass_index = class_index
         self.name = name
-        self.colour_path = colour_path
-        self.normal_path = normal_path
-        self.mesh_path = mesh_path
-        self.construct(colour_path, normal_path, mesh_path)
+        self.colour_path = ball_info['colour_path']
+        self.normal_path = ball_info['norm_path']
+        self.mesh_path = ball_info['mesh_path']
+        self.construct(ball_info)
 
     # Setup ball object
-    def construct(self, colour_path, normal_path=None, mesh_path=None):
+    def construct(self, ball_info):
         ball_mesh = None
         ball = None
 
@@ -36,19 +30,16 @@ class Ball(BlenderObject):
             bpy.data.objects.remove(self.obj)
 
         # Load mesh or create UV sphere
-        if mesh_path is not None:
+        if ball_info['mesh_path'] is not None:
             # Determine new object
             prev_obj_names = [x.name for x in bpy.data.objects]
             # Load fbx mesh
             # TODO: Support other mesh types
-            ball_mesh = bpy.ops.import_scene.fbx(filepath=mesh_path)
+            ball_mesh = bpy.ops.import_scene.fbx(filepath=ball_info['mesh_path'])
 
             # Determine new ball name (by picking first result not in previous list)
             # (Should always only result in one new object)
-            ball_name = [
-                x.name for x in bpy.data.objects
-                if x.name not in prev_obj_names
-            ]
+            ball_name = [x.name for x in bpy.data.objects if x.name not in prev_obj_names]
             ball = bpy.data.objects[ball_name[0]]
         else:
             # Add UV sphere for ball
@@ -59,8 +50,7 @@ class Ball(BlenderObject):
             )
             ball = bpy.data.objects['Sphere']
             # TODO: Determine scale based on pre-defined object scaling for leaded mesh
-            ball.scale = (scene_cfg.ball['radius'], scene_cfg.ball['radius'],
-                          scene_cfg.ball['radius'])
+            ball.scale = (scene_cfg.ball['radius'], scene_cfg.ball['radius'], scene_cfg.ball['radius'])
 
         # Make ball active object
         bpy.context.scene.objects.active = ball
@@ -71,18 +61,16 @@ class Ball(BlenderObject):
         ball.pass_index = self.pass_index
 
         # Add material to ball material slots
-        self.mat = self.create_mat(blend_cfg.ball['material'], colour_path,
-                                   normal_path)
+        self.mat = self.create_mat(blend_cfg.ball['material'], ball_info['colour_path'], ball_info['norm_path'])
         ball.data.materials.append(self.mat)
 
         # Create subdiv surface modifiers if we have a new UV sphere
-        if mesh_path is None:
+        if ball_info['mesh_path'] is None:
             bpy.ops.object.modifier_add(type='SUBSURF')
             ball.modifiers['Subsurf'].name = 'Ball_Subsurf'
             ball_subsurf = ball.modifiers['Ball_Subsurf']
             ball_subsurf.levels = blend_cfg.ball['subsurf_mod']['levels']
-            ball_subsurf.render_levels = blend_cfg.ball['subsurf_mod'][
-                'rend_levels']
+            ball_subsurf.render_levels = blend_cfg.ball['subsurf_mod']['rend_levels']
 
         self.obj = ball
 
@@ -126,10 +114,8 @@ class Ball(BlenderObject):
 
         # Create principled node
         n_principled = node_list.new('ShaderNodeBsdfPrincipled')
-        n_principled.inputs[4].default_value = blend_cfg.ball['material'][
-            'metallic']
-        n_principled.inputs[7].default_value = blend_cfg.ball['material'][
-            'roughness']
+        n_principled.inputs[4].default_value = blend_cfg.ball['material']['metallic']
+        n_principled.inputs[7].default_value = blend_cfg.ball['material']['roughness']
 
         # Create output node
         n_output = node_list.new('ShaderNodeOutputMaterial')
@@ -139,7 +125,8 @@ class Ball(BlenderObject):
 
         # Link texture image and normal map
         tl.new(n_uv_map.outputs[0], n_principled.inputs[0])
-        tl.new(n_norm_map.outputs[0], n_principled.inputs[16])
+        if normal_path is not None:
+            tl.new(n_norm_map.outputs[0], n_principled.inputs[16])
         tl.new(n_principled.outputs[0], n_output.inputs[0])
 
         return b_mat

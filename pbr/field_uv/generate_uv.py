@@ -1,7 +1,36 @@
-from config import scene_config as cfg
-from . import draw_field
+import sys
+import os
+import re
 
-import Image
+#############################################
+## ADD PYTHON SITE-PACKAGES TO SYSTEM PATH ##
+#############################################
+
+# (As Blender can change to custom python install)
+LIB_ROOT = '/usr/local/lib'
+
+lib_paths = os.listdir('/usr/local/lib')
+python_paths = []
+for path in lib_paths:
+    result = re.search('python[0-9].[0-9]', path, re.I)
+    if result is not None:
+        python_paths.append(os.path.join('/usr/local/lib', path, 'dist-packages'))
+
+for p in python_paths:
+    sys.path.insert(0, p)
+
+# TODO: Check if Windows is supported
+if 'PYTHONPATH' in os.environ:
+    sys.path.insert(0, os.environ['PYTHONPATH'].split(os.pathsep))
+
+#################
+## GENERATE UV ##
+#################
+
+from config import scene_config as cfg
+from field_uv import draw_field
+
+from PIL import Image
 from os import path
 
 # Function for checking errors which would make the UV map unrealisable
