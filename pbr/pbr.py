@@ -77,7 +77,7 @@ def main():
             ('mask_path', scene_cfg.HDRI_MASK_REGEX),
         ]
     )
-    print("[INFO] Number of environments imported: {0}".format(len(hdrs)))
+    print("[INFO] \tNumber of environments imported: {0}".format(len(hdrs)))
 
     # Make sure we're only loading .hdr files
     hdr_index = 0
@@ -93,7 +93,7 @@ def main():
             ('mesh_path', scene_cfg.BALL_MESH_REGEX),
         ],
     )
-    print("[INFO] Number of balls imported: {0}".format(len(balls)))
+    print("[INFO] \tNumber of balls imported: {0}".format(len(balls)))
 
     ball_index = 0
     curr_ball_info = balls[ball_index]
@@ -264,6 +264,7 @@ def main():
             # Render raw image
             render_layers['RenderLayer'].use = True
             render_layer_toggle.check = False
+            ball.sc_plane.hide_render = False
             env.update_hdri_env(world, hdr['raw_path'])
             bpy.data.scenes['Scene'].render.filepath = os.path.join(out_cfg.image_dir, filename + cam['str'])
             bpy.ops.render.render(write_still=True)
@@ -276,6 +277,7 @@ def main():
             # Render mask image
             render_layers['RenderLayer'].use = False
             render_layer_toggle.check = True
+            ball.sc_plane.hide_render = True
             env.update_hdri_env(world, hdr['mask_path'])
             bpy.data.scenes['Scene'].render.filepath = os.path.join(out_cfg.mask_dir, filename + cam['str'])
             bpy.ops.render.render(write_still=True)

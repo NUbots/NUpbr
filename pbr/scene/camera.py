@@ -8,7 +8,6 @@ from config import blend_config as blend_cfg
 
 from scene.blender_object import BlenderObject
 
-
 class Camera(BlenderObject):
     def __init__(self, name):
         self.loc = (0., 0., 0.)
@@ -53,8 +52,6 @@ class Camera(BlenderObject):
         child_constr.use_rotation_x = False
         child_constr.use_rotation_y = False
         child_constr.use_rotation_z = False
-
-        # self.obj.location = temp
 
     def construct(self):
         # Add camera

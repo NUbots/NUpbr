@@ -13,11 +13,13 @@ class Ball(BlenderObject):
     def __init__(self, name, class_index, ball_info):
         self.mat = None
         self.obj = None
+        self.sc_plane = None
         self.pass_index = class_index
         self.name = name
         self.colour_path = ball_info['colour_path']
         self.normal_path = ball_info['norm_path']
         self.mesh_path = ball_info['mesh_path']
+        self.create_shadowcatcher()
         self.construct(ball_info)
 
     # Setup ball object
@@ -71,6 +73,8 @@ class Ball(BlenderObject):
             ball_subsurf = ball.modifiers['Ball_Subsurf']
             ball_subsurf.levels = blend_cfg.ball['subsurf_mod']['levels']
             ball_subsurf.render_levels = blend_cfg.ball['subsurf_mod']['rend_levels']
+        # Update shadowcatcher if updated sphere
+        self.set_sc_parent(ball)
 
         self.obj = ball
 
@@ -152,3 +156,30 @@ class Ball(BlenderObject):
                 raise NameError('Cannot load image {0}'.format(normal_path))
 
             n_norm_map.image = norm_map
+
+    def create_shadowcatcher(self):
+        bpy.ops.mesh.primitive_plane_add()
+        sc_plane = bpy.data.objects['Plane']
+        sc_plane.name = 'SC_Plane'
+        sc_plane.cycles.is_shadow_catcher = True
+        sc_plane.cycles.show_transparent = True
+
+        self.sc_plane = sc_plane
+
+    def set_sc_parent(self, obj):
+        bpy.context.scene.objects.active = self.sc_plane
+
+        if 'Child Of' not in self.sc_plane.constraints:
+            bpy.ops.object.constraint_add(type='CHILD_OF')
+
+        child_constr = self.sc_plane.constraints['Child Of']
+        child_constr.target = obj
+
+        # Set child to obtain x, y location of parent
+        child_constr.use_location_z = False
+        child_constr.use_rotation_x = False
+        child_constr.use_rotation_y = False
+        child_constr.use_rotation_z = False
+        child_constr.use_scale_x = False
+        child_constr.use_scale_y = False
+        child_constr.use_scale_z = False
