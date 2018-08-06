@@ -5,7 +5,9 @@ from math import pi
 from os import path, pardir
 
 # Get project path
-proj_path = path.abspath(path.join(path.join(path.dirname(path.realpath(__file__)), pardir), pardir))
+proj_path = path.abspath(
+    path.join(
+        path.join(path.dirname(path.realpath(__file__)), pardir), pardir))
 
 classes = {
     'unclassified': {
@@ -53,10 +55,12 @@ goal = {
 ball_radius = 0.5969 / (2 * pi)
 
 ball = {
-    'radius': ball_radius,
+    'radius':
+    ball_radius,
     'img_types': ['.jpg', '.png'],
     'mesh_types': ['.fbx', '.obj'],
-    'ball_dir': path.abspath(path.join(path.join(proj_path, 'resources'), 'balls')),
+    'ball_dir':
+    path.abspath(path.join(path.join(proj_path, 'resources'), 'balls')),
     'limits': {
         'position': {
             'x': [-field['length'] / 2., field['length'] / 2.],
@@ -96,18 +100,27 @@ camera = {
 }
 
 field_uv = {
-    'type': '.png',
-    'mode': 'RGBA',
-    'pixels_per_metre': 100,
-    'uv_path': path.abspath(path.join(path.join(proj_path, 'resources'), 'field_uv')),
-    'name': 'default',
-    'orientation': 'portrait',
+    'type':
+    '.png',
+    'mode':
+    'RGBA',
+    'pixels_per_metre':
+    100,
+    'uv_path':
+    path.abspath(path.join(path.join(proj_path, 'resources'), 'field_uv')),
+    'name':
+    'default',
+    'orientation':
+    'portrait',
 }
 
 scene_hdr = {
-    'path': path.abspath(path.join(path.join(proj_path, 'resources'), 'scene_hdr')),
+    'path':
+    path.abspath(path.join(path.join(proj_path, 'resources'), 'scene_hdr')),
     'hdri_types': ['.hdr'],
     'mask_types': ['.hdr', '.mask'],
+    'info_type':
+    '.json'
 }
 
 ##############################################
@@ -158,3 +171,4 @@ HDRI_MASK_EXT += ')'
 # Establish regex strings for HDR images and HDR mask images
 HDRI_MASK_REGEX = r'mask(.*)' + HDRI_MASK_EXT
 HDRI_RAW_REGEX = r'raw(.*)' + HDRI_RAW_EXT
+HDRI_INFO_REGEX = scene_hdr['info_type']
