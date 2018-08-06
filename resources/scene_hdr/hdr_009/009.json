@@ -1,0 +1,25 @@
+{
+    "rotation": {
+        "roll": 0.689474,
+        "pitch": 0.894737,
+        "yaw": -8.79999
+    },
+    "position": {
+        "x": 0,
+        "y": 0,
+        "z": 1.07,
+    },
+    "to_draw": {
+        "ball": true,
+        "goal": true,
+        "field": true
+    },
+    "ranges": { 
+        "include": [
+            [[-1.09, 7.91], [-0.3, 5.7]]
+        ],
+        "exclude": [
+            [[-0.5, 0.8], [-0.7, 0.7]]
+        ]
+    }
+}
