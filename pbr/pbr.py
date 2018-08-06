@@ -5,6 +5,7 @@ import sys
 import random as rand
 import bpy
 import re
+import json
 
 # Add our current position to path to include package
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
@@ -132,6 +133,14 @@ def main():
                 hdr_index += 1
             hdr = hdrs[hdr_index]
             cam_l.set_tracking_target(ball.obj)
+            # Toggle objects based on environment map requirements
+            with open(hdr['info_path'], 'r') as f:
+                data = json.load(f)
+            ball.obj.hide_render = not data['to_draw']['ball']
+            goals[0].obj.hide_render = not data['to_draw']['goal']
+            goals[1].obj.hide_render = not data['to_draw']['goal']
+            field.obj.hide_render = not data['to_draw']['field']
+            field.lower_plane.hide_render = not data['to_draw']['field']
 
         ## Update ball
         # Move ball
