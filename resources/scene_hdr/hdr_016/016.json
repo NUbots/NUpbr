@@ -9,6 +9,11 @@
         "y": 0,
         "z": 0.91
     },
+    "to_draw": {
+        "ball": true,
+        "goal": false,
+        "field": false
+    },
     "ranges": { 
         "include": [
             [[0, 10], [-4.5, 3]],

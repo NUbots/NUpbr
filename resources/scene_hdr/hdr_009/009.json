@@ -7,12 +7,12 @@
     "position": {
         "x": 0,
         "y": 0,
-        "z": 1.07,
+        "z": 1.07
     },
     "to_draw": {
         "ball": true,
-        "goal": true,
-        "field": true
+        "goal": false,
+        "field": false
     },
     "ranges": { 
         "include": [

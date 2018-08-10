@@ -11,8 +11,8 @@
     },
     "to_draw": {
         "ball": true,
-        "goal": true,
-        "field": true
+        "goal": false,
+        "field": false
     },
     "ranges": {
         "include": [
