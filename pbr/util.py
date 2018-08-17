@@ -5,7 +5,6 @@ import random as rand
 from math import pi
 
 from config import scene_config as scene_cfg
-from config import output_config as out_cfg
 
 from scene import environment as env
 
@@ -47,6 +46,8 @@ def populate_assets(path, asset_list):
 
     return assets
 
+# Load ball and HDR map data from respective paths,
+#   traversing recursively through subdirectories
 def load_assets():
     # Populate list of hdr scenes
     print("[INFO] Importing environments from '{0}'".format(scene_cfg.scene_hdr['path']))
@@ -84,6 +85,7 @@ def setup_environment(hdr):
     # Setup render layers (visual, segmentation and field lines)
     return env.setup_segmentation_render_layers(len(scene_cfg.classes)), world
 
+# Renders image frame for either raw or mask image (defined by <isRawImage>)
 def render_image(isRawImage, toggle, ball, world, env, hdr_path, output_path):
     # Turn off all render layers
     for l in bpy.context.scene.render.layers:
@@ -99,7 +101,10 @@ def render_image(isRawImage, toggle, ball, world, env, hdr_path, output_path):
     bpy.data.scenes['Scene'].render.filepath = output_path
     bpy.ops.render.render(write_still=True)
 
+# Updates position and rotation for ball, camera and camera anchor objects
 def update_scene(ball, cam, anch, env_info):
+    # TODO: Update object limits based on if field/goals are rendered
+
     # Update ball
     ball_limits = scene_cfg.ball['limits']
     update_obj(ball, ball_limits)
@@ -111,6 +116,7 @@ def update_scene(ball, cam, anch, env_info):
     # Update anchor
     update_obj(anch, ball_limits)
 
+# Updates position and rotation by uniform random generation within limits for each component
 def update_obj(obj, limits):
     if 'position' in limits:
         obj.move((

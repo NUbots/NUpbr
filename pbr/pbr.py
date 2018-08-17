@@ -6,7 +6,6 @@ import random as rand
 import bpy
 import re
 import json
-
 # Add our current position to path to include package
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
@@ -22,14 +21,11 @@ from scene.goal import Goal
 from scene.camera import Camera
 from scene.camera_anchor import CameraAnchor
 
-# from field_uv import generate_uv
+# TODO: Reimplement field uv generation with Scikit-Image
 
 import util
 
 def main():
-    # Make UV map
-    # generate_uv.main()
-
     ##############################################
     ##              ASSET LOADING               ##
     ##############################################
@@ -162,7 +158,7 @@ def main():
 
         cam_l.set_tracking_target(tracking_target)
 
-        # TODO: Update scene to rectify rotation and location matrices
+        # Updates scene to rectify rotation and location matrices
         bpy.context.scene.update()
 
         ##############################################
@@ -178,7 +174,7 @@ def main():
         else:
             cam_list = [{'obj': cam_l.obj, 'str': '_L'}, {'obj': cam_r.obj, 'str': '_R'}]
 
-        ## Render for each camera
+        # Render for each camera
         for cam in cam_list:
             bpy.context.scene.camera = cam['obj']
 
