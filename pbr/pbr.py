@@ -26,8 +26,6 @@ from scene.camera_anchor import CameraAnchor
 
 import util
 
-DEG_TO_RAD = pi / 180.
-
 def main():
     # Make UV map
     # generate_uv.main()
@@ -61,7 +59,6 @@ def main():
     # Construct our goals
     goals = [Goal(scene_cfg.classes['goal']['index']), Goal(scene_cfg.classes['goal']['index'])]
     goals[0].offset((scene_cfg.field['length'] / 2., 0., 0.))
-
     goals[1].offset(
         (-scene_cfg.field['length'] / 2. - 1.5 * scene_cfg.goal['depth'] + scene_cfg.goal['post_width'], 0., 0.)
     )
@@ -75,26 +72,19 @@ def main():
     height = rand.uniform(
         scene_cfg.camera['limits']['position']['z'][0], scene_cfg.camera['limits']['position']['z'][1]
     )
-
     cam_l = Camera('Camera_L')
     cam_r = Camera('Camera_R')
-
     cam_l.move((-cam_separation / 2., 0., height))
-
     cam_l.set_tracking_target(ball.obj)
     # Set left camera to be parent camera
     # (and so all right camera movements are relative to the left camera position)
     cam_r.set_stereo_pair(cam_l.obj)
-
     cam_r.move((cam_separation, 0., 0.))
 
     # Create camera anchor target for random field images
-    a = CameraAnchor()
+    anch = CameraAnchor()
 
-    ##############################################
-    ##               SCENE UPDATE               ##
-    ##############################################
-
+    # Alias camera limits for useability
     cam_limits = scene_cfg.camera['limits']
     ball_limits = scene_cfg.ball['limits']
 
@@ -112,27 +102,35 @@ def main():
         )
     )
 
+    # Default tracking target to ball
+    tracking_target = ball.obj
+
+    ##############################################
+    ##               SCENE UPDATE               ##
+    ##############################################
+
     for frame_num in range(0, out_cfg.num_images):
         # Each ball gets even number of frames for each environment
+        # Set new ball every <ball_batch_size> frames
         if frame_num % ball_batch_size == 0:
             ball_data = balls[ball_index]
             # If we're using same UV sphere and only changing textures,
             #   recreating the UV sphere is unnecessary
             if 'mesh_path' in ball_data and ball_data['mesh_path'] is None and ball.mesh_path is None:
                 ball.update_texture(ball_data['colour_path'], ball_data['norm_path'])
-            # If we're changing meshes, completely reconstruct our ball
             else:
+                # If we're changing meshes, completely reconstruct our ball
                 ball.construct(ball_data)
-            cam_l.set_tracking_target(ball.obj)
             # Update ball index for next pass
             if ball_index + 1 < len(balls):
                 ball_index += 1
+            tracking_target = ball.obj
 
         # Each environment map gets even distribution of frames
+        # Set new env map every <env_batch_size> frames
         if frame_num % env_batch_size == 0:
             ball_index = 0
             hdr_data = hdrs[hdr_index]
-            cam_l.set_tracking_target(ball.obj)
             # Toggle objects based on environment map requirements
             with open(hdr_data['info_path'], 'r') as f:
                 env_info = json.load(f)
@@ -144,6 +142,7 @@ def main():
             # Update hdr index for next pass
             if hdr_index + 1 < len(hdrs):
                 hdr_index += 1
+            tracking_target = ball.obj
 
         print(
             '[INFO] Frame {0}: ball: "{1}", map: "{2}"'.format(
@@ -151,48 +150,17 @@ def main():
             )
         )
 
-        ## Update ball
-        # Move ball
-        ball.move((
-            rand.uniform(ball_limits['position']['x'][0], ball_limits['position']['x'][1]),
-            rand.uniform(ball_limits['position']['y'][0], ball_limits['position']['y'][1]),
-            rand.uniform(ball_limits['position']['z'][0], ball_limits['position']['z'][1]),
-        ))
-        # Rotate ball
-        ball.rotate((
-            rand.uniform(ball_limits['rotation']['pitch'][0], ball_limits['rotation']['pitch'][1]) * DEG_TO_RAD,
-            rand.uniform(ball_limits['rotation']['yaw'][0], ball_limits['rotation']['yaw'][1]) * DEG_TO_RAD,
-            rand.uniform(ball_limits['rotation']['roll'][0], ball_limits['rotation']['roll'][1]) * DEG_TO_RAD,
-        ))
-
-        ## Update camera
-        # Move camera
-        cam_l.move((
-            rand.uniform(cam_limits['position']['x'][0], cam_limits['position']['x'][1]),
-            rand.uniform(cam_limits['position']['y'][0], cam_limits['position']['y'][1]),
-            rand.uniform(cam_limits['position']['z'][0], cam_limits['position']['z'][1]),
-        ))
-
-        cam_l.rotate((
-            rand.uniform(cam_limits['rotation']['pitch'][0], cam_limits['rotation']['pitch'][1]) * DEG_TO_RAD,
-            rand.uniform(cam_limits['rotation']['yaw'][0], cam_limits['rotation']['yaw'][1]) * DEG_TO_RAD,
-            rand.uniform(cam_limits['rotation']['roll'][0], cam_limits['rotation']['roll'][1]) * DEG_TO_RAD,
-        ))
-
-        # Move potential camera target
-        a.move((
-            rand.uniform(cam_limits['position']['x'][0], cam_limits['position']['x'][1]),
-            rand.uniform(cam_limits['position']['y'][0], cam_limits['position']['y'][1]),
-            rand.uniform(cam_limits['position']['z'][0], cam_limits['position']['z'][1]),
-        ))
+        # Update location and rotation of camera focus and camera
+        util.update_scene(ball, cam_l, anch, env_info)
 
         # Focus to goal if within second third of images
         if int(frame_num % env_batch_size) == int(env_batch_size / 3.):
-            goal_index = rand.randint(0, 1)
-            cam_l.set_tracking_target(goals[goal_index].obj)
-        # Focus on random field if within third third of images
+            tracking_target = goals[rand.randint(0, 1)].obj
+        # Focus on random field if within last third of images
         elif int(frame_num % env_batch_size) == int((2 * env_batch_size) / 3.):
-            cam_l.set_tracking_target(a.obj)
+            tracking_target = anch.obj
+
+        cam_l.set_tracking_target(tracking_target)
 
         # TODO: Update scene to rectify rotation and location matrices
         bpy.context.scene.update()
@@ -213,33 +181,28 @@ def main():
         ## Render for each camera
         for cam in cam_list:
             bpy.context.scene.camera = cam['obj']
-            render_layers = bpy.context.scene.render.layers
-
-            ## Raw image rendering
-            # Turn off all render layers
-            for l in render_layers:
-                l.use = False
 
             # Render raw image
-            render_layers['RenderLayer'].use = True
-            render_layer_toggle.check = False
-            ball.sc_plane.hide_render = False
-            env.update_hdri_env(world, hdr_data['raw_path'])
-            bpy.data.scenes['Scene'].render.filepath = os.path.join(out_cfg.image_dir, filename + cam['str'])
-            bpy.ops.render.render(write_still=True)
-
-            ## Mask image rendering
-            # Turn on all render layers
-            for l in render_layers:
-                l.use = True
+            util.render_image(
+                isRawImage=True,
+                toggle=render_layer_toggle,
+                ball=ball,
+                world=world,
+                env=env,
+                hdr_path=hdr_data['raw_path'],
+                output_path=os.path.join(out_cfg.image_dir, filename + cam['str']),
+            )
 
             # Render mask image
-            render_layers['RenderLayer'].use = False
-            render_layer_toggle.check = True
-            ball.sc_plane.hide_render = True
-            env.update_hdri_env(world, hdr_data['mask_path'])
-            bpy.data.scenes['Scene'].render.filepath = os.path.join(out_cfg.mask_dir, filename + cam['str'])
-            bpy.ops.render.render(write_still=True)
+            util.render_image(
+                isRawImage=False,
+                toggle=render_layer_toggle,
+                ball=ball,
+                world=world,
+                env=env,
+                hdr_path=hdr_data['mask_path'],
+                output_path=os.path.join(out_cfg.mask_dir, filename + cam['str']),
+            )
 
 if __name__ == '__main__':
     main()
