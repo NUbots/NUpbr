@@ -1,5 +1,5 @@
 # Field-specific Configuration Settings
-#   * All measurements are in metres
+#   * All measurements are in SI units
 
 from math import pi
 from os import path, pardir
