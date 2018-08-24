@@ -279,7 +279,7 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     tl.new(n_switch.outputs[0], n_comp.inputs[0])
 
     # Return switch node to toggle composite output
-    return n_switch
+    return n_switch, n_alpha
 
 def setup_segmentation_render_layers(num_objects):
     scene = bpy.context.scene

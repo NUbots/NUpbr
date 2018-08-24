@@ -93,7 +93,8 @@ def render_image(isRawImage, toggle, ball, world, env, hdr_path, output_path):
 
     # Enable raw image rendering if required
     bpy.context.scene.render.layers['RenderLayer'].use = isRawImage
-    toggle.check = not isRawImage
+    toggle[0].check = not isRawImage
+    toggle[1].inputs[0].default_value = 0.
     ball.sc_plane.hide_render = not isRawImage
     # Update HDRI map
     env.update_hdri_env(world, hdr_path)
