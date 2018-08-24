@@ -140,21 +140,30 @@ def main():
                 hdr_index += 1
             tracking_target = ball.obj
 
-        print(
-            '[INFO] Frame {0}: ball: "{1}", map: "{2}"'.format(
-                frame_num, os.path.basename(ball_data['colour_path']), os.path.basename(hdr_data['raw_path'])
-            )
-        )
-
         # Update location and rotation of camera focus and camera
         util.update_scene(ball, cam_l, anch, env_info)
 
+        # Calculate number of frames per object (e.g. 3 for synthetic balls, goals and random)
+        num_frames_per_object = float(1 + len([o for o in env_info['to_draw'].values() if o == True]))
+
+        # Focus on ball if within first third of images
+        if env_info['to_draw']['ball'] and frame_num < int(out_cfg.num_images / num_frames_per_object):
+            tracking_target = ball.obj
         # Focus to goal if within second third of images
-        if int(frame_num % env_batch_size) == int(env_batch_size / 3.):
+        elif env_info['to_draw']['goal'] and frame_num < int(2 * out_cfg.num_images / num_frames_per_object):
             tracking_target = goals[rand.randint(0, 1)].obj
         # Focus on random field if within last third of images
-        elif int(frame_num % env_batch_size) == int((2 * env_batch_size) / 3.):
+        else:
             tracking_target = anch.obj
+
+        print(
+            '[INFO] Frame {0}: ball: "{1}", map: "{2}", target: {3}'.format(
+                frame_num,
+                os.path.basename(ball_data['colour_path']),
+                os.path.basename(hdr_data['raw_path']),
+                tracking_target.name,
+            )
+        )
 
         cam_l.set_tracking_target(tracking_target)
 
