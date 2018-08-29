@@ -94,7 +94,7 @@ def render_image(isMaskImage, toggle, ball, world, env, hdr_path, output_path):
     # Enable raw image rendering if required
     bpy.context.scene.render.layers['RenderLayer'].use = not isMaskImage
     toggle[0].check = isMaskImage
-    toggle[1].inputs[0].default_value = 1. if isMaskImage else 0.
+    toggle[1].inputs[0].default_value = 0. if isMaskImage else 1.
     ball.sc_plane.hide_render = isMaskImage
     # Update HDRI map
     env.update_hdri_env(world, hdr_path)
