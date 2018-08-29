@@ -86,16 +86,16 @@ def setup_environment(hdr):
     return env.setup_segmentation_render_layers(len(scene_cfg.classes)), world
 
 # Renders image frame for either raw or mask image (defined by <isRawImage>)
-def render_image(isRawImage, toggle, ball, world, env, hdr_path, output_path):
+def render_image(isMaskImage, toggle, ball, world, env, hdr_path, output_path):
     # Turn off all render layers
     for l in bpy.context.scene.render.layers:
-        l.use = not isRawImage
+        l.use = isMaskImage
 
     # Enable raw image rendering if required
-    bpy.context.scene.render.layers['RenderLayer'].use = isRawImage
-    toggle[0].check = not isRawImage
-    toggle[1].inputs[0].default_value = 0.
-    ball.sc_plane.hide_render = not isRawImage
+    bpy.context.scene.render.layers['RenderLayer'].use = not isMaskImage
+    toggle[0].check = isMaskImage
+    toggle[1].inputs[0].default_value = 1. if isMaskImage else 0.
+    ball.sc_plane.hide_render = isMaskImage
     # Update HDRI map
     env.update_hdri_env(world, hdr_path)
     # Update render output filepath

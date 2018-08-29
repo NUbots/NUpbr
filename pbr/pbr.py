@@ -189,7 +189,7 @@ def main():
 
             # Render raw image
             util.render_image(
-                isRawImage=True,
+                isMaskImage=False,
                 toggle=render_layer_toggle,
                 ball=ball,
                 world=world,
@@ -200,7 +200,7 @@ def main():
 
             # Render mask image
             util.render_image(
-                isRawImage=False,
+                isMaskImage=True,
                 toggle=render_layer_toggle,
                 ball=ball,
                 world=world,
@@ -208,6 +208,8 @@ def main():
                 hdr_path=hdr_data['mask_path'],
                 output_path=os.path.join(out_cfg.mask_dir, filename + cam['str']),
             )
+
+            # TODO: Render depth image
 
 if __name__ == '__main__':
     main()
