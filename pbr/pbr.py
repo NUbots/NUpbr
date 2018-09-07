@@ -38,7 +38,7 @@ def main():
     ##             ENVIRONMENT SETUP            ##
     ##############################################
 
-    render_layer_toggle, world = util.setup_environment(hdrs[0])
+    render_layer_toggles, world = util.setup_environment(hdrs[0])
 
     ##############################################
     ##            SCENE CONSTRUCTION            ##
@@ -189,8 +189,8 @@ def main():
 
             # Render raw image
             util.render_image(
-                isMaskImage=False,
-                toggle=render_layer_toggle,
+                imageType='RAW',
+                toggles=render_layer_toggles,
                 ball=ball,
                 world=world,
                 env=env,
@@ -200,8 +200,8 @@ def main():
 
             # Render mask image
             util.render_image(
-                isMaskImage=True,
-                toggle=render_layer_toggle,
+                imageType='MASK',
+                toggles=render_layer_toggles,
                 ball=ball,
                 world=world,
                 env=env,
@@ -209,7 +209,16 @@ def main():
                 output_path=os.path.join(out_cfg.mask_dir, filename + cam['str']),
             )
 
-            # TODO: Render depth image
+            # Render depth image
+            util.render_image(
+                imageType='DEPTH',
+                toggles=render_layer_toggles,
+                ball=ball,
+                world=world,
+                env=env,
+                hdr_path=None, #hdr_data['raw_path'],
+                output_path=os.path.join(out_cfg.depth_dir, filename + cam['str']),
+            )
 
 if __name__ == '__main__':
     main()

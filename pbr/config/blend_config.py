@@ -5,7 +5,7 @@ from math import pi
 render = {
     'render_engine': 'CYCLES',
     'render': {
-        'cycles_device': 'GPU',
+        'cycles_device': 'CPU',
     },
     'dimensions': {
         'resolution': [1280, 1024],
@@ -32,7 +32,7 @@ render = {
         'refractive_caustics': False,
     },
     'performance': {
-        'render_tile': [512, 512],
+        'render_tile': [64, 64],
     },
     'layers': {
         'use_hair': False,

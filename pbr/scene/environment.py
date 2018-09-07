@@ -142,8 +142,8 @@ def setup_image_seg_mat(total_classes):
     # Iterate through classes and create colour regions in colour ramp for each class
     for obj_class in scene_cfg.classes:
         elem = n_col_ramp.color_ramp.elements.new(
-            position=(scene_cfg.classes[obj_class]['index'] / (len(scene_cfg.classes))) - 0.5 /
-            (len(scene_cfg.classes))
+            position=(scene_cfg.classes[obj_class]['index'] / (len(scene_cfg.classes))) -
+            0.5 / (len(scene_cfg.classes))
         )
         elem.color = scene_cfg.classes[obj_class]['colour']
 
@@ -255,15 +255,25 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     n_mix.inputs[2].default_value = scene_cfg.classes['field']['field_lines_colour']
     # Alpha over
     n_alpha = node_list.new('CompositorNodeAlphaOver')
+    # Switch (to switch between raw image and depth)
+    n_raw_switch = node_list.new('CompositorNodeSwitch')
     # Switch (to switch between raw image and segmentation)
-    n_switch = node_list.new('CompositorNodeSwitch')
+    n_seg_switch = node_list.new('CompositorNodeSwitch')
     # Composite
     n_comp = node_list.new('CompositorNodeComposite')
 
+    # Raw Image ------
+    #                 \ n_raw_switch
+    #                  ----------
+    #                             ----------------- Composite
+    # Depth Image ----           /  n_seg_switch
+    #                           /
+    #                          /
+    # Segmentation Image ------
+
     # Link shaders
     tl = bpy.context.scene.node_tree.links
-    # Link raw image render layer to switch
-    tl.new(n_image_rl.outputs[0], n_switch.inputs[0])
+
     # Link image segment render layer
     tl.new(n_img_seg_rl.outputs[0], n_alpha.inputs[1])
     # Link field segment render layer
@@ -273,13 +283,21 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     tl.new(n_col_key.outputs[1], n_mix.inputs[0])
     # Link mix to alpha
     tl.new(n_mix.outputs[0], n_alpha.inputs[2])
-    # Link alpha to switch
-    tl.new(n_alpha.outputs[0], n_switch.inputs[1])
-    # Link switch to composite output
-    tl.new(n_switch.outputs[0], n_comp.inputs[0])
+
+    # Link switches
+    tl.new(n_raw_switch.outputs[0], n_seg_switch.inputs[0])
+    # Link raw image render layer to n_raw_switch
+    tl.new(n_image_rl.outputs[0], n_raw_switch.inputs[0])
+    # Link depth image render layer to n_raw_switch
+    tl.new(n_image_rl.outputs['Mist'], n_raw_switch.inputs[1])
+    # Link alpha to (segmentation image) n_seg_switch
+    tl.new(n_alpha.outputs[0], n_seg_switch.inputs[1])
+
+    # Link n_seg_switch to composite output
+    tl.new(n_seg_switch.outputs[0], n_comp.inputs[0])
 
     # Return switch node to toggle composite output
-    return n_switch, n_alpha
+    return n_raw_switch, n_seg_switch, n_alpha
 
 def setup_segmentation_render_layers(num_objects):
     scene = bpy.context.scene
@@ -288,6 +306,18 @@ def setup_segmentation_render_layers(num_objects):
     # Setup raw image render layer
     render_layers['RenderLayer'].use_pass_object_index = True
     render_layers['RenderLayer'].use_pass_combined = False
+
+    #setup the depthmap calculation using blender's mist function:
+    render_layers['RenderLayer'].use_pass_mist = True
+
+    #the depthmap can be calculated as the distance between objects and camera ('LINEAR'), or square/inverse square of the distance ('QUADRATIC'/'INVERSEQUADRATIC'):
+    scene.world.mist_settings.falloff = 'LINEAR'
+
+    #minimum depth:
+    scene.world.mist_settings.intensity = 0.0
+
+    #maximum depth (can be changed depending on the scene geometry to normalize the depth map whatever the camera orientation and position is):
+    scene.world.mist_settings.depth = 10
 
     # Setup image segmentation (without field lines) render layer
     l_image_seg = render_layers.new('Image_Seg')

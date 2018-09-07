@@ -5,7 +5,7 @@ import os
 ##############################################
 
 # Number of images to generate
-num_images = 1
+num_images = 10
 
 # Stereo output
 output_stereo = False
@@ -16,9 +16,10 @@ output_dir = os.path.join(
 )
 
 # Directory names for both the RGB image outputs and the pixel-level segmentation masks
-# (Outputs will be stored in <output_dir>/<image_dirname> and <output_dir>/<mask_dirname>)
+# (Outputs will be stored in <output_dir>/<dirname>)
 image_dirname = 'raw'
 mask_dirname = 'seg'
+depth_dirname = 'depth'
 
 ##############################################
 ##         CONFIGURATION PROCESSING         ##
@@ -35,3 +36,7 @@ if not os.path.isdir(image_dir):
 mask_dir = os.path.join(output_dir, mask_dirname)
 if not os.path.isdir(mask_dir):
     os.mkdir(mask_dir)
+
+depth_dir = os.path.join(output_dir, depth_dirname)
+if not os.path.isdir(depth_dir):
+    os.mkdir(depth_dir)

@@ -5,9 +5,7 @@ from math import pi
 from os import path, pardir
 
 # Get project path
-proj_path = path.abspath(
-    path.join(
-        path.join(path.dirname(path.realpath(__file__)), pardir), pardir))
+proj_path = path.abspath(path.join(path.join(path.dirname(path.realpath(__file__)), pardir), pardir))
 
 classes = {
     'unclassified': {
@@ -55,12 +53,10 @@ goal = {
 ball_radius = 0.5969 / (2 * pi)
 
 ball = {
-    'radius':
-    ball_radius,
+    'radius': ball_radius,
     'img_types': ['.jpg', '.png'],
     'mesh_types': ['.fbx', '.obj'],
-    'ball_dir':
-    path.abspath(path.join(path.join(proj_path, 'resources'), 'balls')),
+    'ball_dir': path.abspath(path.join(path.join(proj_path, 'resources'), 'balls')),
     'limits': {
         'position': {
             'x': [-field['length'] / 2., field['length'] / 2.],
@@ -100,27 +96,19 @@ camera = {
 }
 
 field_uv = {
-    'type':
-    '.png',
-    'mode':
-    'RGBA',
-    'pixels_per_metre':
-    100,
-    'uv_path':
-    path.abspath(path.join(path.join(proj_path, 'resources'), 'field_uv')),
-    'name':
-    'default',
-    'orientation':
-    'portrait',
+    'type': '.png',
+    'mode': 'RGBA',
+    'pixels_per_metre': 100,
+    'uv_path': path.abspath(path.join(path.join(proj_path, 'resources'), 'field_uv')),
+    'name': 'default',
+    'orientation': 'portrait',
 }
 
 scene_hdr = {
-    'path':
-    path.abspath(path.join(path.join(proj_path, 'resources'), 'scene_hdr')),
+    'path': path.abspath(path.join(path.join(proj_path, 'resources'), 'scene_hdr')),
     'hdri_types': ['.hdr'],
     'mask_types': ['.hdr', '.mask'],
-    'info_type':
-    '.json'
+    'info_type': '.json'
 }
 
 ##############################################
@@ -147,8 +135,8 @@ for i in range(0, len(ball['mesh_types'])):
 BALL_MESH_EXT += ')'
 
 # Establish regex strings for normals (norm, normal), colour (color(s), colour(s)) and mesh (*.fbx)
-BALL_NORM_REGEX = r'norm(al)?(.*)' + BALL_IMG_EXT
-BALL_COL_REGEX = r'colou?rs?(.*)' + BALL_IMG_EXT
+BALL_NORM_REGEX = r'norm(al)?.*' + BALL_IMG_EXT
+BALL_COL_REGEX = r'colou?rs?.*' + BALL_IMG_EXT
 BALL_MESH_REGEX = BALL_MESH_EXT
 
 ################

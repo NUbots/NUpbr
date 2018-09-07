@@ -86,32 +86,84 @@ def setup_environment(hdr):
     return env.setup_segmentation_render_layers(len(scene_cfg.classes)), world
 
 # Renders image frame for either raw or mask image (defined by <isRawImage>)
-def render_image(isMaskImage, toggle, ball, world, env, hdr_path, output_path):
+def render_image(imageType, toggles, ball, world, env, hdr_path, output_path):
     # Turn off all render layers
     for l in bpy.context.scene.render.layers:
-        l.use = isMaskImage
+        l.use = imageType is not 'MASK'
 
     # Enable raw image rendering if required
-    bpy.context.scene.render.layers['RenderLayer'].use = not isMaskImage
-    toggle[0].check = isMaskImage
-    toggle[1].inputs[0].default_value = 0. if isMaskImage else 1.
-    ball.sc_plane.hide_render = isMaskImage
+    bpy.context.scene.render.layers['RenderLayer'].use = imageType is not 'MASK'
+    ball.sc_plane.hide_render = imageType is not 'MASK'
+
+    if imageType == 'RAW':
+        toggles[0].check = False
+        toggles[1].check = False
+    elif imageType == 'MASK':
+        toggles[0].check = False
+        toggles[1].check = True
+    elif imageType == 'DEPTH':
+        toggles[0].check = True
+        toggles[1].check = False
+    else:
+        return
+
+    # toggle[1].inputs[0].default_value = 0. if isMaskImage else 1.
+
     # Update HDRI map
     env.update_hdri_env(world, hdr_path)
+
     # Update render output filepath
     bpy.data.scenes['Scene'].render.filepath = output_path
     bpy.ops.render.render(write_still=True)
 
+    # if depth_path:
+    #     img = bpy.data.images['Viewer Node']
+    #     min_val = None
+    #     max_val = None
+    #     with open('{}.pfm'.format(depth_path), 'wb') as f:
+    #         f.write('Pf\n'.encode('utf-8'))
+    #         f.write('{:d} {:d}\n'.format(img.size[0], img.size[1]).encode('utf-8'))
+    #         f.write('{:f}\n'.format(-1.0).encode('utf-8'))
+    #         for p in img.pixels:
+    #             if not min_val or p < min_val:
+    #                 min_val = p
+    #             if not max_val or p > max_val:
+    #                 max_val = p
+    #             f.write('{:f}'.format(p).encode('utf-8'))
+
+    #     with open('{}.pgm'.format(depth_path), 'wb') as f:
+    #         f.write('P5\n'.encode('utf-8'))
+    #         f.write('{:d} {:d}\n'.format(img.size[0], img.size[1]).encode('utf-8'))
+    #         f.write('255\n'.encode('utf-8'))
+    #         for p in img.pixels:
+    #             f.write('{:d}'.format(int(((p - min_val) / (max_val - min_val)) * 255)).encode('utf-8'))
+
 # Updates position and rotation for ball, camera and camera anchor objects
 def update_scene(ball, cam, anch, env_info):
     # TODO: Update object limits based on if field/goals are rendered
+    # Calculate synthetic limits
+
+    synth_cam_limits = {
+        'position': {
+            'x': [0., 0.],
+            'y': [0., 0.],
+            'z': scene_cfg.camera['limits']['position']['z']
+        },
+        'rotation': scene_cfg.camera['limits']['rotation']
+    }
 
     # Update ball
     ball_limits = scene_cfg.ball['limits']
+    # if env_info['to_draw']['field']:
+    #     ball_limits = {
+    #         'position': {
+    #             'x'
+    #         }
+    #     }
     update_obj(ball, ball_limits)
 
     # Update camera
-    cam_limits = scene_cfg.camera['limits']
+    cam_limits = scene_cfg.camera['limits'] if env_info['to_draw']['field'] else synth_cam_limits
     update_obj(cam, cam_limits)
 
     # Update anchor
