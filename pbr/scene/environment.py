@@ -31,6 +31,11 @@ def setup_render():
     # Set render submenu settings
     scene.cycles.device = rend_cfg['render']['cycles_device']
 
+    # Do we need to set these as well? To choose a specific GPU device?
+    # It seems that we can set the 'cycles_device' to GPU independently of these settings (found in User Preferences -> System)
+    # bpy.context.user_preferences.system.compute_device_type = “CUDA”
+    # bpy.context.user_preferences.system.compute_device = ‘CUDA_0’
+
     # Set denoising settings
     context.scene.render.layers[0].cycles.use_denoising = blend_cfg.layers['denoising']['use_denoising']
 
@@ -313,10 +318,13 @@ def setup_segmentation_render_layers(num_objects):
     #the depthmap can be calculated as the distance between objects and camera ('LINEAR'), or square/inverse square of the distance ('QUADRATIC'/'INVERSEQUADRATIC'):
     scene.world.mist_settings.falloff = 'LINEAR'
 
-    #minimum depth:
+    #mist minimum depth:
+    scene.world.mist_settings.start = 0.0
+
+    #mist intensity
     scene.world.mist_settings.intensity = 0.0
 
-    #maximum depth (can be changed depending on the scene geometry to normalize the depth map whatever the camera orientation and position is):
+    #mist maximum depth (can be changed depending on the scene geometry to normalize the depth map whatever the camera orientation and position is):
     scene.world.mist_settings.depth = 10
 
     # Setup image segmentation (without field lines) render layer
