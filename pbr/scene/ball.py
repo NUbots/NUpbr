@@ -163,6 +163,7 @@ class Ball(BlenderObject):
         sc_plane.name = 'SC_Plane'
         sc_plane.cycles.is_shadow_catcher = True
         sc_plane.cycles.show_transparent = True
+        sc_plane.scale = (50.0, 50.0, 1.0)
 
         self.sc_plane = sc_plane
 
