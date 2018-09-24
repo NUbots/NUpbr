@@ -86,28 +86,34 @@ def setup_environment(hdr):
     return env.setup_segmentation_render_layers(len(scene_cfg.classes)), world
 
 # Renders image frame for either raw or mask image (defined by <isRawImage>)
-def render_image(imageType, toggles, ball, world, env, hdr_path, output_path):
+# def render_image(imageType, toggles, ball, world, env, hdr_path, output_path):
+def render_image(isMaskImage, toggle, ball, world, env, hdr_path, output_path):
     # Turn off all render layers
     for l in bpy.context.scene.render.layers:
-        l.use = imageType is not 'MASK'
+        l.use = isMaskImage
 
     # Enable raw image rendering if required
-    bpy.context.scene.render.layers['RenderLayer'].use = imageType is not 'MASK'
-    ball.sc_plane.hide_render = imageType is not 'MASK'
+    bpy.context.scene.render.layers['RenderLayer'].use = not isMaskImage
 
-    if imageType == 'RAW':
-        toggles[0].check = False
-        toggles[1].check = False
-    elif imageType == 'MASK':
-        toggles[0].check = False
-        toggles[1].check = True
-    elif imageType == 'DEPTH':
-        toggles[0].check = True
-        toggles[1].check = False
-    else:
-        return
+    # Switch
+    toggle[0].check = isMaskImage
 
-    # toggle[1].inputs[0].default_value = 0. if isMaskImage else 1.
+    # Alpha Over
+    toggle[1].inputs[0].default_value = 0. if isMaskImage else 1.
+
+    if not isMaskImage:
+        # Depth Viewer
+        toggle[2].format.file_format = 'OPEN_EXR'
+        toggle[2].base_path = os.path.join(os.path.dirname(output_path), '..', 'depth')
+        toggle[2].file_slots[0].path = os.path.basename(output_path)
+
+        # Mist Viewer
+        toggle[3].format.file_format = 'PNG'
+        toggle[3].base_path = os.path.join(os.path.dirname(output_path), '..', 'mist')
+        toggle[3].file_slots[0].path = os.path.basename(output_path)
+
+    # Hide ball shadow catcher plane when rendering the mask image
+    ball.sc_plane.hide_render = isMaskImage
 
     # Update HDRI map
     env.update_hdri_env(world, hdr_path)
