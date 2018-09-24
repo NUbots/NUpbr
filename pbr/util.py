@@ -122,28 +122,6 @@ def render_image(isMaskImage, toggle, ball, world, env, hdr_path, output_path):
     bpy.data.scenes['Scene'].render.filepath = output_path
     bpy.ops.render.render(write_still=True)
 
-    # if depth_path:
-    #     img = bpy.data.images['Viewer Node']
-    #     min_val = None
-    #     max_val = None
-    #     with open('{}.pfm'.format(depth_path), 'wb') as f:
-    #         f.write('Pf\n'.encode('utf-8'))
-    #         f.write('{:d} {:d}\n'.format(img.size[0], img.size[1]).encode('utf-8'))
-    #         f.write('{:f}\n'.format(-1.0).encode('utf-8'))
-    #         for p in img.pixels:
-    #             if not min_val or p < min_val:
-    #                 min_val = p
-    #             if not max_val or p > max_val:
-    #                 max_val = p
-    #             f.write('{:f}'.format(p).encode('utf-8'))
-
-    #     with open('{}.pgm'.format(depth_path), 'wb') as f:
-    #         f.write('P5\n'.encode('utf-8'))
-    #         f.write('{:d} {:d}\n'.format(img.size[0], img.size[1]).encode('utf-8'))
-    #         f.write('255\n'.encode('utf-8'))
-    #         for p in img.pixels:
-    #             f.write('{:d}'.format(int(((p - min_val) / (max_val - min_val)) * 255)).encode('utf-8'))
-
 # Updates position and rotation for ball, camera and camera anchor objects
 def update_scene(ball, cam, anch, env_info):
     # TODO: Update object limits based on if field/goals are rendered
