@@ -65,6 +65,10 @@ def setup_render():
     # Set performance Settings
     [context.scene.render.tile_x, context.scene.render.tile_y] = rend_cfg['performance']['render_tile']
 
+    scene.render.threads_mode = rend_cfg['performance']['threads']['mode'].upper()
+    if rend_cfg['performance']['threads']['mode'] == 'FIXED':
+        scene.render.threads = rend_cfg['performance']['threads']['count']
+
     # Disable splash screen
     context.user_preferences.view.show_splash = False
 

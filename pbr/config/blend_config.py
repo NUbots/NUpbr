@@ -32,6 +32,11 @@ render = {
         'refractive_caustics': False,
     },
     'performance': {
+        'threads': {
+            # 'mode': 'AUTO',
+            'mode': 'FIXED',
+            'count': 8,
+        },
         'render_tile': [64, 64],
     },
     'layers': {
