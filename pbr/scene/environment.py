@@ -72,6 +72,10 @@ def setup_render():
     # Disable splash screen
     context.user_preferences.view.show_splash = False
 
+    # Generate raw outputs
+    scene.view_settings.view_transform = 'Raw'
+    scene.sequencer_colorspace_settings.name = 'Raw'
+
 # Setup background HDRI environment
 def setup_hdri_env(img_path):
     # Get world
