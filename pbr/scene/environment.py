@@ -329,7 +329,7 @@ def setup_segmentation_render_layers(num_objects):
     scene.world.mist_settings.intensity = 0.0
 
     #mist maximum depth (can be changed depending on the scene geometry to normalize the depth map whatever the camera orientation and position is):
-    scene.world.mist_settings.depth = 10
+    scene.world.mist_settings.depth = 50
 
     # Setup image segmentation (without field lines) render layer
     l_image_seg = render_layers.new('Image_Seg')
