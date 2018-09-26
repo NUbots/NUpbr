@@ -73,8 +73,6 @@ class Ball(BlenderObject):
             ball_subsurf = ball.modifiers['Ball_Subsurf']
             ball_subsurf.levels = blend_cfg.ball['subsurf_mod']['levels']
             ball_subsurf.render_levels = blend_cfg.ball['subsurf_mod']['rend_levels']
-        # Update shadowcatcher if updated sphere
-        self.set_sc_parent(ball)
 
         self.obj = ball
 
@@ -163,6 +161,8 @@ class Ball(BlenderObject):
         sc_plane.name = 'SC_Plane'
         sc_plane.cycles.is_shadow_catcher = True
         sc_plane.cycles.show_transparent = True
+        sc_plane.scale = (50., 50., 1.)
+        sc_plane.location = (0., 0., -0.0001)
 
         self.sc_plane = sc_plane
 
