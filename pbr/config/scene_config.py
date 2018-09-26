@@ -116,7 +116,10 @@ field_uv = {
 
 scene_hdr = {
     'path':
-    path.abspath(path.join(path.join(proj_path, 'resources'), 'scene_hdr')),
+    path.abspath(
+        path.join(
+            path.join('..', proj_path, 'NUpbr_resources', 'resources'),
+            'scene_hdr')),
     'hdri_types': ['.hdr'],
     'mask_types': ['.hdr', '.mask'],
     'info_type':
