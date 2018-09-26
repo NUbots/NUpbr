@@ -105,7 +105,7 @@ def main():
     ##               SCENE UPDATE               ##
     ##############################################
 
-    for frame_num in range(0, out_cfg.num_images):
+    for frame_num in range(1, out_cfg.num_images + 1):
         # Each ball gets even number of frames for each environment
         # Set new ball every <ball_batch_size> frames
         if frame_num % ball_batch_size == 0:
@@ -174,7 +174,7 @@ def main():
         ##                RENDERING                 ##
         ##############################################
 
-        filename = '{0:010}'.format(frame_num)
+        filename = str(frame_num).zfill(out_cfg.filename_len)
 
         # Establish camera list for either stereo or mono output
         cam_list = None
@@ -195,7 +195,7 @@ def main():
                 world=world,
                 env=env,
                 hdr_path=hdr_data['raw_path'],
-                output_path=os.path.join(out_cfg.image_dir, filename + cam['str']),
+                output_path=os.path.join(out_cfg.image_dir, filename + cam['str'] + '.png'),
             )
 
             # Render mask image
@@ -206,10 +206,8 @@ def main():
                 world=world,
                 env=env,
                 hdr_path=hdr_data['mask_path'],
-                output_path=os.path.join(out_cfg.mask_dir, filename + cam['str']),
+                output_path=os.path.join(out_cfg.mask_dir, filename + cam['str'] + '.png'),
             )
-
-            # TODO: Render depth image
 
 if __name__ == '__main__':
     main()

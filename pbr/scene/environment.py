@@ -5,6 +5,7 @@ import bpy
 
 from config import scene_config as scene_cfg
 from config import blend_config as blend_cfg
+from config import output_config as out_cfg
 
 # Clear environment of all objects
 def clear_env():
@@ -27,6 +28,9 @@ def setup_render():
     # Set render settings
     # Cycles rendering and establish our scene
     context.scene.render.engine = rend_cfg['render_engine']
+
+    # Disable file extension (so frame number is not appended)
+    context.scene.render.use_file_extension = False
 
     # Set render submenu settings
     scene.cycles.device = rend_cfg['render']['cycles_device']
@@ -72,6 +76,11 @@ def setup_hdri_env(img_path):
 
     # Get our node list to make material
     node_list = world.node_tree.nodes
+
+    # Setup mist for world
+    world.mist_settings.start = 0.
+    world.mist_settings.depth = out_cfg.max_depth
+    world.mist_settings.falloff = 'LINEAR'
 
     # Load our HDRI image and store in environment texture shader
     n_env_tex = node_list.new('ShaderNodeTexEnvironment')
@@ -232,9 +241,17 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     for node in node_list:
         node_list.remove(node)
 
-    # Render layer for image segment
+    # Render layer for raw image
     n_image_rl = node_list.new('CompositorNodeRLayers')
     n_image_rl.layer = l_image_raw.name
+
+    # File Output node for mist
+    n_depth_out = node_list.new('CompositorNodeOutputFile')
+    n_depth_out.name = 'Depth_Out'
+    n_depth_out.base_path = out_cfg.depth_dir
+    n_depth_out.file_slots[0].path = str.rjust('', out_cfg.filename_len, '#') + '.png'
+    n_depth_out.format.compression = 0.
+    n_depth_out.format.color_mode = 'RGB'
 
     # Render layer for image segment
     n_img_seg_rl = node_list.new('CompositorNodeRLayers')
@@ -264,6 +281,8 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     tl = bpy.context.scene.node_tree.links
     # Link raw image render layer to switch
     tl.new(n_image_rl.outputs[0], n_switch.inputs[0])
+    # Link depth from raw image to depth file output
+    tl.new(n_image_rl.outputs['Mist'], n_depth_out.inputs[0])
     # Link image segment render layer
     tl.new(n_img_seg_rl.outputs[0], n_alpha.inputs[1])
     # Link field segment render layer
@@ -281,13 +300,14 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     # Return switch node to toggle composite output
     return n_switch, n_alpha
 
-def setup_segmentation_render_layers(num_objects):
+def setup_render_layers(num_objects):
     scene = bpy.context.scene
     render_layers = scene.render.layers
 
     # Setup raw image render layer
-    render_layers['RenderLayer'].use_pass_object_index = True
+    render_layers['RenderLayer'].use_pass_object_index = False
     render_layers['RenderLayer'].use_pass_combined = False
+    render_layers['RenderLayer'].use_pass_mist = True
 
     # Setup image segmentation (without field lines) render layer
     l_image_seg = render_layers.new('Image_Seg')
