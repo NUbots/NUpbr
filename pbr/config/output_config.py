@@ -15,10 +15,17 @@ output_dir = os.path.join(
     os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)), 'outputs'
 )
 
+# Filename length (characters)
+filename_len = 10
+
 # Directory names for both the RGB image outputs and the pixel-level segmentation masks
 # (Outputs will be stored in <output_dir>/<image_dirname> and <output_dir>/<mask_dirname>)
 image_dirname = 'raw'
 mask_dirname = 'seg'
+depth_dirname = 'depth'
+
+# Maximum depth for normalized depth map (metres)
+max_depth = 20.
 
 ##############################################
 ##         CONFIGURATION PROCESSING         ##
@@ -35,3 +42,7 @@ if not os.path.isdir(image_dir):
 mask_dir = os.path.join(output_dir, mask_dirname)
 if not os.path.isdir(mask_dir):
     os.mkdir(mask_dir)
+
+depth_dir = os.path.join(output_dir, depth_dirname)
+if not os.path.isdir(depth_dir):
+    os.mkdir(depth_dir)
