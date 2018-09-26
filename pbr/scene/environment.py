@@ -142,8 +142,8 @@ def setup_image_seg_mat(total_classes):
     # Iterate through classes and create colour regions in colour ramp for each class
     for obj_class in scene_cfg.classes:
         elem = n_col_ramp.color_ramp.elements.new(
-            position=(scene_cfg.classes[obj_class]['index'] / (len(scene_cfg.classes))) - 0.5 /
-            (len(scene_cfg.classes))
+            position=(scene_cfg.classes[obj_class]['index'] / (len(scene_cfg.classes))) -
+            0.5 / (len(scene_cfg.classes))
         )
         elem.color = scene_cfg.classes[obj_class]['colour']
 
@@ -299,6 +299,7 @@ def setup_segmentation_render_layers(num_objects):
     # Setup field line segmentation render layer
     l_field_seg = render_layers.new('Field_Seg')
     l_field_seg.use_strand = blend_cfg.render['layers']['use_hair']
+    l_field_seg.use_sky = False
     l_field_seg.samples = 1
     field_seg_mat = setup_field_seg_mat(num_objects - 1, num_objects)
     l_field_seg.material_override = field_seg_mat
