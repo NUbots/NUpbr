@@ -1,5 +1,5 @@
 # Field-specific Configuration Settings
-#   * All measurements are in metres
+#   * All measurements are in SI units
 
 from math import pi
 from os import path, pardir
@@ -161,14 +161,14 @@ for i in range(0, len(scene_hdr['hdri_types'])):
         HDRI_RAW_EXT += '|'
 HDRI_RAW_EXT += ')'
 
-HDRI_MASK_EXT = '('
+HDRI_MASK_EXT = '['
 for i in range(0, len(scene_hdr['mask_types'])):
     HDRI_MASK_EXT += '({0})'.format(scene_hdr['mask_types'][i])
     if i + 1 < len(scene_hdr['mask_types']):
         HDRI_MASK_EXT += '|'
-HDRI_MASK_EXT += ')'
+HDRI_MASK_EXT += ']'
 
 # Establish regex strings for HDR images and HDR mask images
-HDRI_MASK_REGEX = r'mask(.*)' + HDRI_MASK_EXT
-HDRI_RAW_REGEX = r'raw(.*)' + HDRI_RAW_EXT
+HDRI_MASK_REGEX = r'mask.*' + HDRI_MASK_EXT
+HDRI_RAW_REGEX = r'raw.*' + HDRI_RAW_EXT
 HDRI_INFO_REGEX = scene_hdr['info_type']
