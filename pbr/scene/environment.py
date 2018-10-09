@@ -257,9 +257,12 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     n_depth_out = node_list.new('CompositorNodeOutputFile')
     n_depth_out.name = 'Depth_Out'
     n_depth_out.base_path = out_cfg.depth_dir
-    n_depth_out.file_slots[0].path = str.rjust('', out_cfg.filename_len, '#') + '.png'
-    n_depth_out.format.compression = 0.
-    n_depth_out.format.color_mode = 'RGB'
+    n_depth_out.format.file_format = 'OPEN_EXR'
+    n_depth_out.format.exr_codec = 'NONE'
+    n_depth_out.format.color_depth = '32'
+    n_depth_out.file_slots[0].path = str.rjust('', out_cfg.filename_len, '#') + '.exr'
+    n_depth_out.width = blend_cfg.render['dimensions']['resolution'][0]
+    n_depth_out.height = blend_cfg.render['dimensions']['resolution'][1]
 
     # Render layer for image segment
     n_img_seg_rl = node_list.new('CompositorNodeRLayers')
@@ -290,7 +293,7 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     # Link raw image render layer to switch
     tl.new(n_image_rl.outputs[0], n_switch.inputs[0])
     # Link depth from raw image to depth file output
-    tl.new(n_image_rl.outputs['Mist'], n_depth_out.inputs[0])
+    tl.new(n_image_rl.outputs['Depth'], n_depth_out.inputs[0])
     # Link image segment render layer
     tl.new(n_img_seg_rl.outputs[0], n_alpha.inputs[1])
     # Link field segment render layer
