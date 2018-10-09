@@ -86,6 +86,7 @@ def setup_hdri_env(img_path):
 
     # Setup mist for world
     world.mist_settings.start = 0.
+    world.mist_settings.intensity = 0.
     world.mist_settings.depth = out_cfg.max_depth
     world.mist_settings.falloff = 'LINEAR'
 
