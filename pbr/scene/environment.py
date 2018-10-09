@@ -67,6 +67,13 @@ def setup_render():
     # Disable splash screen
     context.user_preferences.view.show_splash = False
 
+    # Setup multiview stereo
+    if out_cfg.output_stereo:
+        bpy.context.scene.render.use_multiview = True
+        bpy.context.scene.render.views_format = 'STEREO_3D'
+    else:
+        bpy.context.scene.render.use_multiview = False
+
 # Setup background HDRI environment
 def setup_hdri_env(img_path):
     # Get world

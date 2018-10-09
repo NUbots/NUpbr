@@ -176,38 +176,35 @@ def main():
 
         filename = str(frame_num).zfill(out_cfg.filename_len)
 
-        # Establish camera list for either stereo or mono output
-        cam_list = None
-        if not out_cfg.output_stereo:
-            cam_list = [{'obj': cam_l.obj, 'str': ''}]
-        else:
-            cam_list = [{'obj': cam_l.obj, 'str': '_L'}, {'obj': cam_r.obj, 'str': '_R'}]
+        # Render for the main camera only
+        bpy.context.scene.camera = cam_l.obj
 
-        # Render for each camera
-        for cam in cam_list:
-            bpy.context.scene.camera = cam['obj']
+        # Use multiview stereo if stereo output is enabled
+        # (this will automatically render the second camera)
+        if out_cfg.output_stereo:
+            bpy.context.scene.render.use_multiview = True
 
-            # Render raw image
-            util.render_image(
-                isMaskImage=False,
-                toggle=render_layer_toggle,
-                ball=ball,
-                world=world,
-                env=env,
-                hdr_path=hdr_data['raw_path'],
-                output_path=os.path.join(out_cfg.image_dir, filename + cam['str'] + '.png'),
-            )
+        # Render raw image
+        util.render_image(
+            isMaskImage=False,
+            toggle=render_layer_toggle,
+            ball=ball,
+            world=world,
+            env=env,
+            hdr_path=hdr_data['raw_path'],
+            output_path=os.path.join(out_cfg.image_dir, '{}.png'.format(filename)),
+        )
 
-            # Render mask image
-            util.render_image(
-                isMaskImage=True,
-                toggle=render_layer_toggle,
-                ball=ball,
-                world=world,
-                env=env,
-                hdr_path=hdr_data['mask_path'],
-                output_path=os.path.join(out_cfg.mask_dir, filename + cam['str'] + '.png'),
-            )
+        # Render mask image
+        util.render_image(
+            isMaskImage=True,
+            toggle=render_layer_toggle,
+            ball=ball,
+            world=world,
+            env=env,
+            hdr_path=hdr_data['mask_path'],
+            output_path=os.path.join(out_cfg.mask_dir, '{}.png'.format(filename)),
+        )
 
 if __name__ == '__main__':
     main()
