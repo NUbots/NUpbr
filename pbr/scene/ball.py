@@ -19,6 +19,7 @@ class Ball(BlenderObject):
         self.colour_path = ball_info['colour_path']
         self.normal_path = ball_info['norm_path']
         self.mesh_path = ball_info['mesh_path']
+        self.roughness = 1.0
         self.create_shadowcatcher()
         self.construct(ball_info)
 
@@ -118,6 +119,7 @@ class Ball(BlenderObject):
         n_principled = node_list.new('ShaderNodeBsdfPrincipled')
         n_principled.inputs[4].default_value = blend_cfg.ball['material']['metallic']
         n_principled.inputs[7].default_value = blend_cfg.ball['material']['roughness']
+        self.roughness = blend_cfg.ball['material']['roughness']
 
         # Create output node
         n_output = node_list.new('ShaderNodeOutputMaterial')
