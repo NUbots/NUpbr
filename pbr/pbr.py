@@ -238,6 +238,7 @@ def main():
                 meta['camera']['right']['position'] = [
                     float(a) + float(b) for a, b in zip(cam_r.obj.location[0:3], cam_l.obj.location[0:3])
                 ]
+                meta['camera']['baseline'] = cam_r.obj.location[0:3]
 
             # Both cameras (in stereo) share the same lens information
             meta['camera']['lens'] = {}
