@@ -249,7 +249,7 @@ def main():
             meta['camera']['lens']['focal_length'] = cam_l.cam.cycles.fisheye_lens
 
             meta['environment'] = {}
-            meta['environment']['file'] = '001_raw.hdr'
+            meta['environment']['file'] = hdr_data['raw_path']
             meta['environment']['strength'] = world.node_tree.nodes['Background'].inputs[1].default_value
 
             # Write metadata to file
