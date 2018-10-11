@@ -3,3 +3,6 @@ __pycache__
 
 # outputs
 outputs/*
+blender-2\.79b/
+
+*build*/
