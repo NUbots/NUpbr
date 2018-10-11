@@ -258,8 +258,8 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     n_depth_out.name = 'Depth_Out'
     n_depth_out.base_path = out_cfg.depth_dir
     n_depth_out.format.file_format = 'OPEN_EXR'
-    n_depth_out.format.exr_codec = 'NONE'
-    n_depth_out.format.color_depth = '32'
+    n_depth_out.format.exr_codec = 'ZIP'
+    n_depth_out.format.color_depth = '16'
     n_depth_out.file_slots[0].path = str.rjust('', out_cfg.filename_len, '#') + '.exr'
     n_depth_out.width = blend_cfg.render['dimensions']['resolution'][0]
     n_depth_out.height = blend_cfg.render['dimensions']['resolution'][1]
