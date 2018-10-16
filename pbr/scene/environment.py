@@ -260,7 +260,6 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     n_depth_out.format.file_format = 'OPEN_EXR'
     n_depth_out.format.exr_codec = 'ZIP'
     n_depth_out.format.color_depth = '16'
-    n_depth_out.file_slots[0].path = str.rjust('', out_cfg.filename_len, '#') + '.exr'
     n_depth_out.width = blend_cfg.render['dimensions']['resolution'][0]
     n_depth_out.height = blend_cfg.render['dimensions']['resolution'][1]
 
@@ -309,7 +308,7 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     tl.new(n_switch.outputs[0], n_comp.inputs[0])
 
     # Return switch node to toggle composite output
-    return n_switch, n_alpha
+    return n_switch, n_alpha, n_depth_out
 
 def setup_render_layers(num_objects):
     scene = bpy.context.scene
