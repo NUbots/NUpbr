@@ -65,5 +65,13 @@ class Camera(BlenderObject):
         self.cam = cam
 
         cam_obj = bpy.data.objects[cam.name]
+        # cam_obj.type = scene_cfg.camera['type']
         cam_obj.name = self.name
         self.obj = cam_obj
+
+        for cam in bpy.data.cameras.keys():
+            if scene_cfg.camera['type'] == 'PANO':
+                bpy.data.cameras[cam].type = 'PANO'
+                bpy.data.cameras[cam].cycles.type = scene_cfg.camera['cycles']['type']
+                bpy.data.cameras[cam].cycles.fisheye_lens = scene_cfg.camera['focal_length']
+                bpy.data.cameras[cam].cycles.fisheye_fov = scene_cfg.camera['fov']
