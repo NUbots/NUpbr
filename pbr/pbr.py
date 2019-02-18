@@ -38,7 +38,9 @@ def main():
     ##             ENVIRONMENT SETUP            ##
     ##############################################
 
-    render_layer_toggle, world = util.setup_environment(hdrs[0])
+    with open(hdrs[0]['info_path'], 'r') as f:
+        env_info = json.load(f)
+    render_layer_toggle, world = util.setup_environment(hdrs[0], env_info)
 
     ##############################################
     ##            SCENE CONSTRUCTION            ##
@@ -197,6 +199,7 @@ def main():
             world=world,
             env=env,
             hdr_path=hdr_data['raw_path'],
+            env_info=env_info,
             output_path=os.path.join(out_cfg.image_dir, '{}.png'.format(filename)),
         )
 
@@ -208,6 +211,7 @@ def main():
             world=world,
             env=env,
             hdr_path=hdr_data['mask_path'],
+            env_info=env_info,
             output_path=os.path.join(out_cfg.mask_dir, '{}.png'.format(filename)),
         )
 

@@ -3,6 +3,8 @@
 import os
 import bpy
 
+from math import radians
+
 from config import scene_config as scene_cfg
 from config import blend_config as blend_cfg
 from config import output_config as out_cfg
@@ -75,7 +77,7 @@ def setup_render():
         bpy.context.scene.render.use_multiview = False
 
 # Setup background HDRI environment
-def setup_hdri_env(img_path):
+def setup_hdri_env(img_path, env_info):
     # Get world
     world = bpy.data.worlds['World']
     world.name = 'World_HDR'
@@ -93,14 +95,22 @@ def setup_hdri_env(img_path):
     # Load our HDRI image and store in environment texture shader
     n_env_tex = node_list.new('ShaderNodeTexEnvironment')
 
+    # Create texture map to rotate environment
+    n_map = node_list.new('ShaderNodeMapping')
+    n_coord = node_list.new('ShaderNodeTexCoord')
+
     node_list['Background'].inputs[0].default_value = scene_cfg.classes['unclassified']['colour']
 
     # Update the HDRI environment with the texture
-    update_hdri_env(world, img_path)
+    update_hdri_env(world, img_path, env_info)
 
     # Link our nodes
     tl = world.node_tree.links
 
+    # Link coordinates to mapping
+    tl.new(n_coord.outputs['Generated'], n_map.inputs['Vector'])
+    # Link mapping to texture
+    tl.new(n_map.outputs['Vector'], n_env_tex.inputs['Vector'])
     # Link texture image
     tl.new(n_env_tex.outputs[0], node_list['Background'].inputs[0])
     # Link background to output
@@ -108,13 +118,20 @@ def setup_hdri_env(img_path):
 
     return world
 
-def update_hdri_env(world, img_path):
+def update_hdri_env(world, img_path, env_info):
     node_list = bpy.data.worlds['World_HDR'].node_tree.nodes
 
     n_env_tex = node_list['Environment Texture']
     n_bg = node_list['Background']
+    n_map = node_list['Mapping']
 
     tl = bpy.data.worlds['World_HDR'].node_tree.links
+
+    n_map.rotation = (
+        radians(env_info['rotation']['roll']),
+        radians(env_info['rotation']['pitch']),
+        radians(env_info['rotation']['yaw']),
+    )
 
     # Attempt to find link to remove if necessary
     link = None
@@ -125,6 +142,7 @@ def update_hdri_env(world, img_path):
     # If we have a image to load, link environment texture to background
     if img_path is not None:
         if link is None:
+            tl.new(n_map.outputs['Vector'], n_env_tex.inputs['Vector'])
             tl.new(n_env_tex.outputs[0], n_bg.inputs[0])
         try:
             img = bpy.data.images.load(img_path)

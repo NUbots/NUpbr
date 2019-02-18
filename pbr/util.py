@@ -72,19 +72,19 @@ def load_assets():
 
     return hdrs, balls
 
-def setup_environment(hdr):
+def setup_environment(hdr, env_info):
     # Clear default environment
     env.clear_env()
     # Setup render settings
     env.setup_render()
     # Setup HRDI environment
-    world = env.setup_hdri_env(hdr['raw_path'])
+    world = env.setup_hdri_env(hdr['raw_path'], env_info)
 
     # Setup render layers (visual, segmentation and field lines)
     return env.setup_render_layers(len(scene_cfg.classes)), world
 
 # Renders image frame for either raw or mask image (defined by <isRawImage>)
-def render_image(isMaskImage, toggle, ball, world, env, hdr_path, output_path):
+def render_image(isMaskImage, toggle, ball, world, env, hdr_path, env_info, output_path):
     # Turn off all render layers
     for l in bpy.context.scene.render.layers:
         l.use = isMaskImage
@@ -95,7 +95,7 @@ def render_image(isMaskImage, toggle, ball, world, env, hdr_path, output_path):
     toggle[1].inputs[0].default_value = 1. if isMaskImage else 0.
     ball.sc_plane.hide_render = isMaskImage
     # Update HDRI map
-    env.update_hdri_env(world, hdr_path)
+    env.update_hdri_env(world, hdr_path, env_info)
     # Update render output filepath
     bpy.data.scenes['Scene'].render.filepath = output_path
     bpy.ops.render.render(write_still=True)
