@@ -100,6 +100,8 @@ def main():
 
     # Default tracking target to ball
     tracking_target = ball.obj
+    env_info = None
+    ball_data = None
 
     ##############################################
     ##               SCENE UPDATE               ##
@@ -108,7 +110,7 @@ def main():
     for frame_num in range(1, out_cfg.num_images + 1):
         # Each ball gets even number of frames for each environment
         # Set new ball every <ball_batch_size> frames
-        if frame_num % ball_batch_size == 0:
+        if not ball_data or frame_num % ball_batch_size == 0:
             ball_data = balls[ball_index]
             # If we're using same UV sphere and only changing textures,
             #   recreating the UV sphere is unnecessary
@@ -124,7 +126,7 @@ def main():
 
         # Each environment map gets even distribution of frames
         # Set new env map every <env_batch_size> frames
-        if frame_num % env_batch_size == 0:
+        if not env_info or frame_num % env_batch_size == 0:
             ball_index = 0
             hdr_data = hdrs[hdr_index]
             # Toggle objects based on environment map requirements
