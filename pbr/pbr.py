@@ -213,10 +213,19 @@ def main():
 
         # Rename our mis-named depth file(s) due to Blender's file output node naming scheme!
         if out_cfg.output_stereo:
-            os.rename(os.path.join(out_cfg.depth_dir, filename) + '_L.exr0001', os.path.join(out_cfg.depth_dir, filename) + '_L.exr')
-            os.rename(os.path.join(out_cfg.depth_dir, filename) + '_R.exr0001', os.path.join(out_cfg.depth_dir, filename) + '_R.exr')
+            os.rename(
+                os.path.join(out_cfg.depth_dir, filename) + '_L.exr0001',
+                os.path.join(out_cfg.depth_dir, filename) + '_L.exr'
+            )
+            os.rename(
+                os.path.join(out_cfg.depth_dir, filename) + '_R.exr0001',
+                os.path.join(out_cfg.depth_dir, filename) + '_R.exr'
+            )
         else:
-            os.rename(os.path.join(out_cfg.depth_dir, filename) + '.exr0001', os.path.join(out_cfg.depth_dir, filename) + '.exr')
+            os.rename(
+                os.path.join(out_cfg.depth_dir, filename) + '.exr0001',
+                os.path.join(out_cfg.depth_dir, filename) + '.exr'
+            )
 
         # Generate meta file
         with open(os.path.join(out_cfg.meta_dir, '{}.yaml'.format(filename)), 'w') as meta_file:
