@@ -2,13 +2,11 @@ import os
 import re
 import bpy
 import random as rand
-from math import pi
+from math import radians
 
 from config import scene_config as scene_cfg
 
 from scene import environment as env
-
-DEG_TO_RAD = pi / 180.
 
 # Import assets from path as defined by asset_list
 # Where asset list ('assets') is a list of two-tuples, each containing
@@ -127,7 +125,7 @@ def update_obj(obj, limits):
         ))
     if 'rotation' in limits:
         obj.rotate((
-            rand.uniform(limits['rotation']['pitch'][0], limits['rotation']['pitch'][1]) * DEG_TO_RAD,
-            rand.uniform(limits['rotation']['yaw'][0], limits['rotation']['yaw'][1]) * DEG_TO_RAD,
-            rand.uniform(limits['rotation']['roll'][0], limits['rotation']['roll'][1]) * DEG_TO_RAD,
+            radians(rand.uniform(limits['rotation']['pitch'][0], limits['rotation']['pitch'][1])),
+            radians(rand.uniform(limits['rotation']['yaw'][0], limits['rotation']['yaw'][1])),
+            radians(rand.uniform(limits['rotation']['roll'][0], limits['rotation']['roll'][1])),
         ))
