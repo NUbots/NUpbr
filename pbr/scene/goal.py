@@ -10,12 +10,12 @@ from config import blend_config as blend_cfg
 
 from scene.blender_object import BlenderObject
 
-
 class Goal(BlenderObject):
     def __init__(self, class_index):
         self.loc = (0., 0., 0.)
         self.mat = None
         self.obj = None
+        self.rear = None
         self.pass_index = class_index
         self.construct()
 
@@ -59,8 +59,9 @@ class Goal(BlenderObject):
 
         # Create goals with posts and crossbar
         self.join_objs([goal_post, goal_post_copy, crossbar])
-        # Create goals with front and back
-        self.join_objs([goal_post, goal_rear])
+
+        # Connect back of goals to front
+        goal_rear.parent = goal_post
 
         # Redefine name to be goal instead of goal post for clarity
         goal = goal_post
@@ -79,7 +80,12 @@ class Goal(BlenderObject):
         self.mat = self.create_mat(goal, blend_cfg.goal['material'])
         goal.data.materials.append(self.mat)
 
+        # Apply goal material
+        self.mat = self.create_mat(goal_rear, blend_cfg.goal['material'])
+        goal_rear.data.materials.append(self.mat)
+
         self.obj = goal_post
+        self.rear = goal_rear
 
     # Utility function for joining objects together
     def join_objs(self, objs):
