@@ -2,7 +2,8 @@ import os
 import re
 import bpy
 import random as rand
-from math import radians
+import numpy as np
+import math
 
 from config import scene_config as scene_cfg
 
@@ -101,12 +102,15 @@ def render_image(isMaskImage, toggle, ball, world, env, hdr_path, env_info, outp
     bpy.ops.render.render(write_still=True)
 
 # Updates position and rotation for ball, camera and camera anchor objects
-def update_scene(ball, cam, anch, env_info):
+def update_scene(ball, cam, anch, env_info, hdr):
     # TODO: Update object limits based on if field/goals are rendered
 
     # Update ball
     ball_limits = scene_cfg.ball['limits']
-    update_obj(ball, ball_limits)
+    if ball_limits['auto_set_limits']:
+        generate_ball_pos(ball, hdr, env_info)
+    else:
+        update_obj(ball, ball_limits)
 
     # Update camera
     cam_limits = scene_cfg.camera['limits']
@@ -125,7 +129,57 @@ def update_obj(obj, limits):
         ))
     if 'rotation' in limits:
         obj.rotate((
-            radians(rand.uniform(limits['rotation']['pitch'][0], limits['rotation']['pitch'][1])),
-            radians(rand.uniform(limits['rotation']['yaw'][0], limits['rotation']['yaw'][1])),
-            radians(rand.uniform(limits['rotation']['roll'][0], limits['rotation']['roll'][1])),
+            math.radians(rand.uniform(limits['rotation']['pitch'][0], limits['rotation']['pitch'][1])),
+            math.radians(rand.uniform(limits['rotation']['yaw'][0], limits['rotation']['yaw'][1])),
+            math.radians(rand.uniform(limits['rotation']['roll'][0], limits['rotation']['roll'][1])),
         ))
+
+def generate_ball_pos(ball, hdr, env_info):
+    try:
+        img = bpy.data.images.load(hdr['mask_path'])
+    except:
+        raise NameError('Cannot load image {0}'.format(hdr['mask_path']))
+
+    # Store image pixels in numpy array
+    img_arr = np.array(img.pixels)
+    img_arr.shape = [img.size[0], img.size[1], 4]
+
+    # Get coordinates where colour is field colour
+    field_coords = (
+        np.all(
+            img_arr == np.broadcast_to(scene_cfg.classes['field']['colour'], (img.size[0], img.size[1], 4)), axis=-1
+        )
+    ).nonzero()
+
+    # Get random field point
+    index = rand.randint(0, len(field_coords[0]))
+    ball_coord_image = (field_coords[0][index], field_coords[1][index])
+    ball_coord_screen = (field_coords[0][index] - img.size[0] / 2., img.size[1] / 2. - field_coords[1][index])
+
+    # Calculate phi/theta
+    phi = (ball_coord_screen[0] / img.size[0]) * 2 * math.pi
+    theta = (ball_coord_screen[1] / img.size[1]) * math.pi
+
+    # Project to 3D
+    ball_vector = np.array([math.cos(phi) * math.cos(theta), math.sin(phi) * math.cos(theta), math.sin(theta)])
+
+    # Create rotation matrix
+    # Roll (x) pitch (y) yaw (z)
+    alpha = env_info['rotation']['roll']
+    beta = env_info['rotation']['pitch']
+    gamma = env_info['rotation']['yaw']
+
+    rot_x = np.matrix([[1, 0, 0], [0, math.cos(alpha), -math.sin(alpha)], [0, math.sin(alpha), math.cos(alpha)]])
+    rot_y = np.matrix([[math.cos(beta), 0, math.sin(beta)], [0, 1, 0], [-math.sin(beta), 0, math.cos(beta)]])
+    rot_z = np.matrix([[math.cos(gamma), -math.sin(gamma), 0], [math.sin(gamma), math.cos(gamma), 0], [0, 0, 1]])
+
+    rot = rot_z * rot_y * rot_x
+
+    print("Ball dims: ", img.size[:])
+    print("Ball coord image: ", ball_coord_image)
+    print("Ball coord screen: ", ball_coord_screen)
+    print("Phi theta: ", phi, theta)
+    print("Rotation: \n", rot)
+    print("Rot unit vec: ", ball_vector * rot)
+
+    exit()

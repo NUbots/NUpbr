@@ -145,7 +145,7 @@ def main():
             tracking_target = ball.obj
 
         # Update location and rotation of camera focus and camera
-        util.update_scene(ball, cam_l, anch, env_info)
+        util.update_scene(ball, cam_l, anch, env_info, hdrs[hdr_index])
 
         # Calculate number of frames per object (e.g. 3 for synthetic balls, goals and random)
         num_frames_per_object = float(1 + len([o for o in env_info['to_draw'].values() if o == True]))

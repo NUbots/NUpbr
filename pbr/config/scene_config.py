@@ -61,6 +61,7 @@ ball = {
     'mesh_types': ['.fbx', '.obj'],
     'ball_dir': path.abspath(path.join(res_path, 'balls')),
     'limits': {
+        'auto_set_limits': True,
         'position': {
             'x': [-field['length'] / 2., field['length'] / 2.],
             'y': [-field['width'] / 2., field['width'] / 2.],
