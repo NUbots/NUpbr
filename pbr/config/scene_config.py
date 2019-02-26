@@ -8,7 +8,7 @@ from os import path, pardir
 proj_path = path.abspath(path.join(path.join(path.dirname(path.realpath(__file__)), pardir), pardir))
 
 # Create resource path
-res_path = path.abspath('/home/matt/NU/NUpbr_resources/resources')
+res_path = path.join(proj_path, 'resources')
 
 classes = {
     'unclassified': {
