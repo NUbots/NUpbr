@@ -87,6 +87,10 @@ class Goal(BlenderObject):
         self.obj = goal_post
         self.rear = goal_rear
 
+    def hide_object(self, to_hide):
+        self.obj.hide_render = to_hide
+        self.rear.hide_render = to_hide
+
     # Utility function for joining objects together
     def join_objs(self, objs):
         # Create copy of context

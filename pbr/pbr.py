@@ -139,8 +139,8 @@ def main():
             with open(hdr_data['info_path'], 'r') as f:
                 env_info = json.load(f)
             ball.obj.hide_render = not env_info['to_draw']['ball']
-            goals[0].obj.hide_render = not env_info['to_draw']['goal']
-            goals[1].obj.hide_render = not env_info['to_draw']['goal']
+            goals[0].hide_object(not env_info['to_draw']['goal'])
+            goals[1].hide_object(not env_info['to_draw']['goal'])
             field.obj.hide_render = not env_info['to_draw']['field']
             field.lower_plane.hide_render = not env_info['to_draw']['field']
             # Update hdr index for next pass
