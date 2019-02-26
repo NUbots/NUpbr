@@ -2,17 +2,20 @@
 
 # We want to use packages that don't come with blender by default
 # To do this we need to make sure we have pip and can install the packages
-try:
-    from pip._internal import main as pip
-except:
+
+def _install_pip():
     import os
-    import urllib.request
+    import requests
     import sys
 
     # Get the get-pip.py install file
     print('Pip is not installed, installing it now, restart the script after this is done')
     try:
-        urllib.request.urlretrieve('https://bootstrap.pypa.io/get-pip.py', 'get_pip.py')  
+        r = requests.get('https://bootstrap.pypa.io/get-pip.py', stream=True)
+        if r.status_code == 200:
+            with open('get_pip.py', 'wb') as f:
+                for chunk in r:
+                    f.write(chunk)
     except:
         if not os.path.isfile('get_pip.py'):
             print("We were unable to download https://bootstrap.pypa.io/get-pip.py")
@@ -24,8 +27,16 @@ except:
     get_pip.main()
     exit(0)
 
-# We have pip, install the dependencies
+def _install_package(args):
+    try:
+        import pip
+        from pip._internal import main as pip_main
+        pip_main(args)
+    except:
+        _install_pip()
+
+# Try to install our dependencies
 try:
     import cv2
 except:
-    pip(['install', '--no-deps', 'opencv-contrib-python'])
+    _install_package(['install', '--no-deps', 'opencv-contrib-python'])
