@@ -4,6 +4,7 @@ import bpy
 import random as rand
 import numpy as np
 import math
+import cv2
 
 from config import scene_config as scene_cfg
 
@@ -105,16 +106,20 @@ def render_image(isMaskImage, toggle, ball, world, env, hdr_path, env_info, outp
 def update_scene(ball, cam, anch, env_info, hdr):
     # TODO: Update object limits based on if field/goals are rendered
 
+    # Update camera
+    # If we are not drawing the field, use the HDRs camera height
+    cam_limits = scene_cfg.camera['limits']
+    if not env_info['to_draw']['field']:
+        cam_limits['position']['z'][0] = env_info['position']['z']
+        cam_limits['position']['z'][1] = env_info['position']['z']
+    update_obj(cam, cam_limits)
+
     # Update ball
     ball_limits = scene_cfg.ball['limits']
-    if ball_limits['auto_set_limits']:
-        generate_ball_pos(ball, hdr, env_info)
+    if ball_limits['auto_set_limits'] and not env_info['to_draw']['field']:
+        generate_ball_pos(ball, cam, hdr, env_info)
     else:
         update_obj(ball, ball_limits)
-
-    # Update camera
-    cam_limits = scene_cfg.camera['limits']
-    update_obj(cam, cam_limits)
 
     # Update anchor
     update_obj(anch, ball_limits)
@@ -134,31 +139,42 @@ def update_obj(obj, limits):
             math.radians(rand.uniform(limits['rotation']['roll'][0], limits['rotation']['roll'][1])),
         ))
 
-def generate_ball_pos(ball, hdr, env_info):
+def generate_ball_pos(ball, cam, hdr, env_info):
+    print('Start')
     try:
-        img = bpy.data.images.load(hdr['mask_path'])
+        img = cv2.imread(hdr['mask_path'])
     except:
         raise NameError('Cannot load image {0}'.format(hdr['mask_path']))
 
-    # Store image pixels in numpy array
-    img_arr = np.array(img.pixels)
-    img_arr.shape = [img.size[0], img.size[1], 4]
+    # Get coordinates where colour is field colour or field line colour
+    field_coords = np.stack(
+        (
+            np.logical_or(
+                np.all(
+                    img == [[[int(round(v * 255)) for v in scene_cfg.classes['field']['colour'][:3][::-1]]]],
+                    axis=-1,
+                ),
+                np.all(
+                    img == [[[int(round(v * 255)) for v in scene_cfg.classes['field']['field_lines_colour'][:3][::-1]]]
+                            ],
+                    axis=-1,
+                )
+            )
+        ).nonzero(),
+        axis=-1,
+    )
 
-    # Get coordinates where colour is field colour
-    field_coords = (
-        np.all(
-            img_arr == np.broadcast_to(scene_cfg.classes['field']['colour'], (img.size[0], img.size[1], 4)), axis=-1
-        )
-    ).nonzero()
+    print(hdr)
+    print(field_coords.shape)
+    input("Waiting")
 
     # Get random field point
-    index = rand.randint(0, len(field_coords[0]))
-    ball_coord_image = (field_coords[0][index], field_coords[1][index])
-    ball_coord_screen = (field_coords[0][index] - img.size[0] / 2., img.size[1] / 2. - field_coords[1][index])
+    index = rand.randint(0, field_coords.shape[0] - 1)
+    y, x = field_coords[index]
 
-    # Calculate phi/theta
-    phi = (ball_coord_screen[0] / img.size[0]) * 2 * math.pi
-    theta = (ball_coord_screen[1] / img.size[1]) * math.pi
+    # Normalise the coordinates into a form useful for making unit vectors
+    phi = (img.shape[0] / 2 - y) / img.shape[0] * math.pi
+    theta = (x - img.shape[1] / 2) / img.shape[1] * math.pi * 2
 
     # Project to 3D
     ball_vector = np.array([math.cos(phi) * math.cos(theta), math.sin(phi) * math.cos(theta), math.sin(theta)])
@@ -175,11 +191,19 @@ def generate_ball_pos(ball, hdr, env_info):
 
     rot = rot_z * rot_y * rot_x
 
-    print("Ball dims: ", img.size[:])
-    print("Ball coord image: ", ball_coord_image)
-    print("Ball coord screen: ", ball_coord_screen)
-    print("Phi theta: ", phi, theta)
-    print("Rotation: \n", rot)
-    print("Rot unit vec: ", ball_vector * rot)
+    # Rotate the ball vector by the rotation of the environment
+    ball_vector = ball_vector * rot
 
-    exit()
+    # Project the ball vector to the ground plane to get a ball position
+    height = -cam.obj.location[2]
+
+    # Get the position for the ball
+    ground_point = ball_vector[0] * (height / ball_vector[0, 2])
+
+    # Move into the world coordinates
+    ground_point = np.array([ground_point[0,0], ground_point[0,1], scene_cfg.ball['radius']])
+
+    # Offset x/y by the camera position
+    ground_point = ground_point + np.array([cam.obj.location[0], cam.obj.location[1], 0])
+
+    ball.move((ground_point[0], ground_point[1], ground_point[2]))
