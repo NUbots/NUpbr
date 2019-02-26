@@ -5,4 +5,8 @@ __pycache__
 outputs/*
 blender-2\.79b/
 
-*build*/
+# Resource directory
+/resources/
+
+# get-pip install script
+/pbr/get_pip.py
