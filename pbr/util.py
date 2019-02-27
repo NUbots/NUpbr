@@ -164,10 +164,6 @@ def generate_ball_pos(ball, cam, hdr, env_info):
         axis=-1,
     )
 
-    print(hdr)
-    print(field_coords.shape)
-    input("Waiting")
-
     # Get random field point
     index = rand.randint(0, field_coords.shape[0] - 1)
     y, x = field_coords[index]
@@ -177,7 +173,7 @@ def generate_ball_pos(ball, cam, hdr, env_info):
     theta = (x - img.shape[1] / 2) / img.shape[1] * math.pi * 2
 
     # Project to 3D
-    ball_vector = np.array([math.cos(phi) * math.cos(theta), math.sin(phi) * math.cos(theta), math.sin(theta)])
+    ball_vector = np.array([math.cos(phi) * math.cos(theta), math.sin(theta), math.sin(phi) * math.cos(theta)])
 
     # Create rotation matrix
     # Roll (x) pitch (y) yaw (z)
@@ -201,9 +197,16 @@ def generate_ball_pos(ball, cam, hdr, env_info):
     ground_point = ball_vector[0] * (height / ball_vector[0, 2])
 
     # Move into the world coordinates
-    ground_point = np.array([ground_point[0,0], ground_point[0,1], scene_cfg.ball['radius']])
+    ground_point = np.array([ground_point[0, 0], ground_point[0, 1], scene_cfg.ball['radius']])
 
     # Offset x/y by the camera position
     ground_point = ground_point + np.array([cam.obj.location[0], cam.obj.location[1], 0])
 
     ball.move((ground_point[0], ground_point[1], ground_point[2]))
+
+    # Random rotation
+    ball.rotate((
+        rand.uniform(-math.pi, math.pi),
+        rand.uniform(-math.pi, math.pi),
+        rand.uniform(-math.pi, math.pi),
+    ))
