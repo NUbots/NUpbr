@@ -2,7 +2,9 @@ import os
 import re
 import bpy
 import random as rand
-from math import radians
+import numpy as np
+import math
+import cv2
 
 from config import scene_config as scene_cfg
 
@@ -101,16 +103,23 @@ def render_image(isMaskImage, toggle, ball, world, env, hdr_path, env_info, outp
     bpy.ops.render.render(write_still=True)
 
 # Updates position and rotation for ball, camera and camera anchor objects
-def update_scene(ball, cam, anch, env_info):
+def update_scene(ball, cam, anch, env_info, hdr):
     # TODO: Update object limits based on if field/goals are rendered
+
+    # Update camera
+    # If we are not drawing the field, use the HDRs camera height
+    cam_limits = scene_cfg.camera['limits']
+    if not env_info['to_draw']['field']:
+        cam_limits['position']['z'][0] = env_info['position']['z']
+        cam_limits['position']['z'][1] = env_info['position']['z']
+    update_obj(cam, cam_limits)
 
     # Update ball
     ball_limits = scene_cfg.ball['limits']
-    update_obj(ball, ball_limits)
-
-    # Update camera
-    cam_limits = scene_cfg.camera['limits']
-    update_obj(cam, cam_limits)
+    if ball_limits['auto_set_limits'] and not env_info['to_draw']['field']:
+        generate_ball_pos(ball, cam, hdr, env_info)
+    else:
+        update_obj(ball, ball_limits)
 
     # Update anchor
     update_obj(anch, ball_limits)
@@ -125,7 +134,99 @@ def update_obj(obj, limits):
         ))
     if 'rotation' in limits:
         obj.rotate((
-            radians(rand.uniform(limits['rotation']['pitch'][0], limits['rotation']['pitch'][1])),
-            radians(rand.uniform(limits['rotation']['yaw'][0], limits['rotation']['yaw'][1])),
-            radians(rand.uniform(limits['rotation']['roll'][0], limits['rotation']['roll'][1])),
+            math.radians(rand.uniform(limits['rotation']['pitch'][0], limits['rotation']['pitch'][1])),
+            math.radians(rand.uniform(limits['rotation']['yaw'][0], limits['rotation']['yaw'][1])),
+            math.radians(rand.uniform(limits['rotation']['roll'][0], limits['rotation']['roll'][1])),
         ))
+
+def generate_ball_pos(ball, cam, hdr, env_info):
+    try:
+        img = cv2.imread(hdr['mask_path'])
+    except:
+        raise NameError('Cannot load image {0}'.format(hdr['mask_path']))
+
+    # Get coordinates where colour is field colour or field line colour
+    field_coords = np.stack(
+        (
+            np.logical_or(
+                np.all(
+                    img == [[[int(round(v * 255)) for v in scene_cfg.classes['field']['colour'][:3][::-1]]]],
+                    axis=-1,
+                ),
+                np.all(
+                    img == [[[int(round(v * 255)) for v in scene_cfg.classes['field']['field_lines_colour'][:3][::-1]]]
+                            ],
+                    axis=-1,
+                )
+            )
+        ).nonzero(),
+        axis=-1,
+    )
+
+    # Get random field point
+    y, x = field_coords[rand.randint(0, field_coords.shape[0] - 1)]
+
+    # Normalise the coordinates into a form useful for making unit vectors
+    phi = (y / img.shape[0]) * math.pi
+    theta = (0.5 - (x / img.shape[1])) * math.pi * 2
+    ball_vector = np.array([
+        math.sin(phi) * math.cos(theta),
+        math.sin(phi) * math.sin(theta),
+        math.cos(phi),
+    ])
+
+    # Create rotation matrix
+    # Roll (x) pitch (y) yaw (z)
+    alpha = math.radians(env_info['rotation']['roll'])
+    beta = math.radians(env_info['rotation']['pitch'])
+    gamma = math.radians(env_info['rotation']['yaw'])
+
+    sa = math.sin(alpha)
+    ca = math.cos(alpha)
+    sb = math.sin(beta)
+    cb = math.cos(beta)
+    sg = math.sin(gamma)
+    cg = math.cos(gamma)
+
+    rot_x = np.matrix([
+        [1,  0,   0],
+        [0, ca, -sa],
+        [0, sa,  ca],
+    ]) # yapf: disable
+    rot_y = np.matrix([
+        [ cb, 0, sb],
+        [  0, 1,  0],
+        [-sb, 0, cb],
+    ]) # yapf: disable
+    rot_z = np.matrix([
+        [cg, -sg, 0],
+        [sg,  cg, 0],
+        [ 0,   0, 1],
+    ]) # yapf: disable
+
+    rot = rot_z * rot_y * rot_x
+
+    # Rotate the ball vector by the rotation of the environment
+    ball_vector = ball_vector * rot
+    ball_vector = np.array([ball_vector[0, 0], ball_vector[0, 1], ball_vector[0, 2]])
+
+    # Project the ball vector to the ground plane to get a ball position
+    height = -cam.obj.location[2]
+
+    # Get the position for the ball
+    ground_point = ball_vector * (height / ball_vector[2])
+
+    # Move into the world coordinates
+    ground_point = np.array([ground_point[0], ground_point[1], scene_cfg.ball['radius']])
+
+    # Offset x/y by the camera position
+    ground_point = ground_point + np.array([cam.obj.location[0], cam.obj.location[1], 0])
+
+    ball.move((ground_point[0], ground_point[1], ground_point[2]))
+
+    # Random rotation
+    ball.rotate((
+        rand.uniform(-math.pi, math.pi),
+        rand.uniform(-math.pi, math.pi),
+        rand.uniform(-math.pi, math.pi),
+    ))

@@ -1,4 +1,4 @@
-#!/usr/local/blender -P
+#!/usr/local/bin/blender -P
 
 import os
 import sys
@@ -6,8 +6,12 @@ import random as rand
 import bpy
 import re
 import json
+
 # Add our current position to path to include package
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+
+# Make sure the python dependencies for this script are installed
+import ensure_dependencies
 
 from math import pi, sqrt, ceil
 
@@ -135,8 +139,8 @@ def main():
             with open(hdr_data['info_path'], 'r') as f:
                 env_info = json.load(f)
             ball.obj.hide_render = not env_info['to_draw']['ball']
-            goals[0].obj.hide_render = not env_info['to_draw']['goal']
-            goals[1].obj.hide_render = not env_info['to_draw']['goal']
+            goals[0].hide_object(not env_info['to_draw']['goal'])
+            goals[1].hide_object(not env_info['to_draw']['goal'])
             field.obj.hide_render = not env_info['to_draw']['field']
             field.lower_plane.hide_render = not env_info['to_draw']['field']
             # Update hdr index for next pass
@@ -145,7 +149,7 @@ def main():
             tracking_target = ball.obj
 
         # Update location and rotation of camera focus and camera
-        util.update_scene(ball, cam_l, anch, env_info)
+        util.update_scene(ball, cam_l, anch, env_info, hdrs[hdr_index])
 
         # Calculate number of frames per object (e.g. 3 for synthetic balls, goals and random)
         num_frames_per_object = float(1 + len([o for o in env_info['to_draw'].values() if o == True]))
