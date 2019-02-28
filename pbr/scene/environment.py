@@ -271,15 +271,17 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     n_image_rl = node_list.new('CompositorNodeRLayers')
     n_image_rl.layer = l_image_raw.name
 
-    # File Output node for mist
-    n_depth_out = node_list.new('CompositorNodeOutputFile')
-    n_depth_out.name = 'Depth_Out'
-    n_depth_out.base_path = out_cfg.depth_dir
-    n_depth_out.format.file_format = 'OPEN_EXR'
-    n_depth_out.format.exr_codec = 'ZIP'
-    n_depth_out.format.color_depth = '16'
-    n_depth_out.width = blend_cfg.render['dimensions']['resolution'][0]
-    n_depth_out.height = blend_cfg.render['dimensions']['resolution'][1]
+    n_depth_out = None
+    if out_cfg.output_depth:
+        # File Output node for mist
+        n_depth_out = node_list.new('CompositorNodeOutputFile')
+        n_depth_out.name = 'Depth_Out'
+        n_depth_out.base_path = out_cfg.depth_dir
+        n_depth_out.format.file_format = 'OPEN_EXR'
+        n_depth_out.format.exr_codec = 'ZIP'
+        n_depth_out.format.color_depth = '16'
+        n_depth_out.width = blend_cfg.render['dimensions']['resolution'][0]
+        n_depth_out.height = blend_cfg.render['dimensions']['resolution'][1]
 
     # Render layer for image segment
     n_img_seg_rl = node_list.new('CompositorNodeRLayers')
@@ -309,8 +311,10 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     tl = bpy.context.scene.node_tree.links
     # Link raw image render layer to switch
     tl.new(n_image_rl.outputs[0], n_switch.inputs[0])
-    # Link depth from raw image to depth file output
-    tl.new(n_image_rl.outputs['Depth'], n_depth_out.inputs[0])
+
+    if out_cfg.output_depth:
+        # Link depth from raw image to depth file output
+        tl.new(n_image_rl.outputs['Depth'], n_depth_out.inputs[0])
     # Link image segment render layer
     tl.new(n_img_seg_rl.outputs[0], n_alpha.inputs[1])
     # Link field segment render layer

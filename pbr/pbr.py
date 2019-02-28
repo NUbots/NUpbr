@@ -184,8 +184,9 @@ def main():
 
         filename = str(frame_num).zfill(out_cfg.filename_len)
 
-        # Set depth filename
-        render_layer_toggle[2].file_slots[0].path = filename + '.exr'
+        if out_cfg.output_depth:
+            # Set depth filename
+            render_layer_toggle[2].file_slots[0].path = filename + '.exr'
 
         # Render for the main camera only
         bpy.context.scene.camera = cam_l.obj
@@ -219,21 +220,22 @@ def main():
             output_path=os.path.join(out_cfg.mask_dir, '{}.png'.format(filename)),
         )
 
-        # Rename our mis-named depth file(s) due to Blender's file output node naming scheme!
-        if out_cfg.output_stereo:
-            os.rename(
-                os.path.join(out_cfg.depth_dir, filename) + '_L.exr0001',
-                os.path.join(out_cfg.depth_dir, filename) + '_L.exr'
-            )
-            os.rename(
-                os.path.join(out_cfg.depth_dir, filename) + '_R.exr0001',
-                os.path.join(out_cfg.depth_dir, filename) + '_R.exr'
-            )
-        else:
-            os.rename(
-                os.path.join(out_cfg.depth_dir, filename) + '.exr0001',
-                os.path.join(out_cfg.depth_dir, filename) + '.exr'
-            )
+        if out_cfg.output_depth:
+            # Rename our mis-named depth file(s) due to Blender's file output node naming scheme!
+            if out_cfg.output_stereo:
+                os.rename(
+                    os.path.join(out_cfg.depth_dir, filename) + '_L.exr0001',
+                    os.path.join(out_cfg.depth_dir, filename) + '_L.exr'
+                )
+                os.rename(
+                    os.path.join(out_cfg.depth_dir, filename) + '_R.exr0001',
+                    os.path.join(out_cfg.depth_dir, filename) + '_R.exr'
+                )
+            else:
+                os.rename(
+                    os.path.join(out_cfg.depth_dir, filename) + '.exr0001',
+                    os.path.join(out_cfg.depth_dir, filename) + '.exr'
+                )
 
         # Generate meta file
         with open(os.path.join(out_cfg.meta_dir, '{}.yaml'.format(filename)), 'w') as meta_file:
