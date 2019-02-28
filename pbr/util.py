@@ -140,7 +140,6 @@ def update_obj(obj, limits):
         ))
 
 def generate_ball_pos(ball, cam, hdr, env_info):
-    print('Start')
     try:
         img = cv2.imread(hdr['mask_path'])
     except:
@@ -165,39 +164,60 @@ def generate_ball_pos(ball, cam, hdr, env_info):
     )
 
     # Get random field point
-    index = rand.randint(0, field_coords.shape[0] - 1)
-    y, x = field_coords[index]
+    y, x = field_coords[rand.randint(0, field_coords.shape[0] - 1)]
 
     # Normalise the coordinates into a form useful for making unit vectors
-    phi = (img.shape[0] / 2 - y) / img.shape[0] * math.pi
-    theta = (x - img.shape[1] / 2) / img.shape[1] * math.pi * 2
-
-    # Project to 3D
-    ball_vector = np.array([math.cos(phi) * math.cos(theta), math.sin(theta), math.sin(phi) * math.cos(theta)])
+    phi = (y / img.shape[0]) * math.pi
+    theta = (0.5 - (x / img.shape[1])) * math.pi * 2
+    ball_vector = np.array([
+        math.sin(phi) * math.cos(theta),
+        math.sin(phi) * math.sin(theta),
+        math.cos(phi),
+    ])
 
     # Create rotation matrix
     # Roll (x) pitch (y) yaw (z)
-    alpha = env_info['rotation']['roll']
-    beta = env_info['rotation']['pitch']
-    gamma = env_info['rotation']['yaw']
+    alpha = math.radians(env_info['rotation']['roll'])
+    beta = math.radians(env_info['rotation']['pitch'])
+    gamma = math.radians(env_info['rotation']['yaw'])
 
-    rot_x = np.matrix([[1, 0, 0], [0, math.cos(alpha), -math.sin(alpha)], [0, math.sin(alpha), math.cos(alpha)]])
-    rot_y = np.matrix([[math.cos(beta), 0, math.sin(beta)], [0, 1, 0], [-math.sin(beta), 0, math.cos(beta)]])
-    rot_z = np.matrix([[math.cos(gamma), -math.sin(gamma), 0], [math.sin(gamma), math.cos(gamma), 0], [0, 0, 1]])
+    sa = math.sin(alpha)
+    ca = math.cos(alpha)
+    sb = math.sin(beta)
+    cb = math.cos(beta)
+    sg = math.sin(gamma)
+    cg = math.cos(gamma)
+
+    rot_x = np.matrix([
+        [1,  0,   0],
+        [0, ca, -sa],
+        [0, sa,  ca],
+    ]) # yapf: disable
+    rot_y = np.matrix([
+        [ cb, 0, sb],
+        [  0, 1,  0],
+        [-sb, 0, cb],
+    ]) # yapf: disable
+    rot_z = np.matrix([
+        [cg, -sg, 0],
+        [sg,  cg, 0],
+        [ 0,   0, 1],
+    ]) # yapf: disable
 
     rot = rot_z * rot_y * rot_x
 
     # Rotate the ball vector by the rotation of the environment
-    ball_vector = ball_vector * rot
+    ball_vector = rot.dot(ball_vector)
+    ball_vector = np.array([ball_vector[0, 0], ball_vector[0, 1], ball_vector[0, 2]])
 
     # Project the ball vector to the ground plane to get a ball position
     height = -cam.obj.location[2]
 
     # Get the position for the ball
-    ground_point = ball_vector[0] * (height / ball_vector[0, 2])
+    ground_point = ball_vector * (height / ball_vector[2])
 
     # Move into the world coordinates
-    ground_point = np.array([ground_point[0, 0], ground_point[0, 1], scene_cfg.ball['radius']])
+    ground_point = np.array([ground_point[0], ground_point[1], scene_cfg.ball['radius']])
 
     # Offset x/y by the camera position
     ground_point = ground_point + np.array([cam.obj.location[0], cam.obj.location[1], 0])
