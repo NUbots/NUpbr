@@ -207,7 +207,7 @@ def generate_ball_pos(ball, cam, hdr, env_info):
     rot = rot_z * rot_y * rot_x
 
     # Rotate the ball vector by the rotation of the environment
-    ball_vector = rot.dot(ball_vector)
+    ball_vector = ball_vector * rot
     ball_vector = np.array([ball_vector[0, 0], ball_vector[0, 1], ball_vector[0, 2]])
 
     # Project the ball vector to the ground plane to get a ball position
