@@ -12,9 +12,16 @@ output_stereo = False
 output_depth = False
 
 # Absolute output directory to hold the directories for output images and segmentation masks
-output_dir = os.path.join(
-    os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)), 'outputs'
+output_base = os.path.join(
+    os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)), 'outputs',
+    'run_{}'
 )
+
+# Find an output directory that isn't already taken
+output_dir_no = 0
+while os.path.isdir(output_base.format(output_dir_no)):
+    output_dir_no += 1
+output_dir = output_base.format(output_dir_no)
 
 # Filename length (characters)
 filename_len = 10
@@ -35,21 +42,14 @@ max_depth = 20
 ##############################################
 
 # Create directories
-if not os.path.isdir(output_dir):
-    os.mkdir(output_dir)
-
 image_dir = os.path.join(output_dir, image_dirname)
-if not os.path.isdir(image_dir):
-    os.mkdir(image_dir)
-
 mask_dir = os.path.join(output_dir, mask_dirname)
-if not os.path.isdir(mask_dir):
-    os.mkdir(mask_dir)
-
-depth_dir = os.path.join(output_dir, depth_dirname)
-if not os.path.isdir(depth_dir):
-    os.mkdir(depth_dir)
-
 meta_dir = os.path.join(output_dir, meta_dirname)
-if not os.path.isdir(meta_dir):
-    os.mkdir(meta_dir)
+
+os.makedirs(image_dir, exist_ok=True)
+os.makedirs(mask_dir, exist_ok=True)
+os.makedirs(meta_dir, exist_ok=True)
+
+if output_depth:
+    depth_dir = os.path.join(output_dir, depth_dirname)
+    os.makedirs(depth_dir, exist_ok=True)
