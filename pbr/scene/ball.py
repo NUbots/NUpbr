@@ -27,7 +27,9 @@ class Ball(BlenderObject):
 
         # If there already exists a ball object bound to this class, destroy it
         if self.obj is not None:
-            bpy.data.objects.remove(self.obj)
+            bpy.ops.object.select_all(action='DESELECT')
+            self.obj.select = True
+            bpy.ops.object.delete()
 
         # Load mesh or create UV sphere
         if ball_info['mesh_path'] is not None:

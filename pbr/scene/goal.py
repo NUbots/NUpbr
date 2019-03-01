@@ -21,9 +21,13 @@ class Goal(BlenderObject):
 
         # Delete object if it already exists
         if self.obj is not None:
-            bpy.data.objects.remove(self.obj)
+            bpy.ops.object.select_all(action='DESELECT')
+            self.obj.select = True
+            bpy.ops.object.delete()
         if self.rear is not None:
-            bpy.data.objects.remove(self.rear)
+            bpy.ops.object.select_all(action='DESELECT')
+            self.rear.select = True
+            bpy.ops.object.delete()
 
         # Define corner radius to avoid extra multiplications
         corner_radius = goal_config['post_width'] / 2

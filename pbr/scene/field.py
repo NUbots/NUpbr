@@ -10,13 +10,22 @@ from scene.blender_object import BlenderObject
 
 class Field(BlenderObject):
     def __init__(self, class_index):
-        self.mat = None
         self.obj = None
         self.lower_plane = None
         self.pass_index = class_index
 
     # Setup field object
     def update(self, field_config):
+        # Delete the old field if it exists
+        if self.obj is not None:
+            bpy.ops.object.select_all(action='DESELECT')
+            self.obj.select = True
+            bpy.ops.object.delete()
+        if self.lower_plane is not None:
+            bpy.ops.object.select_all(action='DESELECT')
+            self.lower_plane.select = True
+            bpy.ops.object.delete()
+
         # Add plane for field
         bpy.ops.mesh.primitive_plane_add()
         lower_plane = bpy.data.objects['Plane']
