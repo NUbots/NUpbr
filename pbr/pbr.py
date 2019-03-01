@@ -65,8 +65,12 @@ def main():
     # Construct our shadowcatcher
     shadowcatcher = ShadowCatcher()
 
+    # Generate a new configuration for field configuration
+    config = scene_config.configure_scene()
+
     # Construct our grass field
     field = Field(scene_config.resources['field']['mask']['index'])
+    field.update(config['field'])
 
     # Construct cameras
     cam_l = Camera('Camera_L')
@@ -116,13 +120,19 @@ def main():
         goals[0].move((
             config['field']['length'] / 2.0,
             0,
-            config['goal']['height'] - config['goal']['post_width'] / 2.0,
+            config['goal']['height'] - 2.5 * config['goal']['post_width'],
         ))
         goals[1].move((
             -config['field']['length'] / 2.0,
             0,
-            config['goal']['height'] - config['goal']['post_width'] / 2.0,
+            config['goal']['height'] - 2.5 * config['goal']['post_width'],
         ))
+
+        # Hide objects based on environment map
+        ball.obj.hide_render = not env_info['to_draw']['ball']
+        field.hide_render(not env_info['to_draw']['field'])
+        goals[0].hide_render(not env_info['to_draw']['goal'])
+        goals[1].hide_render(not env_info['to_draw']['goal'])
 
         # Update anchor
         anch.update(config['anchor'])

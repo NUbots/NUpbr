@@ -4,6 +4,7 @@ import os
 import bpy
 
 from config import blend_config as blend_cfg
+from config import scene_config as scene_cfg
 
 from scene.blender_object import BlenderObject
 
@@ -25,8 +26,8 @@ class Field(BlenderObject):
         # Define location and dimensions of field
         lower_plane.location = (0, 0, 0)
         lower_plane.dimensions = (
-            2 * scene_cfg.field['border_width'] + scene_cfg.field['length'],
-            2 * scene_cfg.field['border_width'] + scene_cfg.field['width'],
+            2 * field_config['border_width'] + field_config['length'],
+            2 * field_config['border_width'] + field_config['width'],
             0,
         )
 
@@ -46,8 +47,8 @@ class Field(BlenderObject):
         # Define location and dimensions of field
         field.location = (0, 0, 0)
         field.dimensions = (
-            2 * scene_cfg.field['border_width'] + scene_cfg.field['length'],
-            2 * scene_cfg.field['border_width'] + scene_cfg.field['width'],
+            2 * field_config['border_width'] + field_config['length'],
+            2 * field_config['border_width'] + field_config['width'],
             0,
         )
 
@@ -174,7 +175,10 @@ class Field(BlenderObject):
 
         # Create texture image of field UV map
         n_field_lines = node_list.new('ShaderNodeTexImage')
-        img_path = os.path.join(scene_cfg.field_uv['uv_path'], scene_cfg.field_uv['name'] + scene_cfg.field_uv['type'])
+        img_path = os.path.join(
+            scene_cfg.resources['field']['uv_path'],
+            scene_cfg.resources['field']['name'] + scene_cfg.resources['field']['type']
+        )
         try:
             img = bpy.data.images.load(img_path)
         except:
