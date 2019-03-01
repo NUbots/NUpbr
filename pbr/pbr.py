@@ -113,6 +113,16 @@ def main():
         for g in goals:
             g.update(config['goal'])
         goals[1].rotate((0, 0, pi))
+        goals[0].move((
+            -config['field']['length'] / 2.0,
+            0,
+            config['goal']['height'] - config['goal']['post_width'] / 2.0,
+        ))
+        goals[1].move((
+            config['field']['length'] / 2.0,
+            0,
+            config['goal']['height'] - config['goal']['post_width'] / 2.0,
+        ))
 
         # Update anchor
         anch.update(config['anchor'])
@@ -205,7 +215,7 @@ def main():
             meta['camera']['lens']['sensor_height'] = cam_l.cam.sensor_height
             meta['camera']['lens']['sensor_width'] = cam_l.cam.sensor_width
 
-            # Add the final camera matricies
+            # Add the final camera matrices
             if not out_cfg.output_stereo:
                 meta['camera']['matrix'] = util.matrix_to_list(cam_l.obj.matrix_world)
             else:
