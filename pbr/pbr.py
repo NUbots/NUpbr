@@ -139,10 +139,12 @@ def main():
 
         # Set a tracking target randomly to anchor/ball or goal
         valid_tracks = []
-        if env_info['to_draw']['ball']:  # Only track if it's rendered
+        if env_info['to_draw']['ball']:  # Only track balls if it's rendered
             valid_tracks.append(ball)
-        if env_info['to_draw']['goal']:  # Only track if it's rendered
+        if env_info['to_draw']['goal']:  # Only track goals if they're rendered
             valid_tracks.append(random.choice(goals))
+        if env_info['to_draw']['field']:  # Only pick random points if the field is rendered
+            valid_tracks.append(anch)
 
         tracking_target = random.choice(valid_tracks).obj
         cam_l.set_tracking_target(tracking_target)

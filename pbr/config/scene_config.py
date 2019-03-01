@@ -1,7 +1,7 @@
 # Field-specific Configuration Settings
 #   * All measurements are in SI units
 
-from math import pi
+from math import pi, radians
 from os import path, pardir
 import random
 
@@ -107,7 +107,7 @@ def configure_scene():
             'width': 2.6,
             'height': 1.8,
             'post_width': 0.12,
-            'shape': random.choice(['circular', 'square']),  # TODO allow square goals
+            'shape': random.choice(['circular', 'square']),
             'net_height': 1.2,
         },
     })
@@ -135,9 +135,9 @@ def configure_scene():
             ),
             # Rotation limits (degrees)
             'rotation': (
-                random.uniform(-pi / 8, pi),
-                random.uniform(-pi / 2, pi / 2),
-                random.uniform(-pi, pi),
+                random.uniform(radians(10), radians(110)),
+                random.uniform(radians(-45), radians(45)),
+                random.uniform(radians(-180), radians(180)),
             ),
         }
     })
