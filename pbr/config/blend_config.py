@@ -12,7 +12,7 @@ render = {
         'percentage': 100.0,
     },
     'sampling': {
-        'cycles_samples': 64,
+        'cycles_samples': 256,
         'cycles_preview_samples': 16,
     },
     'light_paths': {
