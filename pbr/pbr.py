@@ -128,7 +128,13 @@ def main():
         anch.update(config['anchor'])
 
         # Set a tracking target randomly to anchor/ball or goal
-        tracking_target = random.choice([ball, anch, random.choice(goals)]).obj
+        valid_tracks = []
+        if env_info['to_draw']['ball']:  # Only track if it's rendered
+            valid_tracks.append(ball)
+        if env_info['to_draw']['goal']:  # Only track if it's rendered
+            valid_tracks.append(random.choice(goals))
+
+        tracking_target = random.choice(valid_tracks).obj
         cam_l.set_tracking_target(tracking_target)
 
         print(
@@ -208,6 +214,8 @@ def main():
         with open(os.path.join(out_cfg.meta_dir, '{}.yaml'.format(filename)), 'w') as meta_file:
             # Gather metadata
             meta = config
+
+            meta.update({'rendered': env_info['to_draw']})
 
             # Add basic camera information
             meta['camera']['focus'] = tracking_target.name
