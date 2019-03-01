@@ -188,6 +188,7 @@ def main():
             world=world,
             env=env,
             hdr_path=hdr_data['raw_path'],
+            strength=config['environment']['strength'],
             env_info=env_info,
             output_path=os.path.join(out_cfg.image_dir, '{}.png'.format(filename)),
         )
@@ -201,6 +202,7 @@ def main():
             world=world,
             env=env,
             hdr_path=hdr_data['mask_path'],
+            strength=1.0,
             env_info=env_info,
             output_path=os.path.join(out_cfg.mask_dir, '{}.png'.format(filename)),
         )

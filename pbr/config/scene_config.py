@@ -61,7 +61,7 @@ def configure_scene():
     # Add environment information
     cfg.update({
         'environment': {
-            'strength': 1.0,  # TODO apply the strength
+            'strength': random.uniform(0.5, 2),
         },
     })
 
@@ -135,9 +135,9 @@ def configure_scene():
             ),
             # Rotation limits (degrees)
             'rotation': (
-                random.uniform(radians(10), radians(110)),
-                random.uniform(radians(-45), radians(45)),
-                random.uniform(radians(-180), radians(180)),
+                random.uniform(pi / 4, pi / 2),
+                random.uniform(-0.1, +0.1),
+                random.uniform(-pi, +pi),
             ),
         }
     })

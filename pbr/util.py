@@ -100,7 +100,7 @@ def setup_environment(hdr, env_info):
     return env.setup_render_layers(len(scene_config.resources)), world
 
 # Renders image frame for either raw or mask image (defined by <isRawImage>)
-def render_image(isMaskImage, toggle, shadowcatcher, ball, world, env, hdr_path, env_info, output_path):
+def render_image(isMaskImage, toggle, shadowcatcher, ball, world, env, hdr_path, strength, env_info, output_path):
     # Turn off all render layers
     for l in bpy.context.scene.render.layers:
         l.use = isMaskImage
@@ -112,6 +112,7 @@ def render_image(isMaskImage, toggle, shadowcatcher, ball, world, env, hdr_path,
     shadowcatcher.obj.hide_render = isMaskImage
     # Update HDRI map
     env.update_hdri_env(world, hdr_path, env_info)
+    bpy.context.scene.world.node_tree.nodes['Background'].inputs['Strength'].default_value = strength
     # Update render output filepath
     bpy.data.scenes['Scene'].render.filepath = output_path
     bpy.ops.render.render(write_still=True)
