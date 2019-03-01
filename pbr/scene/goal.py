@@ -55,12 +55,14 @@ class Goal(BlenderObject):
         )
 
         # Create crossbar
+        crossbar_y_loc = corner_radius if goal_config['shape'] == 'circular' else -corner_radius
+        crossbar_ext_offset = -(2 * corner_radius) if goal_config['shape'] == 'circular' else 2 * corner_radius
         crossbar = self.create_post(
             goal_config,
             name='Crossbar',
-            loc=(0, corner_radius, goal_config['height'] + corner_radius),
+            loc=(0, crossbar_y_loc, goal_config['height'] + corner_radius),
             rot=(pi / 2, 0, 0),
-            extrude=(0, goal_config['width'] - 2 * corner_radius, 0),
+            extrude=(0, goal_config['width'] + crossbar_ext_offset, 0),
         )
 
         # Create goals with posts and crossbar
@@ -162,30 +164,38 @@ class Goal(BlenderObject):
         # Define corner radius to avoid extra multiplications
         corner_radius = goal_config['post_width'] / 2
 
-        # Create corner Bezier curve
-        corner_curve = bpy.ops.curve.primitive_bezier_curve_add()
+        if goal_config['shape'] == 'circular':
+            # Create corner Bezier curve
+            corner_curve = bpy.ops.curve.primitive_bezier_curve_add()
 
-        curve = bpy.data.objects['BezierCurve']
+            curve = bpy.data.objects['BezierCurve']
 
-        # Set curve properties
-        curve.name = 'Goal_Corner_Curve'
-        curve.data.fill_mode = blend_cfg.goal['corner_curve']['fill']
-        curve.data.bevel_depth = corner_radius
-        curve.data.bevel_resolution = int(blend_cfg.goal['initial_cond']['vertices'] / 2)
+            # Set curve properties
+            curve.name = 'Goal_Corner_Curve'
+            curve.data.fill_mode = blend_cfg.goal['corner_curve']['fill']
+            curve.data.bevel_depth = corner_radius
+            curve.data.bevel_resolution = int(blend_cfg.goal['initial_cond']['vertices'] / 2)
 
-        [p0, p1] = [
-            curve.data.splines.active.bezier_points[0],
-            curve.data.splines.active.bezier_points[1],
-        ]
-        # Set first point
-        p0.co = (0, 0, goal_config['height'])
-        p0.handle_left = (0, 0, goal_config['height'] - corner_radius)
-        p0.handle_right = (0, 0, goal_config['height'] + corner_radius)
+            [p0, p1] = [
+                curve.data.splines.active.bezier_points[0],
+                curve.data.splines.active.bezier_points[1],
+            ]
+            # Set first point
+            p0.co = (0, 0, goal_config['height'])
+            p0.handle_left = (0, 0, goal_config['height'] - corner_radius)
+            p0.handle_right = (0, 0, goal_config['height'] + corner_radius)
 
-        # Set second point
-        p1.co = (0, corner_radius, goal_config['height'] + corner_radius)
-        p1.handle_left = (0, 0, goal_config['height'] + corner_radius)
-        p1.handle_right = (0, goal_config['post_width'], goal_config['height'] + corner_radius)
+            # Set second point
+            p1.co = (0, corner_radius, goal_config['height'] + corner_radius)
+            p1.handle_left = (0, 0, goal_config['height'] + corner_radius)
+            p1.handle_right = (0, goal_config['post_width'], goal_config['height'] + corner_radius)
+        elif goal_config['shape'] == 'square':
+            curve = self.create_post(
+                goal_config=goal_config,
+                name='Goal_Corner_Curve',
+                loc=(0, 0, goal_config['height'] - corner_radius),
+                extrude=(0, 0, 2 * corner_radius),
+            )
 
         # Move origin to centre of geometry
         # bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
@@ -198,14 +208,24 @@ class Goal(BlenderObject):
         corner_radius = goal_config['post_width'] / 2
 
         # Add plane for field
-        mesh = bpy.ops.mesh.primitive_circle_add(
-            radius=corner_radius,
-            vertices=blend_cfg.goal['initial_cond']['vertices'],
-            calc_uvs=blend_cfg.ball['initial_cond']['calc_uvs'],
-            rotation=rot,
-        )
-        # Change name of goal post
-        goal_post = bpy.data.objects['Circle']
+        if goal_config['shape'] == 'circular':
+            mesh = bpy.ops.mesh.primitive_circle_add(
+                radius=corner_radius,
+                vertices=blend_cfg.goal['initial_cond']['vertices'],
+                calc_uvs=blend_cfg.ball['initial_cond']['calc_uvs'],
+                rotation=rot,
+            )
+            # Change name of goal post
+            goal_post = bpy.data.objects['Circle']
+        elif goal_config['shape'] == 'square':
+            mesh = bpy.ops.mesh.primitive_plane_add(
+                radius=corner_radius,
+                calc_uvs=blend_cfg.ball['initial_cond']['calc_uvs'],
+                rotation=rot,
+            )
+            # Change name of goal post
+            goal_post = bpy.data.objects['Plane']
+
         goal_post.name = name
         goal_post.location = loc
 
