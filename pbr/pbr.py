@@ -117,15 +117,16 @@ def main():
         for g in goals:
             g.update(config['goal'])
         goals[1].rotate((0, 0, pi))
+        goal_height_offset = -3.0 if config['goal']['shape'] == 'square' else -1.0
         goals[0].move((
             config['field']['length'] / 2.0,
             0,
-            config['goal']['height'] - 3.0 * config['goal']['post_width'],
+            config['goal']['height'] + goal_height_offset * config['goal']['post_width'],
         ))
         goals[1].move((
             -config['field']['length'] / 2.0,
             0,
-            config['goal']['height'] - 3.0 * config['goal']['post_width'],
+            config['goal']['height'] + goal_height_offset * config['goal']['post_width'],
         ))
 
         # Hide objects based on environment map
