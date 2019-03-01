@@ -114,12 +114,12 @@ def main():
             g.update(config['goal'])
         goals[1].rotate((0, 0, pi))
         goals[0].move((
-            -config['field']['length'] / 2.0,
+            config['field']['length'] / 2.0,
             0,
             config['goal']['height'] - config['goal']['post_width'] / 2.0,
         ))
         goals[1].move((
-            config['field']['length'] / 2.0,
+            -config['field']['length'] / 2.0,
             0,
             config['goal']['height'] - config['goal']['post_width'] / 2.0,
         ))
