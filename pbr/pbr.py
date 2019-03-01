@@ -197,48 +197,29 @@ def main():
         # Generate meta file
         with open(os.path.join(out_cfg.meta_dir, '{}.yaml'.format(filename)), 'w') as meta_file:
             # Gather metadata
-            meta = {}
-            meta['ball'] = {}
-            meta['ball']['file'] = ball.mesh_path
-            meta['ball']['position'] = ball.obj.location[0:3]
-            meta['ball']['radius'] = ball.obj.scale[0]
-            meta['ball']['rotation'] = ball.obj.rotation_euler[0:3]
-            meta['ball']['roughness'] = ball.roughness
+            meta = config
 
-            meta['camera'] = {}
-
-            if not out_cfg.output_stereo:
-                meta['camera']['rotation'] = [row.to_tuple() for row in cam_l.obj.rotation_euler.to_matrix().row]
-                meta['camera']['position'] = cam_l.obj.location[0:3]
-
-            else:
-                meta['camera']['left'] = {}
-                meta['camera']['right'] = {}
-                meta['camera']['left']['rotation'] = [
-                    row.to_tuple() for row in cam_l.obj.rotation_euler.to_matrix().row
-                ]
-                meta['camera']['left']['position'] = cam_l.obj.location[0:3]
-
-                # Right camera is dependant on left camera
-                # Right rotation uses the left rotation
-                # Right position is offset from the left position
-                meta['camera']['right']['rotation'] = meta['camera']['left']['rotation']
-                meta['camera']['right']['position'] = [
-                    float(a) + float(b) for a, b in zip(cam_r.obj.location[0:3], cam_l.obj.location[0:3])
-                ]
-                meta['camera']['baseline'] = cam_r.obj.location[0:3]
-
-            # Both cameras (in stereo) share the same lens information
+            # Add basic camera information
+            meta['camera']['focus'] = tracking_target.name
             meta['camera']['lens'] = {}
-            meta['camera']['lens']['type'] = scene_cfg.camera['cycles']['type']
-            meta['camera']['lens']['fov'] = cam_l.cam.cycles.fisheye_fov
             meta['camera']['lens']['sensor_height'] = cam_l.cam.sensor_height
             meta['camera']['lens']['sensor_width'] = cam_l.cam.sensor_width
-            meta['camera']['lens']['focal_length'] = cam_l.cam.cycles.fisheye_lens
 
-            meta['environment'] = {}
+            # Add the final camera matricies
+            if not out_cfg.output_stereo:
+                meta['camera']['matrix'] = cam_l.obj.matrix_world
+            else:
+                template = meta['camera']
+                meta['camera'] = {
+                    'left': {
+                        **template, 'matrix': cam_l.obj.matrix_world
+                    },
+                    'right': {
+                        **template, 'matrix': cam_r.obj.matrix_world
+                    },
+                }
+
             meta['environment']['file'] = hdr_data['raw_path']
-            meta['environment']['strength'] = world.node_tree.nodes['Background'].inputs[1].default_value
 
             # Write metadata to file
             json.dump(meta, meta_file, indent=4, sort_keys=True)

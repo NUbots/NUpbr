@@ -58,6 +58,13 @@ def configure_scene():
 
     cfg = {}
 
+    # Add environment information
+    cfg.update({
+        'environment': {
+            'strength': 1.0,  # TODO apply the strength
+        },
+    })
+
     # Add field information
     cfg.update({
         'field': {
@@ -100,7 +107,7 @@ def configure_scene():
             'width': 2.6,
             'height': 1.8,
             'post_width': 0.12,
-            'shape': random.choice(['circular', 'square']),
+            'shape': random.choice(['circular', 'square']),  # TODO allow square goals
             'net_height': 1.2,
         },
     })
