@@ -237,7 +237,7 @@ def main():
                     },
                 }
 
-            meta['environment']['file'] = hdr_data['raw_path']
+            meta['environment']['file'] = os.path.relpath(hdr_data['raw_path'], scene_config.res_path)
 
             # Write metadata to file
             json.dump(meta, meta_file, indent=4, sort_keys=True)
