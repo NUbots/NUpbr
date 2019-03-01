@@ -116,6 +116,13 @@ def render_image(isMaskImage, toggle, shadowcatcher, ball, world, env, hdr_path,
     bpy.data.scenes['Scene'].render.filepath = output_path
     bpy.ops.render.render(write_still=True)
 
+def matrix_to_list(mat):
+    return [
+        [mat[0][0], mat[0][1], mat[0][2], mat[0][3]],
+        [mat[1][0], mat[1][1], mat[1][2], mat[1][3]],
+        [mat[2][0], mat[2][1], mat[2][2], mat[2][3]],
+        [mat[3][0], mat[3][1], mat[3][2], mat[3][3]],
+    ]
 
 def point_on_field(cam, mask_path, env_info):
     try:
@@ -128,9 +135,8 @@ def point_on_field(cam, mask_path, env_info):
         (
             np.logical_or(
                 np.all(
-                    img == [[[
-                        int(round(v * 255)) for v in scene_config.resources['field']['mask']['colour'][:3][::-1]
-                    ]]],
+                    img == [[[int(round(v * 255)) for v in scene_config.resources['field']['mask']['colour'][:3][::-1]]]
+                            ],
                     axis=-1,
                 ),
                 np.all(

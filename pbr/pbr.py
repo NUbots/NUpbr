@@ -207,15 +207,15 @@ def main():
 
             # Add the final camera matricies
             if not out_cfg.output_stereo:
-                meta['camera']['matrix'] = cam_l.obj.matrix_world
+                meta['camera']['matrix'] = util.matrix_to_list(cam_l.obj.matrix_world)
             else:
                 template = meta['camera']
                 meta['camera'] = {
                     'left': {
-                        **template, 'matrix': cam_l.obj.matrix_world
+                        **template, 'matrix': util.matrix_to_list(cam_l.obj.matrix_world)
                     },
                     'right': {
-                        **template, 'matrix': cam_r.obj.matrix_world
+                        **template, 'matrix': util.matrix_to_list(cam_r.obj.matrix_world)
                     },
                 }
 
