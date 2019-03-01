@@ -95,7 +95,7 @@ class Goal(BlenderObject):
         self.obj = goal_post
         self.rear = goal_rear
 
-    def hide_object(self, to_hide):
+    def hide_render(self, to_hide):
         self.obj.hide_render = to_hide
         self.rear.hide_render = to_hide
 
