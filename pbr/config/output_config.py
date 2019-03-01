@@ -5,7 +5,7 @@ import os
 ##############################################
 
 # Number of images to generate
-num_images = 1
+num_images = 1000
 
 # Stereo output
 output_stereo = False
@@ -28,7 +28,7 @@ depth_dirname = 'depth'
 meta_dirname = 'meta'
 
 # Maximum depth for normalized depth map (metres)
-max_depth = 20.
+max_depth = 20
 
 ##############################################
 ##         CONFIGURATION PROCESSING         ##

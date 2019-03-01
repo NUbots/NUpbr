@@ -3,31 +3,28 @@
 import os
 import bpy
 
-from config import scene_config as scene_cfg
-from config import blend_config as blend_cfg
-
 from scene.blender_object import BlenderObject
 
 class Camera(BlenderObject):
     def __init__(self, name):
-        self.loc = (0., 0., 0.)
-        self.obj = None
-        self.cam = None
-        self.name = name
-        self.construct()
+
+        bpy.ops.object.camera_add()
+
+        self.cam = bpy.data.cameras['Camera']
+        self.obj = bpy.data.objects[self.cam.name]
+        self.obj.name = name
 
     # Sets target for camera to track
     def set_tracking_target(self, target):
         bpy.context.scene.objects.active = self.obj
 
-        if 'Track To' not in self.obj.constraints:
-            bpy.ops.object.constraint_add(type='TRACK_TO')
+        if 'Damped Track' not in self.obj.constraints:
+            bpy.ops.object.constraint_add(type='DAMPED_TRACK')
 
-        constr = self.obj.constraints['Track To']
+        constr = self.obj.constraints['Damped Track']
         constr.target = target
         constr.track_axis = 'TRACK_NEGATIVE_Z'
-        constr.up_axis = 'UP_Y'
-        constr.influence = 0.9
+        constr.influence = 0.75
 
     # Add parent camera for stereo vision
     def set_stereo_pair(self, cam):
@@ -53,25 +50,20 @@ class Camera(BlenderObject):
         child_constr.use_rotation_y = False
         child_constr.use_rotation_z = False
 
-    def construct(self):
-        # Add camera
-        bpy.ops.object.camera_add()
-        cam = bpy.data.cameras['Camera']
-        cam.type = scene_cfg.camera['type']
-        if scene_cfg.camera['type'] == 'PANO':
-            cam.cycles.type = scene_cfg.camera['cycles']['type']
-            cam.cycles.fisheye_lens = scene_cfg.camera['focal_length']
-            cam.cycles.fisheye_fov = scene_cfg.camera['fov']
-        self.cam = cam
+    def update(self, cam_config):
 
-        cam_obj = bpy.data.objects[cam.name]
-        # cam_obj.type = scene_cfg.camera['type']
-        cam_obj.name = self.name
-        self.obj = cam_obj
+        # Fix for blender being stupid
+        for k in bpy.data.cameras.keys():
+            cam = bpy.data.cameras[k]
+            if cam_config['type'] == 'EQUISOLID':
+                cam.type = 'PANO'
+                cam.cycles.panorama_type = 'FISHEYE_EQUISOLID'
+                cam.cycles.fisheye_fov = cam_config['fov']
+                cam.cycles.fisheye_lens = cam_config['focal_length']
+            elif cam_config['type'] == 'RECTILINEAR':
+                cam.type = 'PERSP'
+                cam.lens_unit = 'FOV'
+                cam.angle = cam_config['fov']
 
-        for cam in bpy.data.cameras.keys():
-            if scene_cfg.camera['type'] == 'PANO':
-                bpy.data.cameras[cam].type = 'PANO'
-                bpy.data.cameras[cam].cycles.type = scene_cfg.camera['cycles']['type']
-                bpy.data.cameras[cam].cycles.fisheye_lens = scene_cfg.camera['focal_length']
-                bpy.data.cameras[cam].cycles.fisheye_fov = scene_cfg.camera['fov']
+        self.move(cam_config['position'])
+        self.rotate(cam_config['rotation'])

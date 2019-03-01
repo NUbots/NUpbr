@@ -3,6 +3,7 @@
 
 from math import pi
 from os import path, pardir
+import random
 
 # Get project path
 proj_path = path.abspath(path.join(path.join(path.dirname(path.realpath(__file__)), pardir), pardir))
@@ -10,157 +11,139 @@ proj_path = path.abspath(path.join(path.join(path.dirname(path.realpath(__file__
 # Create resource path
 res_path = path.join(proj_path, 'resources')
 
-classes = {
-    'unclassified': {
-        'index': 0,
-        'colour': (0., 0., 0., 1.)
-    },
+resources = {
     'ball': {
-        'index': 1,
-        'colour': (1., 0., 0., 1.)
+        'img_types': ['.jpg', '.png'],
+        'mesh_types': ['.fbx', '.obj'],
+        'path': path.abspath(path.join(res_path, 'balls')),
+        'mask': {
+            'index': 1,
+            'colour': (1, 0, 0, 1),
+        },
+    },
+    'environment': {
+        'path': path.abspath(path.join(res_path, 'hdr')),
+        'hdri_types': ['.hdr'],
+        'mask_types': ['.png'],
+        'info_type': '.json',
+        'mask': {
+            'index': 0,
+            'colour': (0, 0, 0, 1)
+        },
     },
     'field': {
-        'index': 2,
-        'colour': (0., 1., 0., 1.),
-        'field_lines_colour': (1., 1., 1., 1.)
+        'type': '.png',
+        'mode': 'RGBA',
+        'pixels_per_metre': 100,
+        'uv_path': path.abspath(path.join(res_path, 'field_uv')),
+        'name': 'default',
+        'orientation': 'portrait',
+        'mask': {
+            'index': 2,
+            'colour': (0, 1, 0, 1),
+            'line_colour': (1, 1, 1, 1),
+        },
     },
     'goal': {
-        'index': 3,
-        'colour': (1., 1., 0., 1.)
-    },
-}
-
-field = {
-    'length': 9,
-    'width': 6,
-    'goal_area': {
-        'length': 1,
-        'width': 5
-    },
-    'penalty_mark_dist': 2.1,
-    'centre_circle_radius': 0.75,
-    'border_width': 0.7,
-    'field_line_width': 0.05,
-    'grass_height': 0.033,
-}
-
-goal = {
-    'depth': 0.6,
-    'width': 2.6,
-    'height': 1.8,
-    'post_width': 0.12,
-    'shape': 'circular',
-    'net_height': 1.2,
-}
-
-ball_radius = 0.5969 / (2 * pi)
-
-ball = {
-    'radius': ball_radius,
-    'img_types': ['.jpg', '.png'],
-    'mesh_types': ['.fbx', '.obj'],
-    'ball_dir': path.abspath(path.join(res_path, 'balls')),
-    'limits': {
-        'auto_set_limits': True,
-        'position': {
-            'x': [-field['length'] / 2., field['length'] / 2.],
-            'y': [-field['width'] / 2., field['width'] / 2.],
-            'z': [ball_radius, ball_radius],
-        },
-        'rotation': {
-            'pitch': [-180., 180.],
-            'roll': [-180., 180.],
-            'yaw': [-180., 180.],
-        },
-    }
-}
-
-camera = {
-    'type': 'PANO',
-    'cycles': {
-        'type': 'FISHEYE'
-    },
-    'focal_length': 10.5,
-    'fov': pi,
-    'stereo_cam_dist': 0.1,
-    'limits': {
-        # Defines possible random placement range of x, y and z positional components
-        'position': {
-            'x': [-field['length'] / 2., field['length'] / 2.],
-            'y': [-field['width'] / 2., field['width'] / 2.],
-            'z': [0.8, 1.0],
-        },
-        # Rotation limits (degrees)
-        'rotation': {
-            'pitch': [30., 70.],
-            'roll': [0., 360.],
-            'yaw': [0., 10.],
+        'mask': {
+            'index': 3,
+            'colour': (1, 1, 0, 1),
         },
     },
 }
 
-field_uv = {
-    'type': '.png',
-    'mode': 'RGBA',
-    'pixels_per_metre': 100,
-    'uv_path': path.abspath(path.join(res_path, 'field_uv')),
-    'name': 'default',
-    'orientation': 'portrait',
-}
+def configure_scene():
 
-scene_hdr = {
-    'path': path.abspath(path.join(res_path, 'hdr')),
-    'hdri_types': ['.hdr'],
-    'mask_types': ['.hdr', '.mask'],
-    'info_type': '.json'
-}
+    ball_radius = 0.5969 / (2 * pi)
 
-##############################################
-##         CONFIGURATION PROCESSING         ##
-##############################################
+    cfg = {}
 
-################
-## BALL REGEX ##
-################
-# Create regex string suffix for image extensions
-BALL_IMG_EXT = '('
-for i in range(0, len(ball['img_types'])):
-    BALL_IMG_EXT += '({0})'.format(ball['img_types'][i])
-    if i + 1 < len(ball['img_types']):
-        BALL_IMG_EXT += '|'
-BALL_IMG_EXT += ')'
+    # Add field information
+    cfg.update({
+        'field': {
+            'length': 9,
+            'width': 6,
+            'goal_area': {
+                'length': 1,
+                'width': 5,
+            },
+            'penalty_mark_dist': 2.1,
+            'centre_circle_radius': 0.75,
+            'border_width': 0.7,
+            'field_line_width': 0.05,
+            'grass_height': random.uniform(0.02, 0.05),
+        }
+    })
 
-# Create regex string suffix for mesh extensions
-BALL_MESH_EXT = '('
-for i in range(0, len(ball['mesh_types'])):
-    BALL_MESH_EXT += '({0})'.format(ball['mesh_types'][i])
-    if i + 1 < len(ball['mesh_types']):
-        BALL_MESH_EXT += '|'
-BALL_MESH_EXT += ')'
+    # Add ball information
+    cfg.update({
+        'ball': {
+            'radius': ball_radius,
+            'auto_position': True,
+            'position': (
+                random.uniform(-cfg['field']['length'] * 0.5, cfg['field']['length'] * 0.5),
+                random.uniform(-cfg['field']['width'] * 0.5, cfg['field']['width'] * 0.5),
+                ball_radius,
+            ),
+            'rotation': (
+                random.uniform(-pi, pi),
+                random.uniform(-pi, pi),
+                random.uniform(-pi, pi),
+            ),
+        }
+    })
 
-# Establish regex strings for normals (norm, normal), colour (color(s), colour(s)) and mesh (*.fbx)
-BALL_NORM_REGEX = r'norm(al)?(.*)' + BALL_IMG_EXT
-BALL_COL_REGEX = r'colou?rs?(.*)' + BALL_IMG_EXT
-BALL_MESH_REGEX = BALL_MESH_EXT
+    # Add goal information
+    cfg.update({
+        'goal': {
+            'depth': 0.6,
+            'width': 2.6,
+            'height': 1.8,
+            'post_width': 0.12,
+            'shape': random.choice(['circular', 'square']),
+            'net_height': 1.2,
+        },
+    })
 
-################
-## HRDI REGEX ##
-################
-HDRI_RAW_EXT = '('
-for i in range(0, len(scene_hdr['hdri_types'])):
-    HDRI_RAW_EXT += '({0})'.format(scene_hdr['hdri_types'][i])
-    if i + 1 < len(scene_hdr['hdri_types']):
-        HDRI_RAW_EXT += '|'
-HDRI_RAW_EXT += ')'
+    # Add camera information
+    cfg.update({
+        'camera': {
+            **random.choice([
+                {
+                    'type': 'EQUISOLID',
+                    'focal_length': 10.5,
+                    'fov': pi
+                },
+                {
+                    'type': 'RECTILINEAR',
+                    'fov': 0.857,
+                },
+            ]),
+            'stereo_camera_distance': 0.1,
+            # Defines possible random placement range of x, y and z positional components
+            'position': (
+                random.uniform(-cfg['field']['length'] * 0.5, cfg['field']['length'] * 0.5),
+                random.uniform(-cfg['field']['width'] * 0.5, cfg['field']['width'] * 0.5),
+                random.uniform(0.8, 1.0),
+            ),
+            # Rotation limits (degrees)
+            'rotation': (
+                random.uniform(-pi / 8, pi),
+                random.uniform(-pi / 2, pi / 2),
+                random.uniform(-pi, pi),
+            ),
+        }
+    })
 
-HDRI_MASK_EXT = '['
-for i in range(0, len(scene_hdr['mask_types'])):
-    HDRI_MASK_EXT += '({0})'.format(scene_hdr['mask_types'][i])
-    if i + 1 < len(scene_hdr['mask_types']):
-        HDRI_MASK_EXT += '|'
-HDRI_MASK_EXT += ']'
+    # Add anchor information
+    cfg.update({
+        'anchor': {
+            'position': (
+                random.uniform(-cfg['field']['length'] * 0.5, cfg['field']['length'] * 0.5),
+                random.uniform(-cfg['field']['width'] * 0.5, cfg['field']['width'] * 0.5),
+                0,
+            ),
+        }
+    })
 
-# Establish regex strings for HDR images and HDR mask images
-HDRI_MASK_REGEX = r'mask.*' + HDRI_MASK_EXT
-HDRI_RAW_REGEX = r'raw.*' + HDRI_RAW_EXT
-HDRI_INFO_REGEX = scene_hdr['info_type']
+    return cfg

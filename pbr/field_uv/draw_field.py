@@ -1,4 +1,3 @@
-from config import scene_config as cfg
 from PIL import Image, ImageDraw
 
 def draw_shape(

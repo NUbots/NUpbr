@@ -4,7 +4,6 @@ import os
 import bpy
 import copy
 
-from config import scene_config as scene_cfg
 from config import blend_config as blend_cfg
 
 from scene.blender_object import BlenderObject
@@ -16,15 +15,13 @@ class Ball(BlenderObject):
         self.sc_plane = None
         self.pass_index = class_index
         self.name = name
-        self.colour_path = ball_info['colour_path']
-        self.normal_path = ball_info['norm_path']
-        self.mesh_path = ball_info['mesh_path']
+        self.colour_path = None
+        self.normal_path = None
+        self.mesh_path = None
         self.roughness = 1.0
-        self.create_shadowcatcher()
-        self.construct(ball_info)
 
     # Setup ball object
-    def construct(self, ball_info):
+    def construct(self, ball_info, radius):
         ball_mesh = None
         ball = None
 
@@ -53,14 +50,14 @@ class Ball(BlenderObject):
             )
             ball = bpy.data.objects['Sphere']
             # TODO: Determine scale based on pre-defined object scaling for leaded mesh
-            ball.scale = (scene_cfg.ball['radius'], scene_cfg.ball['radius'], scene_cfg.ball['radius'])
+            ball.scale = (radius, radius, radius)
 
         # Make ball active object
         bpy.context.scene.objects.active = ball
 
         # Add UV sphere for ball
         ball.name = self.name
-        ball.location = (0., 0., 0.)
+        ball.location = (0, 0, 0)
         ball.pass_index = self.pass_index
 
         # Add material to ball material slots
@@ -78,7 +75,7 @@ class Ball(BlenderObject):
         self.obj = ball
 
     # Create material for the ball
-    def create_mat(self, m_cfg, colour_path, normal_path=None):
+    def create_mat(self, m_cfg, colour_path, normal_path):
         b_mat = bpy.data.materials.new('Ball_Mat')
 
         # Enable use of material nodes
@@ -151,37 +148,16 @@ class Ball(BlenderObject):
         if norm_path is not None:
             n_norm_map = b_mat.node_tree.nodes['Norm_Map']
             try:
-                norm_map = bpy.data.images.load(normal_path)
+                norm_map = bpy.data.images.load(norm_path)
             except:
-                raise NameError('Cannot load image {0}'.format(normal_path))
+                raise NameError('Cannot load image {0}'.format(norm_path))
 
             n_norm_map.image = norm_map
 
-    def create_shadowcatcher(self):
-        bpy.ops.mesh.primitive_plane_add()
-        sc_plane = bpy.data.objects['Plane']
-        sc_plane.name = 'SC_Plane'
-        sc_plane.cycles.is_shadow_catcher = True
-        sc_plane.cycles.show_transparent = True
-        sc_plane.scale = (50., 50., 1.)
-        sc_plane.location = (0., 0., -0.0001)
+    def update(self, ball_data, ball_cfg):
 
-        self.sc_plane = sc_plane
+        # Update the ball mesh/textures
+        self.construct(ball_data, ball_cfg['radius'])
 
-    def set_sc_parent(self, obj):
-        bpy.context.scene.objects.active = self.sc_plane
-
-        if 'Child Of' not in self.sc_plane.constraints:
-            bpy.ops.object.constraint_add(type='CHILD_OF')
-
-        child_constr = self.sc_plane.constraints['Child Of']
-        child_constr.target = obj
-
-        # Set child to obtain x, y location of parent
-        child_constr.use_location_z = False
-        child_constr.use_rotation_x = False
-        child_constr.use_rotation_y = False
-        child_constr.use_rotation_z = False
-        child_constr.use_scale_x = False
-        child_constr.use_scale_y = False
-        child_constr.use_scale_z = False
+        self.move(ball_cfg['position'])
+        self.rotate(ball_cfg['rotation'])

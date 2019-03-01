@@ -30,7 +30,6 @@ sys.path.insert(0, head)
 ## GENERATE UV ##
 #################
 
-from config import scene_config as cfg
 from field_uv import draw_field
 
 from PIL import Image

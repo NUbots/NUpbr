@@ -5,9 +5,9 @@ import bpy
 
 from math import radians
 
-from config import scene_config as scene_cfg
 from config import blend_config as blend_cfg
 from config import output_config as out_cfg
+from config import scene_config
 
 # Clear environment of all objects
 def clear_env():
@@ -87,8 +87,8 @@ def setup_hdri_env(img_path, env_info):
     node_list = world.node_tree.nodes
 
     # Setup mist for world
-    world.mist_settings.start = 0.
-    world.mist_settings.intensity = 0.
+    world.mist_settings.start = 0
+    world.mist_settings.intensity = 0
     world.mist_settings.depth = out_cfg.max_depth
     world.mist_settings.falloff = 'LINEAR'
 
@@ -99,7 +99,7 @@ def setup_hdri_env(img_path, env_info):
     n_map = node_list.new('ShaderNodeMapping')
     n_coord = node_list.new('ShaderNodeTexCoord')
 
-    node_list['Background'].inputs[0].default_value = scene_cfg.classes['unclassified']['colour']
+    node_list['Background'].inputs[0].default_value = scene_config.resources['environment']['mask']['colour']
 
     # Update the HDRI environment with the texture
     update_hdri_env(world, img_path, env_info)
@@ -169,18 +169,18 @@ def setup_image_seg_mat(total_classes):
     # Create division node
     n_div = node_list.new('ShaderNodeMath')
     n_div.operation = 'DIVIDE'
-    n_div.inputs[1].default_value = len(scene_cfg.classes)
+    n_div.inputs[1].default_value = len(scene_config.resources)
     # Create Colour Ramp node
     n_col_ramp = node_list.new('ShaderNodeValToRGB')
     n_col_ramp.color_ramp.interpolation = 'CONSTANT'
 
     # Iterate through classes and create colour regions in colour ramp for each class
-    for obj_class in scene_cfg.classes:
+    for obj_class in scene_config.resources:
         elem = n_col_ramp.color_ramp.elements.new(
-            position=(scene_cfg.classes[obj_class]['index'] / (len(scene_cfg.classes))) -
-            0.5 / (len(scene_cfg.classes))
+            position=(scene_config.resources[obj_class]['mask']['index'] / (len(scene_config.resources))) -
+            0.5 / (len(scene_config.resources))
         )
-        elem.color = scene_cfg.classes[obj_class]['colour']
+        elem.color = scene_config.resources[obj_class]['mask']['colour']
 
     # Create emission node
     n_emission = node_list.new('ShaderNodeEmission')
@@ -216,7 +216,10 @@ def setup_field_seg_mat(index, total_classes):
     n_obj_info = node_list.new('ShaderNodeObjectInfo')
     # Create node texture image of field UV map
     n_field_lines = node_list.new('ShaderNodeTexImage')
-    img_path = os.path.join(scene_cfg.field_uv['uv_path'], scene_cfg.field_uv['name'] + scene_cfg.field_uv['type'])
+    img_path = os.path.join(
+        scene_config.resources['field']['uv_path'],
+        scene_config.resources['field']['name'] + scene_config.resources['field']['type']
+    )
     try:
         img = bpy.data.images.load(img_path)
     except:
@@ -225,7 +228,7 @@ def setup_field_seg_mat(index, total_classes):
     # Create modulo node
     n_mod = node_list.new('ShaderNodeMath')
     n_mod.operation = 'MODULO'
-    n_mod.inputs[1].default_value = scene_cfg.classes['field']['index']
+    n_mod.inputs[1].default_value = scene_config.resources['field']['mask']['index']
     n_mod.use_clamp = True
     # Create subtraction node
     n_sub = node_list.new('ShaderNodeMath')
@@ -296,10 +299,10 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     n_col_key.color_hue = 0.0001
     n_col_key.color_saturation = 0.0001
     n_col_key.color_value = 0.0001
-    n_col_key.inputs[1].default_value = (0., 0., 0., 1.)
+    n_col_key.inputs[1].default_value = (0, 0, 0, 1)
     # Mix node
     n_mix = node_list.new('CompositorNodeMixRGB')
-    n_mix.inputs[2].default_value = scene_cfg.classes['field']['field_lines_colour']
+    n_mix.inputs[2].default_value = scene_config.resources['field']['mask']['line_colour']
     # Alpha over
     n_alpha = node_list.new('CompositorNodeAlphaOver')
     # Switch (to switch between raw image and segmentation)

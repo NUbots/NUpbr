@@ -3,22 +3,19 @@
 import os
 import bpy
 
-from config import scene_config as scene_cfg
 from config import blend_config as blend_cfg
 
 from scene.blender_object import BlenderObject
 
 class Field(BlenderObject):
     def __init__(self, class_index):
-        self.loc = (0., 0., 0.)
         self.mat = None
         self.obj = None
         self.lower_plane = None
         self.pass_index = class_index
-        self.construct()
 
     # Setup field object
-    def construct(self):
+    def update(self, field_config):
         # Add plane for field
         bpy.ops.mesh.primitive_plane_add()
         lower_plane = bpy.data.objects['Plane']
@@ -28,9 +25,9 @@ class Field(BlenderObject):
         # Define location and dimensions of field
         lower_plane.location = (0, 0, 0)
         lower_plane.dimensions = (
-            2. * scene_cfg.field['border_width'] + scene_cfg.field['length'],
-            2. * scene_cfg.field['border_width'] + scene_cfg.field['width'],
-            0.,
+            2 * scene_cfg.field['border_width'] + scene_cfg.field['length'],
+            2 * scene_cfg.field['border_width'] + scene_cfg.field['width'],
+            0,
         )
 
         lower_plane.data.materials.append(self.create_lower_plane_mat(blend_cfg.field['lower_plane']))
@@ -49,9 +46,9 @@ class Field(BlenderObject):
         # Define location and dimensions of field
         field.location = (0, 0, 0)
         field.dimensions = (
-            2. * scene_cfg.field['border_width'] + scene_cfg.field['length'],
-            2. * scene_cfg.field['border_width'] + scene_cfg.field['width'],
-            0.,
+            2 * scene_cfg.field['border_width'] + scene_cfg.field['length'],
+            2 * scene_cfg.field['border_width'] + scene_cfg.field['width'],
+            0,
         )
 
         # Add material to field material slots
