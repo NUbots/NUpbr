@@ -120,12 +120,12 @@ def main():
         goals[0].move((
             config['field']['length'] / 2.0,
             0,
-            config['goal']['height'] - 2.5 * config['goal']['post_width'],
+            config['goal']['height'] - 3.0 * config['goal']['post_width'],
         ))
         goals[1].move((
             -config['field']['length'] / 2.0,
             0,
-            config['goal']['height'] - 2.5 * config['goal']['post_width'],
+            config['goal']['height'] - 3.0 * config['goal']['post_width'],
         ))
 
         # Hide objects based on environment map
