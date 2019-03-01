@@ -215,6 +215,8 @@ def main():
             # Gather metadata
             meta = config
 
+            meta.update({'rendered': env_info['to_draw']})
+
             # Add basic camera information
             meta['camera']['focus'] = tracking_target.name
             meta['camera']['lens'] = {}
