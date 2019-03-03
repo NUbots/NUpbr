@@ -33,6 +33,10 @@ render = {
     },
     'performance': {
         'render_tile': [512, 512],
+        'threads': {
+            'mode': 'FIXED',
+            'num_threads': 8,
+        },
     },
     'layers': {
         'use_hair': False,

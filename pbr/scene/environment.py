@@ -69,6 +69,13 @@ def setup_render():
     # Disable splash screen
     context.user_preferences.view.show_splash = False
 
+    # Limit blender thread usage
+    if rend_cfg["performance"]["threads"]["mode"] == "FIXED":
+        scene.render.threads_mode = "FIXED"
+        scene.render.threads = rend_cfg["performance"]["threads"]["num_threads"]
+    else:
+        scene.render.threads_mode = "AUTO"
+
     # Setup multiview stereo
     if out_cfg.output_stereo:
         bpy.context.scene.render.use_multiview = True
