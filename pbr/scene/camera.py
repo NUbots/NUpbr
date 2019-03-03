@@ -5,12 +5,13 @@ import bpy
 
 from scene.blender_object import BlenderObject
 
+
 class Camera(BlenderObject):
     def __init__(self, name):
 
         bpy.ops.object.camera_add()
 
-        self.cam = bpy.data.cameras['Camera']
+        self.cam = bpy.data.cameras["Camera"]
         self.obj = bpy.data.objects[self.cam.name]
         self.obj.name = name
 
@@ -18,12 +19,12 @@ class Camera(BlenderObject):
     def set_tracking_target(self, target):
         bpy.context.scene.objects.active = self.obj
 
-        if 'Damped Track' not in self.obj.constraints:
-            bpy.ops.object.constraint_add(type='DAMPED_TRACK')
+        if "Damped Track" not in self.obj.constraints:
+            bpy.ops.object.constraint_add(type="DAMPED_TRACK")
 
-        constr = self.obj.constraints['Damped Track']
+        constr = self.obj.constraints["Damped Track"]
         constr.target = target
-        constr.track_axis = 'TRACK_NEGATIVE_Z'
+        constr.track_axis = "TRACK_NEGATIVE_Z"
         constr.influence = 0.75
 
     # Add parent camera for stereo vision
@@ -35,16 +36,16 @@ class Camera(BlenderObject):
         self.obj.parent = cam
         self.obj.use_slow_parent = True
 
-        if 'Copy Rotation' not in self.obj.constraints:
-            bpy.ops.object.constraint_add(type='COPY_ROTATION')
+        if "Copy Rotation" not in self.obj.constraints:
+            bpy.ops.object.constraint_add(type="COPY_ROTATION")
 
-        rot_copy_constr = self.obj.constraints['Copy Rotation']
+        rot_copy_constr = self.obj.constraints["Copy Rotation"]
         rot_copy_constr.target = cam
 
-        if 'Child Of' not in self.obj.constraints:
-            bpy.ops.object.constraint_add(type='CHILD_OF')
+        if "Child Of" not in self.obj.constraints:
+            bpy.ops.object.constraint_add(type="CHILD_OF")
 
-        child_constr = self.obj.constraints['Child Of']
+        child_constr = self.obj.constraints["Child Of"]
         child_constr.target = cam
         child_constr.use_rotation_x = False
         child_constr.use_rotation_y = False
@@ -55,15 +56,15 @@ class Camera(BlenderObject):
         # Fix for blender being stupid
         for k in bpy.data.cameras.keys():
             cam = bpy.data.cameras[k]
-            if cam_config['type'] == 'EQUISOLID':
-                cam.type = 'PANO'
-                cam.cycles.panorama_type = 'FISHEYE_EQUISOLID'
-                cam.cycles.fisheye_fov = cam_config['fov']
-                cam.cycles.fisheye_lens = cam_config['focal_length']
-            elif cam_config['type'] == 'RECTILINEAR':
-                cam.type = 'PERSP'
-                cam.lens_unit = 'FOV'
-                cam.angle = cam_config['fov']
+            if cam_config["type"] == "EQUISOLID":
+                cam.type = "PANO"
+                cam.cycles.panorama_type = "FISHEYE_EQUISOLID"
+                cam.cycles.fisheye_fov = cam_config["fov"]
+                cam.cycles.fisheye_lens = cam_config["focal_length"]
+            elif cam_config["type"] == "RECTILINEAR":
+                cam.type = "PERSP"
+                cam.lens_unit = "FOV"
+                cam.angle = cam_config["fov"]
 
-        self.move(cam_config['position'])
-        self.rotate(cam_config['rotation'])
+        self.move(cam_config["position"])
+        self.rotate(cam_config["rotation"])

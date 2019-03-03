@@ -13,8 +13,11 @@ output_depth = False
 
 # Absolute output directory to hold the directories for output images and segmentation masks
 output_base = os.path.join(
-    os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)), 'outputs',
-    'run_{}'
+    os.path.abspath(
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), os.pardir, os.pardir)
+    ),
+    "outputs",
+    "run_{}",
 )
 
 # Find an output directory that isn't already taken
@@ -29,10 +32,10 @@ filename_len = 10
 # Directory names for both the RGB image outputs, the pixel-level segmentation masks, the pixel-level depth image,
 # and the meta files
 # (Outputs will be stored in <output_dir>/<image_dirname> and <output_dir>/<mask_dirname>)
-image_dirname = 'raw'
-mask_dirname = 'seg'
-depth_dirname = 'depth'
-meta_dirname = 'meta'
+image_dirname = "raw"
+mask_dirname = "seg"
+depth_dirname = "depth"
+meta_dirname = "meta"
 
 # Maximum depth for normalized depth map (metres)
 max_depth = 20

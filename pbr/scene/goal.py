@@ -9,6 +9,7 @@ from config import blend_config as blend_cfg
 
 from scene.blender_object import BlenderObject
 
+
 class Goal(BlenderObject):
     def __init__(self, class_index):
         self.mat = None
@@ -21,29 +22,27 @@ class Goal(BlenderObject):
 
         # Delete object if it already exists
         if self.obj is not None:
-            bpy.ops.object.select_all(action='DESELECT')
+            bpy.ops.object.select_all(action="DESELECT")
             self.obj.select = True
             bpy.ops.object.delete()
         if self.rear is not None:
-            bpy.ops.object.select_all(action='DESELECT')
+            bpy.ops.object.select_all(action="DESELECT")
             self.rear.select = True
             bpy.ops.object.delete()
 
         # Define corner radius to avoid extra multiplications
-        corner_radius = goal_config['post_width'] / 2
+        corner_radius = goal_config["post_width"] / 2
 
         goal_post = self.create_post(
-            goal_config,
-            name='Goal_Post',
-            extrude=(0, 0, goal_config['height']),
+            goal_config, name="Goal_Post", extrude=(0, 0, goal_config["height"])
         )
 
         # Get corner curve
-        curve = self.create_corner_curve(goal_config, blend_cfg.goal['corner_curve'])
+        curve = self.create_corner_curve(goal_config, blend_cfg.goal["corner_curve"])
         # Convert curve to mesh
-        bpy.ops.object.convert(target='MESH', keep_original=False)
+        bpy.ops.object.convert(target="MESH", keep_original=False)
 
-        bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
+        bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY")
 
         # Create our goal rear to join after we have created the front of the goals
         goal_rear = self.create_goal_rear(goal_config, curve)
@@ -53,20 +52,26 @@ class Goal(BlenderObject):
         # Create second goal post
         goal_post_copy = self.copy_obj(
             goal_post,
-            name='Goal_Post_copy',
-            loc=(0, goal_config['width'], 0),
+            name="Goal_Post_copy",
+            loc=(0, goal_config["width"], 0),
             rot=(0, 0, pi),
         )
 
         # Create crossbar
-        crossbar_y_loc = corner_radius if goal_config['shape'] == 'circular' else -corner_radius
-        crossbar_ext_offset = -(2 * corner_radius) if goal_config['shape'] == 'circular' else 2 * corner_radius
+        crossbar_y_loc = (
+            corner_radius if goal_config["shape"] == "circular" else -corner_radius
+        )
+        crossbar_ext_offset = (
+            -(2 * corner_radius)
+            if goal_config["shape"] == "circular"
+            else 2 * corner_radius
+        )
         crossbar = self.create_post(
             goal_config,
-            name='Crossbar',
-            loc=(0, crossbar_y_loc, goal_config['height'] + corner_radius),
+            name="Crossbar",
+            loc=(0, crossbar_y_loc, goal_config["height"] + corner_radius),
             rot=(pi / 2, 0, 0),
-            extrude=(0, goal_config['width'] + crossbar_ext_offset, 0),
+            extrude=(0, goal_config["width"] + crossbar_ext_offset, 0),
         )
 
         # Create goals with posts and crossbar
@@ -77,23 +82,23 @@ class Goal(BlenderObject):
 
         # Redefine name to be goal instead of goal post for clarity
         goal = goal_post
-        goal.name = 'Goal'
+        goal.name = "Goal"
         goal.location = (
             goal.location[0] + 0,
-            goal.location[1] - goal_config['width'] / 2,
+            goal.location[1] - goal_config["width"] / 2,
             goal.location[2] + 0,
         )
         goal.pass_index = self.pass_index
 
         # Reset origin to centre of geometry
-        bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
+        bpy.ops.object.origin_set(type="ORIGIN_GEOMETRY")
 
         # Apply goal material
-        self.mat = self.create_mat(goal, blend_cfg.goal['material'])
+        self.mat = self.create_mat(goal, blend_cfg.goal["material"])
         goal.data.materials.append(self.mat)
 
         # Apply goal material
-        self.mat = self.create_mat(goal_rear, blend_cfg.goal['material'])
+        self.mat = self.create_mat(goal_rear, blend_cfg.goal["material"])
         goal_rear.data.materials.append(self.mat)
 
         self.obj = goal_post
@@ -108,10 +113,12 @@ class Goal(BlenderObject):
         # Create copy of context
         context = bpy.context.copy()
         # Select our active and selected objects
-        context['active_object'] = objs[0]
-        context['selected_objects'] = objs
+        context["active_object"] = objs[0]
+        context["selected_objects"] = objs
         # Select all of our available editable bases
-        context['selected_editable_bases'] = [bpy.context.scene.object_bases[obj.name] for obj in objs]
+        context["selected_editable_bases"] = [
+            bpy.context.scene.object_bases[obj.name] for obj in objs
+        ]
         # Join objects
         bpy.ops.object.join(context)
         bpy.data.objects[objs[0].name].select = True
@@ -133,7 +140,7 @@ class Goal(BlenderObject):
 
     # Create material for the field
     def create_mat(self, g_object, m_cfg):
-        g_mat = bpy.data.materials.new('Goal_Mat')
+        g_mat = bpy.data.materials.new("Goal_Mat")
 
         # Enable use of material nodes
         g_mat.use_nodes = True
@@ -147,13 +154,13 @@ class Goal(BlenderObject):
 
         # Construct node tree
         # Create principled node
-        n_principled = node_list.new('ShaderNodeBsdfPrincipled')
-        n_principled.inputs[0].default_value = blend_cfg.goal['material']['colour']
-        n_principled.inputs[4].default_value = blend_cfg.goal['material']['metallic']
-        n_principled.inputs[7].default_value = blend_cfg.goal['material']['roughness']
+        n_principled = node_list.new("ShaderNodeBsdfPrincipled")
+        n_principled.inputs[0].default_value = blend_cfg.goal["material"]["colour"]
+        n_principled.inputs[4].default_value = blend_cfg.goal["material"]["metallic"]
+        n_principled.inputs[7].default_value = blend_cfg.goal["material"]["roughness"]
 
         # Create output node
-        n_output = node_list.new('ShaderNodeOutputMaterial')
+        n_output = node_list.new("ShaderNodeOutputMaterial")
 
         # Link shaders
         tl = g_mat.node_tree.links
@@ -166,38 +173,44 @@ class Goal(BlenderObject):
     # Create corner curve to apply to goal post
     def create_corner_curve(self, goal_config, c_cfg):
         # Define corner radius to avoid extra multiplications
-        corner_radius = goal_config['post_width'] / 2
+        corner_radius = goal_config["post_width"] / 2
 
-        if goal_config['shape'] == 'circular':
+        if goal_config["shape"] == "circular":
             # Create corner Bezier curve
             corner_curve = bpy.ops.curve.primitive_bezier_curve_add()
 
-            curve = bpy.data.objects['BezierCurve']
+            curve = bpy.data.objects["BezierCurve"]
 
             # Set curve properties
-            curve.name = 'Goal_Corner_Curve'
-            curve.data.fill_mode = blend_cfg.goal['corner_curve']['fill']
+            curve.name = "Goal_Corner_Curve"
+            curve.data.fill_mode = blend_cfg.goal["corner_curve"]["fill"]
             curve.data.bevel_depth = corner_radius
-            curve.data.bevel_resolution = int(blend_cfg.goal['initial_cond']['vertices'] / 2)
+            curve.data.bevel_resolution = int(
+                blend_cfg.goal["initial_cond"]["vertices"] / 2
+            )
 
             [p0, p1] = [
                 curve.data.splines.active.bezier_points[0],
                 curve.data.splines.active.bezier_points[1],
             ]
             # Set first point
-            p0.co = (0, 0, goal_config['height'])
-            p0.handle_left = (0, 0, goal_config['height'] - corner_radius)
-            p0.handle_right = (0, 0, goal_config['height'] + corner_radius)
+            p0.co = (0, 0, goal_config["height"])
+            p0.handle_left = (0, 0, goal_config["height"] - corner_radius)
+            p0.handle_right = (0, 0, goal_config["height"] + corner_radius)
 
             # Set second point
-            p1.co = (0, corner_radius, goal_config['height'] + corner_radius)
-            p1.handle_left = (0, 0, goal_config['height'] + corner_radius)
-            p1.handle_right = (0, goal_config['post_width'], goal_config['height'] + corner_radius)
-        elif goal_config['shape'] == 'square':
+            p1.co = (0, corner_radius, goal_config["height"] + corner_radius)
+            p1.handle_left = (0, 0, goal_config["height"] + corner_radius)
+            p1.handle_right = (
+                0,
+                goal_config["post_width"],
+                goal_config["height"] + corner_radius,
+            )
+        elif goal_config["shape"] == "square":
             curve = self.create_post(
                 goal_config=goal_config,
-                name='Goal_Corner_Curve',
-                loc=(0, 0, goal_config['height'] - corner_radius),
+                name="Goal_Corner_Curve",
+                loc=(0, 0, goal_config["height"] - corner_radius),
                 extrude=(0, 0, 2 * corner_radius),
             )
 
@@ -207,156 +220,180 @@ class Goal(BlenderObject):
         return curve
 
     # Create goal post
-    def create_post(self, goal_config, name, loc=(0, 0, 0), rot=(0, 0, 0), extrude=(0, 0, 0)):
+    def create_post(
+        self, goal_config, name, loc=(0, 0, 0), rot=(0, 0, 0), extrude=(0, 0, 0)
+    ):
         # Define corner radius to avoid extra multiplications
-        corner_radius = goal_config['post_width'] / 2
+        corner_radius = goal_config["post_width"] / 2
 
         # Add plane for field
-        if goal_config['shape'] == 'circular':
+        if goal_config["shape"] == "circular":
             mesh = bpy.ops.mesh.primitive_circle_add(
                 radius=corner_radius,
-                vertices=blend_cfg.goal['initial_cond']['vertices'],
-                calc_uvs=blend_cfg.ball['initial_cond']['calc_uvs'],
+                vertices=blend_cfg.goal["initial_cond"]["vertices"],
+                calc_uvs=blend_cfg.ball["initial_cond"]["calc_uvs"],
                 rotation=rot,
             )
             # Change name of goal post
-            goal_post = bpy.data.objects['Circle']
-        elif goal_config['shape'] == 'square':
+            goal_post = bpy.data.objects["Circle"]
+        elif goal_config["shape"] == "square":
             mesh = bpy.ops.mesh.primitive_plane_add(
                 radius=corner_radius,
-                calc_uvs=blend_cfg.ball['initial_cond']['calc_uvs'],
+                calc_uvs=blend_cfg.ball["initial_cond"]["calc_uvs"],
                 rotation=rot,
             )
             # Change name of goal post
-            goal_post = bpy.data.objects['Plane']
+            goal_post = bpy.data.objects["Plane"]
 
         goal_post.name = name
         goal_post.location = loc
 
         # Extrude the goal post to proper length
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.select_mode(type='VERT')
-        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.object.mode_set(mode="EDIT")
+        bpy.ops.mesh.select_mode(type="VERT")
+        bpy.ops.mesh.select_all(action="SELECT")
 
         bpy.ops.mesh.extrude_region_move(
             MESH_OT_extrude_region={"mirror": False},
             TRANSFORM_OT_translate={"value": extrude},
         )
 
-        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.mode_set(mode="OBJECT")
 
         return goal_post
 
     def create_goal_rear(self, goal_config, curve):
         # Define corner radius to avoid extra multiplications
-        corner_radius = goal_config['post_width'] / 2
+        corner_radius = goal_config["post_width"] / 2
         # Left bottom
         lb_curve = self.copy_obj(
             curve,
-            name='LT_Curve',
-            loc=(goal_config['depth'], corner_radius / 4, corner_radius),
+            name="LT_Curve",
+            loc=(goal_config["depth"], corner_radius / 4, corner_radius),
             rot=(0, pi / 2, 0),
         )
         lb_post = self.create_post(
             goal_config,
-            name='LB_Post',
+            name="LB_Post",
             loc=(0, 0, corner_radius),
             rot=(0, -pi / 2, 0),
-            extrude=(goal_config['depth'] - corner_radius / 2, 0, 0),
+            extrude=(goal_config["depth"] - corner_radius / 2, 0, 0),
         )
         # Left top
         lt_curve = self.copy_obj(
             curve,
-            name='LB_Curve',
-            loc=(goal_config['depth'], corner_radius / 4, goal_config['net_height']),
+            name="LB_Curve",
+            loc=(goal_config["depth"], corner_radius / 4, goal_config["net_height"]),
             rot=(0, pi / 2, 0),
         )
         lt_post = self.create_post(
             goal_config,
-            name='LT_Post',
-            loc=(0, 0, goal_config['net_height']),
+            name="LT_Post",
+            loc=(0, 0, goal_config["net_height"]),
             rot=(0, -pi / 2, 0),
-            extrude=(goal_config['depth'] - corner_radius / 2, 0, 0),
+            extrude=(goal_config["depth"] - corner_radius / 2, 0, 0),
         )
 
         # Right bottom
         rb_curve = self.copy_obj(
             curve,
-            name='RB_Curve',
-            loc=(goal_config['depth'], goal_config['width'] - corner_radius / 4, corner_radius),
+            name="RB_Curve",
+            loc=(
+                goal_config["depth"],
+                goal_config["width"] - corner_radius / 4,
+                corner_radius,
+            ),
             rot=(0, pi / 2, pi / 2),
         )
         rb_post = self.create_post(
             goal_config,
-            name='RB_Post',
-            loc=(0, goal_config['width'], corner_radius),
+            name="RB_Post",
+            loc=(0, goal_config["width"], corner_radius),
             rot=(0, -pi / 2, 0),
-            extrude=(goal_config['depth'] - corner_radius / 2, 0, 0),
+            extrude=(goal_config["depth"] - corner_radius / 2, 0, 0),
         )
         # Right top
         rt_curve = self.copy_obj(
             curve,
-            name='RT_Curve',
-            loc=(goal_config['depth'], goal_config['width'] - corner_radius / 4, goal_config['net_height']),
+            name="RT_Curve",
+            loc=(
+                goal_config["depth"],
+                goal_config["width"] - corner_radius / 4,
+                goal_config["net_height"],
+            ),
             rot=(0, pi / 2, pi / 2),
         )
         rt_post = self.create_post(
             goal_config,
-            name='RT_Post',
-            loc=(0, goal_config['width'], goal_config['net_height']),
+            name="RT_Post",
+            loc=(0, goal_config["width"], goal_config["net_height"]),
             rot=(0, -pi / 2, 0),
-            extrude=(goal_config['depth'] - corner_radius / 2, 0, 0),
+            extrude=(goal_config["depth"] - corner_radius / 2, 0, 0),
         )
 
         # Back bottom
         bb_post = self.create_post(
             goal_config,
-            name='BB_Post',
-            loc=(goal_config['depth'] + corner_radius / 4, corner_radius / 2, goal_config['net_height']),
+            name="BB_Post",
+            loc=(
+                goal_config["depth"] + corner_radius / 4,
+                corner_radius / 2,
+                goal_config["net_height"],
+            ),
             rot=(pi / 2, 0, 0),
-            extrude=(0, goal_config['width'] - corner_radius, 0),
+            extrude=(0, goal_config["width"] - corner_radius, 0),
         )
         bt_post = self.create_post(
             goal_config,
-            name='BT_Post',
-            loc=(goal_config['depth'] + corner_radius / 4, corner_radius / 2, corner_radius),
+            name="BT_Post",
+            loc=(
+                goal_config["depth"] + corner_radius / 4,
+                corner_radius / 2,
+                corner_radius,
+            ),
             rot=(pi / 2, 0, 0),
-            extrude=(0, goal_config['width'] - corner_radius, 0),
+            extrude=(0, goal_config["width"] - corner_radius, 0),
         )
 
         # Back verticals
         lv_post = self.create_post(
             goal_config,
-            name='BB_Post',
-            loc=(goal_config['depth'], corner_radius / 4, corner_radius),
-            extrude=(0, 0, goal_config['net_height'] - corner_radius),
+            name="BB_Post",
+            loc=(goal_config["depth"], corner_radius / 4, corner_radius),
+            extrude=(0, 0, goal_config["net_height"] - corner_radius),
         )
         rv_post = self.create_post(
             goal_config,
-            name='BB_Post',
-            loc=(goal_config['depth'], goal_config['width'] - corner_radius / 4, corner_radius),
-            extrude=(0, 0, goal_config['net_height'] - corner_radius),
+            name="BB_Post",
+            loc=(
+                goal_config["depth"],
+                goal_config["width"] - corner_radius / 4,
+                corner_radius,
+            ),
+            extrude=(0, 0, goal_config["net_height"] - corner_radius),
         )
 
         # Make single goal back object
-        self.join_objs([
-            lb_curve,
-            lb_post,
-            lt_curve,
-            lt_post,
-            rb_curve,
-            rb_post,
-            rt_curve,
-            rt_post,
-            bb_post,
-            bt_post,
-            lv_post,
-            rv_post,
-        ])
+        self.join_objs(
+            [
+                lb_curve,
+                lb_post,
+                lt_curve,
+                lt_post,
+                rb_curve,
+                rb_post,
+                rt_curve,
+                rt_post,
+                bb_post,
+                bt_post,
+                lv_post,
+                rv_post,
+            ]
+        )
 
         # Rename the object for clarity
         goal_back = lb_curve
-        goal_back.name = 'Goal_Back'
+        goal_back.name = "Goal_Back"
 
         return goal_back
 
