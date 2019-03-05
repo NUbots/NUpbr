@@ -22,7 +22,7 @@ output_base = os.path.join(
 
 # Find an output directory that isn't already taken
 output_dir_no = 0
-while os.path.isdir(output_base.format(output_dir_no)):
+while True:
     try:
     output_dir_no += 1
 output_dir = output_base.format(output_dir_no)
