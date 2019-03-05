@@ -24,8 +24,8 @@ output_base = os.path.join(
 output_dir_no = 0
 while True:
     try:
-    output_dir_no += 1
-output_dir = output_base.format(output_dir_no)
+        output_dir_no += 1
+        output_dir = output_base.format(output_dir_no)
         os.makedirs(output_dir, exist_ok=False)
         break
     except:
