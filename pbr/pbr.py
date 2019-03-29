@@ -10,9 +10,6 @@ import json
 # Add our current position to path to include package
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
-# Make sure the python dependencies for this script are installed
-import ensure_dependencies
-
 from math import pi, sqrt, ceil
 
 from config import output_config as out_cfg
