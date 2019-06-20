@@ -107,4 +107,10 @@ goal = {
     "corner_curve": {"fill": "FULL"},
     "material": {"metallic": 0.0, "roughness": 0.35, "colour": (0.8, 0.8, 0.8, 1.0)},
     "subsurf_mod": {"levels": 1, "rend_levels": 4},
+robot = {
+    "material": {
+        "specular": 0.742,
+        "metallic": 0.0,
+        "roughness": 0.9,
+    }
 }

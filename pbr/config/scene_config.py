@@ -14,6 +14,16 @@ proj_path = path.abspath(
 res_path = path.join(proj_path, "resources")
 
 resources = {
+    "robot": {
+        "mesh_path": path.abspath(path.join(res_path, "robot", "NUgus.fbx")),
+        "texture_path": path.abspath("/home/matt/ownCloud/NUpbr/Substance"),
+        "kinematics_path": path.abspath(path.join(res_path, "robot", "NUgus.json")),
+        "kinematics_variance": 0.5,
+        "mask": {
+            "index": 0,
+            "colour": (0, 0, 0, 1),
+        },
+    },
     "ball": {
         "img_types": [".jpg", ".png"],
         "mesh_types": [".fbx", ".obj"],

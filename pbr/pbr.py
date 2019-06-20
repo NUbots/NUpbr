@@ -25,11 +25,11 @@ from scene.goal import Goal
 from scene.camera import Camera
 from scene.camera_anchor import CameraAnchor
 from scene.shadowcatcher import ShadowCatcher
+from scene.robot import Robot
 
 # TODO: Reimplement field uv generation with Scikit-Image
 
 import util
-
 
 def main():
     ##############################################
@@ -69,6 +69,9 @@ def main():
     field = Field(scene_config.resources["field"]["mask"]["index"])
     field.update(config["field"])
 
+    # Create robot to attach to camera
+    robot = Robot("NUgus", 0, scene_config.resources["robot"])
+
     # Construct cameras
     cam_l = Camera("Camera_L")
     cam_r = Camera("Camera_R")
@@ -76,6 +79,10 @@ def main():
     # Set left camera to be parent camera
     # (and so all right camera movements are relative to the left camera position)
     cam_r.set_stereo_pair(cam_l.obj)
+
+    # Attach camera to robot head (TODO: Remove hard-coded torso to cam offset)
+    cam_l.obj.delta_rotation_euler = (pi / 2., 0., -pi / 2.)
+    cam_l.set_robot(robot.obj, robot.obj.location[2] + 0.33)
 
     # Create camera anchor target for random field images
     anch = CameraAnchor()
@@ -97,9 +104,8 @@ def main():
         with open(hdr_data["info_path"], "r") as f:
             env_info = json.load(f)
 
-        # Update camera
-        cam_l.update(config["camera"])
-        cam_r.move((config["camera"]["stereo_camera_distance"], 0, 0))
+        # Update robot (and camera)
+        robot.update(config["robot"])
 
         # Update ball
         # If we are autoplacing update the configuration
