@@ -39,9 +39,6 @@ class Robot(BlenderObject):
             # Set torso as main robot object
             if obj.parent == None:
                 self.obj = obj
-            # Hide head so camera can be used
-            if p == "Head":
-                obj.hide_render = True
             obj.name = "{}_{}".format(self.name, p)
             self.objs.update({obj.name: obj})
             # Configure each part to have correct pass index
@@ -105,8 +102,8 @@ class Robot(BlenderObject):
 
         # Create principled node
         n_principled = node_list.new("ShaderNodeBsdfPrincipled")
-        n_principled.inputs["Metallic"].default_value = blend_cfg.ball["material"]["metallic"]
-        n_principled.inputs["Roughness"].default_value = blend_cfg.ball["material"]["roughness"]
+        n_principled.inputs["Metallic"].default_value = blend_cfg.robot["material"]["metallic"]
+        n_principled.inputs["Roughness"].default_value = blend_cfg.robot["material"]["roughness"]
 
         # Create output node
         n_output = node_list.new("ShaderNodeOutputMaterial")
