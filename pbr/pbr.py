@@ -158,6 +158,7 @@ def main():
 
         tracking_target = random.choice(valid_tracks).obj
         cam_l.set_tracking_target(tracking_target)
+        robot.set_tracking_target(tracking_target)
 
         print(
             '[INFO] Frame {0}: ball: "{1}", map: "{2}", target: {3}'.format(
@@ -194,7 +195,6 @@ def main():
             isMaskImage=False,
             toggle=render_layer_toggle,
             shadowcatcher=shadowcatcher,
-            ball=ball,
             world=world,
             env=env,
             hdr_path=hdr_data["raw_path"],
@@ -208,7 +208,6 @@ def main():
             isMaskImage=True,
             toggle=render_layer_toggle,
             shadowcatcher=shadowcatcher,
-            ball=ball,
             world=world,
             env=env,
             hdr_path=hdr_data["mask_path"],

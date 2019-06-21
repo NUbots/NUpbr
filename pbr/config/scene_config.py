@@ -19,7 +19,7 @@ resources = {
         "kinematics_path": path.abspath(path.join(res_path, "robot", "NUgus.json")),
         "kinematics_variance": 0.5,
         "mask": {
-            "index": 0,
+            "index": 3,
             "colour": (0, 0, 0, 1),
         },
     },
@@ -42,6 +42,7 @@ resources = {
             "colour": (0, 0, 0, 1)
         },
     },
+    ## Always make sure that the field has the last index so field lines can be index + 1
     "field": {
         "type": ".png",
         "mode": "RGBA",
@@ -50,14 +51,14 @@ resources = {
         "name": "default",
         "orientation": "portrait",
         "mask": {
-            "index": 2,
+            "index": 4,
             "colour": (0, 1, 0, 1),
             "line_colour": (1, 1, 1, 1)
         },
     },
     "goal": {
         "mask": {
-            "index": 3,
+            "index": 2,
             "colour": (1, 1, 0, 1)
         }
     },
