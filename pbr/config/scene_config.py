@@ -20,7 +20,7 @@ resources = {
         "kinematics_variance": 0.5,
         "mask": {
             "index": 3,
-            "colour": (0, 0, 0, 1),
+            "colour": (0, 0, 1, 1),
         },
     },
     "ball": {
