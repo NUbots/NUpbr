@@ -8,7 +8,6 @@ from config import blend_config as blend_cfg
 
 from scene.blender_object import BlenderObject
 
-
 class Ball(BlenderObject):
     def __init__(self, name, class_index, ball_info):
         self.mat = None
@@ -42,9 +41,7 @@ class Ball(BlenderObject):
 
             # Determine new ball name (by picking first result not in previous list)
             # (Should always only result in one new object)
-            ball_name = [
-                x.name for x in bpy.data.objects if x.name not in prev_obj_names
-            ]
+            ball_name = [x.name for x in bpy.data.objects if x.name not in prev_obj_names]
             ball = bpy.data.objects[ball_name[0]]
         else:
             # Add UV sphere for ball
@@ -54,8 +51,9 @@ class Ball(BlenderObject):
                 calc_uvs=blend_cfg.ball["initial_cond"]["calc_uvs"],
             )
             ball = bpy.data.objects["Sphere"]
-            # TODO: Determine scale based on pre-defined object scaling for leaded mesh
-            ball.scale = (radius, radius, radius)
+
+        # Make ball correct size
+        ball.dimensions = (radius * 2.0, radius * 2.0, radius * 2.0)
 
         # Make ball active object
         bpy.context.scene.objects.active = ball
@@ -66,9 +64,7 @@ class Ball(BlenderObject):
         ball.pass_index = self.pass_index
 
         # Add material to ball material slots
-        self.mat = self.create_mat(
-            blend_cfg.ball["material"], ball_info["colour_path"], ball_info["norm_path"]
-        )
+        self.mat = self.create_mat(blend_cfg.ball["material"], ball_info["colour_path"], ball_info["norm_path"])
         ball.data.materials.append(self.mat)
 
         # Create subdiv surface modifiers if we have a new UV sphere
