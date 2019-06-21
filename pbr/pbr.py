@@ -59,6 +59,9 @@ def main():
         Goal(scene_config.resources["goal"]["mask"]["index"]),
     ]
 
+    # Create robot to attach to camera
+    robot = Robot("NUgus", scene_config.resources["robot"]["mask"]["index"], scene_config.resources["robot"])
+
     # Construct our shadowcatcher
     shadowcatcher = ShadowCatcher()
 
@@ -68,9 +71,6 @@ def main():
     # Construct our grass field
     field = Field(scene_config.resources["field"]["mask"]["index"])
     field.update(config["field"])
-
-    # Create robot to attach to camera
-    robot = Robot("NUgus", 0, scene_config.resources["robot"])
 
     # Construct cameras
     cam_l = Camera("Camera_L")
@@ -112,9 +112,7 @@ def main():
         # Update ball
         # If we are autoplacing update the configuration
         if config["ball"]["auto_position"] and not env_info["to_draw"]["field"]:
-            ground_point = util.point_on_field(
-                cam_l.obj, hdr_data["mask_path"], env_info
-            )
+            ground_point = util.point_on_field(cam_l.obj, hdr_data["mask_path"], env_info)
             config["ball"]["position"] = (
                 ground_point[0],
                 ground_point[1],
@@ -129,22 +127,16 @@ def main():
             g.update(config["goal"])
         goals[1].rotate((0, 0, pi))
         goal_height_offset = -3.0 if config["goal"]["shape"] == "square" else -1.0
-        goals[0].move(
-            (
-                config["field"]["length"] / 2.0,
-                0,
-                config["goal"]["height"]
-                + goal_height_offset * config["goal"]["post_width"],
-            )
-        )
-        goals[1].move(
-            (
-                -config["field"]["length"] / 2.0,
-                0,
-                config["goal"]["height"]
-                + goal_height_offset * config["goal"]["post_width"],
-            )
-        )
+        goals[0].move((
+            config["field"]["length"] / 2.0,
+            0,
+            config["goal"]["height"] + goal_height_offset * config["goal"]["post_width"],
+        ))
+        goals[1].move((
+            -config["field"]["length"] / 2.0,
+            0,
+            config["goal"]["height"] + goal_height_offset * config["goal"]["post_width"],
+        ))
 
         # Hide objects based on environment map
         ball.obj.hide_render = not env_info["to_draw"]["ball"]
@@ -161,9 +153,7 @@ def main():
             valid_tracks.append(ball)
         if env_info["to_draw"]["goal"]:  # Only track goals if they're rendered
             valid_tracks.append(random.choice(goals))
-        if env_info["to_draw"][
-            "field"
-        ]:  # Only pick random points if the field is rendered
+        if env_info["to_draw"]["field"]:  # Only pick random points if the field is rendered
             valid_tracks.append(anch)
 
         tracking_target = random.choice(valid_tracks).obj
@@ -245,9 +235,7 @@ def main():
                 )
 
         # Generate meta file
-        with open(
-            os.path.join(out_cfg.meta_dir, "{}.yaml".format(filename)), "w"
-        ) as meta_file:
+        with open(os.path.join(out_cfg.meta_dir, "{}.yaml".format(filename)), "w") as meta_file:
             # Gather metadata
             meta = config
 
@@ -275,13 +263,10 @@ def main():
                     },
                 }
 
-            meta["environment"]["file"] = os.path.relpath(
-                hdr_data["raw_path"], scene_config.res_path
-            )
+            meta["environment"]["file"] = os.path.relpath(hdr_data["raw_path"], scene_config.res_path)
 
             # Write metadata to file
             json.dump(meta, meta_file, indent=4, sort_keys=True)
-
 
 if __name__ == "__main__":
     main()

@@ -123,6 +123,21 @@ class Robot(BlenderObject):
 
         return l_mat
 
+    def set_tracking_target(self, target):
+        # Ensure object is selected to receive added constraints
+        bpy.context.scene.objects.active = self.obj
+
+        if "Copy Rotation" not in self.obj.constraints:
+            bpy.ops.object.constraint_add(type="COPY_ROTATION")
+
+        rot_copy_constr = self.obj.constraints["Copy Rotation"]
+        rot_copy_constr.name = "robot_copy_rot"
+        rot_copy_constr.target = target
+
+        rot_copy_constr.use_x = False
+        rot_copy_constr.use_y = False
+        rot_copy_constr.use_z = True
+
     def initialise_kinematics(self):
         # Set all joints to neutral pose
         for k in self.robot_parts.keys():
