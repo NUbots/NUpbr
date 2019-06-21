@@ -100,6 +100,9 @@ class Robot(BlenderObject):
                 raise NameError("Cannot load image {0}".format(normal_path))
             n_norm_map.image = norm_map
 
+        n_norm_map_conv = node_list.new("ShaderNodeNormalMap")
+        n_norm_map_conv.name = "Norm_Map_Conv"
+
         # Create principled node
         n_principled = node_list.new("ShaderNodeBsdfPrincipled")
         n_principled.inputs["Metallic"].default_value = blend_cfg.robot["material"]["metallic"]
@@ -114,7 +117,8 @@ class Robot(BlenderObject):
         # Link texture image and normal map
         tl.new(n_uv_map.outputs[0], n_principled.inputs[0])
         if normal_path is not None:
-            tl.new(n_norm_map.outputs[0], n_principled.inputs[16])
+            tl.new(n_norm_map.outputs["Color"], n_norm_map_conv.inputs["Color"])
+            tl.new(n_norm_map_conv.outputs["Normal"], n_principled.inputs["Normal"])
         tl.new(n_principled.outputs[0], n_output.inputs[0])
 
         return l_mat

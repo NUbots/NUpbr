@@ -83,6 +83,8 @@ def main():
     # Attach camera to robot head (TODO: Remove hard-coded torso to cam offset)
     cam_l.obj.delta_rotation_euler = (pi / 2., 0., -pi / 2.)
     cam_l.set_robot(robot.obj, robot.obj.location[2] + 0.33)
+    # Disable rendering of head if camera is now inside
+    robot.objs[robot.name + "_Head"].hide_render = True
 
     # Create camera anchor target for random field images
     anch = CameraAnchor()
