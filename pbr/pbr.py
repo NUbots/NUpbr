@@ -59,8 +59,11 @@ def main():
         Goal(scene_config.resources["goal"]["mask"]["index"]),
     ]
 
-    # Create robot to attach to camera
-    robot = Robot("NUgus", scene_config.resources["robot"]["mask"]["index"], scene_config.resources["robot"])
+    # Create robots to fill the scene
+    robots = [
+        Robot("r{}".format(ii), scene_config.resources["robot"]["mask"]["index"], scene_config.resources["robot"])
+        for ii in range(scene_config.num_robots + 1)
+    ]
 
     # Construct our shadowcatcher
     shadowcatcher = ShadowCatcher()
@@ -82,9 +85,9 @@ def main():
 
     # Attach camera to robot head (TODO: Remove hard-coded torso to cam offset)
     cam_l.obj.delta_rotation_euler = (pi / 2., 0., -pi / 2.)
-    cam_l.set_robot(robot.obj, robot.obj.location[2] + 0.33)
+    cam_l.set_robot(robots[0].obj, robots[0].obj.location[2] + 0.33)
     # Disable rendering of head if camera is now inside
-    robot.objs[robot.name + "_Head"].hide_render = True
+    robots[0].objs[robots[0].name + "_Head"].hide_render = True
 
     # Create camera anchor target for random field images
     anch = CameraAnchor()
@@ -106,9 +109,6 @@ def main():
         with open(hdr_data["info_path"], "r") as f:
             env_info = json.load(f)
 
-        # Update robot (and camera)
-        robot.update(config["robot"])
-
         # Update ball
         # If we are autoplacing update the configuration
         if config["ball"]["auto_position"] and not env_info["to_draw"]["field"]:
@@ -118,6 +118,20 @@ def main():
                 ground_point[1],
                 config["ball"]["position"][2],
             )
+
+        for ii in range(len(robots)):
+            # Update robot
+            # If we are autoplacing update the configuration
+            if config["robot"][ii]["auto_position"] and not env_info["to_draw"]["field"]:
+                ground_point = util.point_on_field(cam_l.obj, hdr_data["mask_path"], env_info)
+                config["robot"][ii]["position"] = (
+                    ground_point[0],
+                    ground_point[1],
+                    config["robot"][ii]["position"][2],
+                )
+
+            # Update robot (and camera)
+            robots[ii].update(config["robot"][ii])
 
         # Apply the updates
         ball.update(ball_data, config["ball"])
@@ -158,7 +172,7 @@ def main():
 
         tracking_target = random.choice(valid_tracks).obj
         cam_l.set_tracking_target(tracking_target)
-        robot.set_tracking_target(tracking_target)
+        robots[0].set_tracking_target(tracking_target)
 
         print(
             '[INFO] Frame {0}: ball: "{1}", map: "{2}", target: {3}'.format(

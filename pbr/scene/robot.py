@@ -5,7 +5,7 @@ import bpy
 import json
 import re
 from math import radians
-from random import triangular
+from random import triangular, randint
 
 from config import blend_config as blend_cfg
 from config import scene_config as scene_cfg
@@ -21,6 +21,7 @@ class Robot(BlenderObject):
         self.objs = {}
         self.obj = None
         self.name = name
+        self.colour = randint(0, 1)  # 1. white or 0. black
         self.construct(robot_info)
 
     # Setup ball object
@@ -81,12 +82,15 @@ class Robot(BlenderObject):
         # Create colour texture image of UV map
         n_uv_map = node_list.new("ShaderNodeTexImage")
         n_uv_map.name = "UV_Image"
-
         try:
             img = bpy.data.images.load(colour_path)
         except:
             raise NameError("Cannot load image {0}".format(colour_path))
         n_uv_map.image = img
+
+        # Create RGB mixer to change base colour of colour map
+        n_mix_col_map = node_list.new("ShaderNodeMixRGB")
+        n_mix_col_map.inputs[2].default_value = (self.colour, self.colour, self.colour, 1.)
 
         # Create normal map node for texture
         if normal_path is not None:
@@ -99,7 +103,6 @@ class Robot(BlenderObject):
             except:
                 raise NameError("Cannot load image {0}".format(normal_path))
             n_norm_map.image = norm_map
-
         n_norm_map_conv = node_list.new("ShaderNodeNormalMap")
         n_norm_map_conv.name = "Norm_Map_Conv"
 
@@ -115,7 +118,8 @@ class Robot(BlenderObject):
         tl = l_mat.node_tree.links
 
         # Link texture image and normal map
-        tl.new(n_uv_map.outputs[0], n_principled.inputs[0])
+        tl.new(n_uv_map.outputs[0], n_mix_col_map.inputs[1])
+        tl.new(n_mix_col_map.outputs[0], n_principled.inputs[0])
         if normal_path is not None:
             tl.new(n_norm_map.outputs["Color"], n_norm_map_conv.inputs["Color"])
             tl.new(n_norm_map_conv.outputs["Normal"], n_principled.inputs["Normal"])
@@ -170,4 +174,3 @@ class Robot(BlenderObject):
         self.update_kinematics()
 
         self.obj.location = cfg["position"]
-        self.obj.delta_rotation_euler = cfg["rotation"]

@@ -9,15 +9,17 @@ import random
 proj_path = path.abspath(path.join(path.join(path.dirname(path.realpath(__file__)), pardir), pardir))
 
 # Create resource path
-# res_path = path.join(proj_path, "resources")
-res_path = path.abspath("/home/matt/ownCloud/NUpbr")
+res_path = path.join(proj_path, "resources")
+
+# Number of robots to fill the scene
+num_robots = 3
 
 resources = {
     "robot": {
         "mesh_path": path.abspath(path.join(res_path, "robot", "NUgus.fbx")),
-        "texture_path": path.abspath("/home/matt/ownCloud/NUpbr/Substance"),
+        "texture_path": path.abspath(path.join(res_path, "robot", "textures")),
         "kinematics_path": path.abspath(path.join(res_path, "robot", "NUgus.json")),
-        "kinematics_variance": 0.5,
+        "kinematics_variance": 0.5,  ## Determines how much variance the random poses will have
         "mask": {
             "index": 3,
             "colour": (0, 0, 1, 1),
@@ -152,20 +154,17 @@ def configure_scene():
 
     # Add robot information
     cfg.update({
-        "robot": {
-            # Defines possible random placement range of x, y and z positional components
-            "position": (
-                random.uniform(-cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5),
-                random.uniform(-cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5),
-                random.uniform(0.45, 0.5),
-            ),
-            # Rotation limits (degrees)
-            "rotation": (
-                random.uniform(-pi / 8, pi / 8),
-                random.uniform(-0.1, +0.1),
-                random.uniform(-pi, +pi),
-            ),
-        }
+        "robot": [
+            {
+                "auto_position": True,
+                # Defines possible random placement range of x, y and z positional components
+                "position": (
+                    random.uniform(-cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5),
+                    random.uniform(-cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5),
+                    random.uniform(0.45, 0.5),
+                ),
+            } for ii in range(num_robots + 1)
+        ]
     })
 
     # Add anchor information
