@@ -23,13 +23,13 @@ from scene.ball import Ball
 from scene.field import Field
 from scene.goal import Goal
 from scene.camera import Camera
+from scene.shape import Shape
 from scene.camera_anchor import CameraAnchor
 from scene.shadowcatcher import ShadowCatcher
 
 # TODO: Reimplement field uv generation with Scikit-Image
 
 import util
-
 
 def main():
     ##############################################
@@ -80,14 +80,20 @@ def main():
     # Create camera anchor target for random field images
     anch = CameraAnchor()
 
+    # Add randomly generated shapes into scene
+    shapes = [Shape("s{}".format(ii), 0) for ii in range(scene_config.num_shapes)]
+
     ##############################################
     ##               SCENE UPDATE               ##
     ##############################################
 
     for frame_num in range(1, out_cfg.num_images + 1):
-
         # Generate a new configuration
         config = scene_config.configure_scene()
+
+        # Update shapes
+        for ii in range(len(shapes)):
+            shapes[ii].update(config["shape"][ii])
 
         # Select the ball and environment to use
         hdr_data = random.choice(hdrs)
