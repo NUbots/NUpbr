@@ -4,6 +4,7 @@
 from math import pi, radians
 from os import path, pardir
 import random
+import colorsys
 
 # Get project path
 proj_path = path.abspath(path.join(path.join(path.dirname(path.realpath(__file__)), pardir), pardir))
