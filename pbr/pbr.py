@@ -81,23 +81,13 @@ def main():
     anch = CameraAnchor()
 
     # Add randomly generated shapes into scene
-    shapes = [
-        Shape("s1", 0),
-        Shape("s2", 0),
-        Shape("s3", 0),
-        Shape("s4", 0),
-        Shape("s5", 0),
-        Shape("s6", 0),
-    ]
-    # TODO: Remove hack to generate num_shapes configs
-    scene_config.num_shapes = len(shapes)
+    shapes = [Shape("s{}".format(ii), 0) for ii in range(scene_config.num_shapes)]
 
     ##############################################
     ##               SCENE UPDATE               ##
     ##############################################
 
     for frame_num in range(1, out_cfg.num_images + 1):
-
         # Generate a new configuration
         config = scene_config.configure_scene()
 

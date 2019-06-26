@@ -12,7 +12,7 @@ proj_path = path.abspath(path.join(path.join(path.dirname(path.realpath(__file__
 # Create resource path
 res_path = path.join(proj_path, "resources")
 
-num_clutter_objects = 0
+# Dictate how many randomly generated shape objects there will be
 num_shapes = 0
 
 resources = {
@@ -150,21 +150,6 @@ def configure_scene():
                 random.uniform(-cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5),
                 0,
             )
-        }
-    })
-
-    cfg.update({
-        "clutter": {
-            "position": [(
-                random.uniform(-cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5),
-                random.uniform(-cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5),
-                0,
-            ) for x in range(num_clutter_objects)],
-            "rotation": [(
-                random.uniform(pi / 4, pi / 2),
-                random.uniform(-0.1, +0.1),
-                random.uniform(-pi, +pi),
-            ) for x in range(num_clutter_objects)]
         }
     })
 
