@@ -11,6 +11,9 @@ proj_path = path.abspath(path.join(path.join(path.dirname(path.realpath(__file__
 # Create resource path
 res_path = path.join(proj_path, "resources")
 
+num_clutter_objects = 0
+num_shapes = 0
+
 resources = {
     "ball": {
         "img_types": [".jpg", ".png"],
@@ -149,7 +152,6 @@ def configure_scene():
         }
     })
 
-    num_clutter_objects = 0
     cfg.update({
         "clutter": {
             "position": [(
@@ -163,6 +165,39 @@ def configure_scene():
                 random.uniform(-pi, +pi),
             ) for x in range(num_clutter_objects)]
         }
+    })
+
+    cfg.update({
+        "shape": [
+            {
+                "dimensions": (
+                    random.uniform(0.05, 1.0),
+                    random.uniform(0.05, 1.0),
+                    random.uniform(0.05, 1.0),
+                ),
+                "position": (
+                    random.uniform(-cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5),
+                    random.uniform(-cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5),
+                    0,
+                ),
+                "rotation": (
+                    random.uniform(-pi, +pi),
+                    random.uniform(-pi, +pi),
+                    random.uniform(-pi, +pi),
+                ),
+                "material": {
+                    # 69 yellow, 176 aqua
+                    "base_col":
+                        colorsys.hsv_to_rgb(
+                            random.uniform(0.440, 1.174),
+                            random.uniform(0., 1.),
+                            random.uniform(0., 1.),
+                        ),
+                    "metallic": random.uniform(0., 1.),
+                    "roughness": random.uniform(0., 1.),
+                }
+            } for ii in range(num_shapes)
+        ]
     })
 
     return cfg
