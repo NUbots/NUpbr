@@ -13,9 +13,22 @@ proj_path = path.abspath(path.join(path.join(path.dirname(path.realpath(__file__
 res_path = path.join(proj_path, "resources")
 
 # Dictate how many randomly generated shape objects there will be
-num_shapes = 0
+num_shapes = 8
+
+# Number of robots to fill the scene
+num_robots = 3
 
 resources = {
+    "robot": {
+        "mesh_path": path.abspath(path.join(res_path, "robot", "NUgus.fbx")),
+        "texture_path": path.abspath(path.join(res_path, "robot", "textures")),
+        "kinematics_path": path.abspath(path.join(res_path, "robot", "NUgus.json")),
+        "kinematics_variance": 0.5,  ## Determines how much variance the random poses will have
+        "mask": {
+            "index": 3,
+            "colour": (0, 0, 1, 1),
+        },
+    },
     "ball": {
         "img_types": [".jpg", ".png"],
         "mesh_types": [".fbx", ".obj"],
@@ -35,6 +48,7 @@ resources = {
             "colour": (0, 0, 0, 1)
         },
     },
+    ## Always make sure that the field has the last index so field lines can be index + 1
     "field": {
         "type": ".png",
         "mode": "RGBA",
@@ -43,14 +57,14 @@ resources = {
         "name": "default",
         "orientation": "portrait",
         "mask": {
-            "index": 2,
+            "index": 4,
             "colour": (0, 1, 0, 1),
             "line_colour": (1, 1, 1, 1)
         },
     },
     "goal": {
         "mask": {
-            "index": 3,
+            "index": 2,
             "colour": (1, 1, 0, 1)
         }
     },
@@ -154,36 +168,58 @@ def configure_scene():
     })
 
     cfg.update({
-        "shape": [
+        "shape": [{
+            "dimensions": (
+                random.uniform(0.05, 1.0),
+                random.uniform(0.05, 1.0),
+                random.uniform(0.05, 1.0),
+            ),
+            "position": (
+                random.uniform(-cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5),
+                random.uniform(-cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5),
+                0,
+            ),
+            "rotation": (
+                random.uniform(-pi, +pi),
+                random.uniform(-pi, +pi),
+                random.uniform(-pi, +pi),
+            ),
+            "material": {
+                "base_col":
+                    colorsys.hsv_to_rgb(
+                        random.uniform(0.440, 1.174),
+                        random.uniform(0., 1.),
+                        random.uniform(0., 1.),
+                    ),
+                "metallic": random.uniform(0., 1.),
+                "roughness": random.uniform(0., 1.),
+            }
+        } for ii in range(num_shapes)]
+    })
+    # Add robot information
+    cfg.update({
+        "robot": [
             {
-                "dimensions": (
-                    random.uniform(0.05, 1.0),
-                    random.uniform(0.05, 1.0),
-                    random.uniform(0.05, 1.0),
-                ),
+                "auto_position": True,
+                # Defines possible random placement range of x, y and z positional components
                 "position": (
                     random.uniform(-cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5),
                     random.uniform(-cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5),
-                    0,
+                    random.uniform(0.45, 0.5),
                 ),
-                "rotation": (
-                    random.uniform(-pi, +pi),
-                    random.uniform(-pi, +pi),
-                    random.uniform(-pi, +pi),
-                ),
-                "material": {
-                    # 69 yellow, 176 aqua
-                    "base_col":
-                        colorsys.hsv_to_rgb(
-                            random.uniform(0.440, 1.174),
-                            random.uniform(0., 1.),
-                            random.uniform(0., 1.),
-                        ),
-                    "metallic": random.uniform(0., 1.),
-                    "roughness": random.uniform(0., 1.),
-                }
-            } for ii in range(num_shapes)
+            } for ii in range(num_robots + 1)
         ]
+    })
+
+    # Add anchor information
+    cfg.update({
+        "anchor": {
+            "position": (
+                random.uniform(-cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5),
+                random.uniform(-cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5),
+                0,
+            )
+        }
     })
 
     return cfg

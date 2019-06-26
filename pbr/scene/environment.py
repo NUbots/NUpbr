@@ -14,7 +14,6 @@ def clear_env():
     for obj in bpy.data.objects:
         bpy.data.objects.remove(obj)
 
-
 # Setup our render parameters
 def setup_render():
     # Alias render config
@@ -39,14 +38,10 @@ def setup_render():
     scene.cycles.device = rend_cfg["render"]["cycles_device"]
 
     # Set denoising settings
-    context.scene.render.layers[0].cycles.use_denoising = blend_cfg.layers["denoising"][
-        "use_denoising"
-    ]
+    context.scene.render.layers[0].cycles.use_denoising = blend_cfg.layers["denoising"]["use_denoising"]
 
     # Set dimensions settings
-    [scene.render.resolution_x, scene.render.resolution_y] = rend_cfg["dimensions"][
-        "resolution"
-    ]
+    [scene.render.resolution_x, scene.render.resolution_y] = rend_cfg["dimensions"]["resolution"]
     scene.render.resolution_percentage = rend_cfg["dimensions"]["percentage"]
 
     # Set sampling settings
@@ -54,12 +49,8 @@ def setup_render():
     scene.cycles.preview_samples = rend_cfg["sampling"]["cycles_preview_samples"]
 
     # Set light paths settings
-    scene.cycles.transparent_max_bounces = rend_cfg["light_paths"]["transparency"][
-        "max_bounces"
-    ]
-    scene.cycles.transparent_min_bounces = rend_cfg["light_paths"]["transparency"][
-        "min_bounces"
-    ]
+    scene.cycles.transparent_max_bounces = rend_cfg["light_paths"]["transparency"]["max_bounces"]
+    scene.cycles.transparent_min_bounces = rend_cfg["light_paths"]["transparency"]["min_bounces"]
     scene.cycles.max_bounces = rend_cfg["light_paths"]["bounces"]["max_bounces"]
     scene.cycles.min_bounces = rend_cfg["light_paths"]["bounces"]["min_bounces"]
     scene.cycles.diffuse_bounces = rend_cfg["light_paths"]["diffuse"]
@@ -73,9 +64,7 @@ def setup_render():
     scene.use_nodes = True
 
     # Set performance Settings
-    [context.scene.render.tile_x, context.scene.render.tile_y] = rend_cfg[
-        "performance"
-    ]["render_tile"]
+    [context.scene.render.tile_x, context.scene.render.tile_y] = rend_cfg["performance"]["render_tile"]
 
     # Disable splash screen
     context.user_preferences.view.show_splash = False
@@ -93,7 +82,6 @@ def setup_render():
         bpy.context.scene.render.views_format = "STEREO_3D"
     else:
         bpy.context.scene.render.use_multiview = False
-
 
 # Setup background HDRI environment
 def setup_hdri_env(img_path, env_info):
@@ -118,9 +106,7 @@ def setup_hdri_env(img_path, env_info):
     n_map = node_list.new("ShaderNodeMapping")
     n_coord = node_list.new("ShaderNodeTexCoord")
 
-    node_list["Background"].inputs[0].default_value = scene_config.resources[
-        "environment"
-    ]["mask"]["colour"]
+    node_list["Background"].inputs[0].default_value = scene_config.resources["environment"]["mask"]["colour"]
 
     # Update the HDRI environment with the texture
     update_hdri_env(world, img_path, env_info)
@@ -138,7 +124,6 @@ def setup_hdri_env(img_path, env_info):
     tl.new(node_list["Background"].outputs[0], node_list["World Output"].inputs[0])
 
     return world
-
 
 def update_hdri_env(world, img_path, env_info):
     node_list = bpy.data.worlds["World_HDR"].node_tree.nodes
@@ -174,7 +159,6 @@ def update_hdri_env(world, img_path, env_info):
     elif link is not None:
         tl.remove(link)
 
-
 def setup_image_seg_mat(total_classes):
     seg_mat = bpy.data.materials.new("Image_Seg")
     # Enable material nodes
@@ -200,11 +184,8 @@ def setup_image_seg_mat(total_classes):
     # Iterate through classes and create colour regions in colour ramp for each class
     for obj_class in scene_config.resources:
         elem = n_col_ramp.color_ramp.elements.new(
-            position=(
-                scene_config.resources[obj_class]["mask"]["index"]
-                / (len(scene_config.resources))
-            )
-            - 0.5 / (len(scene_config.resources))
+            position=(scene_config.resources[obj_class]["mask"]["index"] / (len(scene_config.resources))) -
+            0.5 / (len(scene_config.resources))
         )
         elem.color = scene_config.resources[obj_class]["mask"]["colour"]
 
@@ -226,7 +207,6 @@ def setup_image_seg_mat(total_classes):
 
     return seg_mat
 
-
 def setup_field_seg_mat(index, total_classes):
     seg_mat = bpy.data.materials.new("Field_Seg")
     # Enable material nodes
@@ -245,8 +225,7 @@ def setup_field_seg_mat(index, total_classes):
     n_field_lines = node_list.new("ShaderNodeTexImage")
     img_path = os.path.join(
         scene_config.resources["field"]["uv_path"],
-        scene_config.resources["field"]["name"]
-        + scene_config.resources["field"]["type"],
+        scene_config.resources["field"]["name"] + scene_config.resources["field"]["type"],
     )
     try:
         img = bpy.data.images.load(img_path)
@@ -287,7 +266,6 @@ def setup_field_seg_mat(index, total_classes):
     tl.new(n_shaders.outputs[0], n_output.inputs[0])
 
     return seg_mat
-
 
 def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     # Enable compositing nodes
@@ -331,9 +309,7 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     n_col_key.inputs[1].default_value = (0, 0, 0, 1)
     # Mix node
     n_mix = node_list.new("CompositorNodeMixRGB")
-    n_mix.inputs[2].default_value = scene_config.resources["field"]["mask"][
-        "line_colour"
-    ]
+    n_mix.inputs[2].default_value = scene_config.resources["field"]["mask"]["line_colour"]
     # Alpha over
     n_alpha = node_list.new("CompositorNodeAlphaOver")
     # Switch (to switch between raw image and segmentation)
@@ -365,7 +341,6 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
 
     # Return switch node to toggle composite output
     return n_switch, n_alpha, n_depth_out
-
 
 def setup_render_layers(num_objects):
     scene = bpy.context.scene

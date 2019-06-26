@@ -4,12 +4,26 @@ from math import pi
 
 render = {
     "render_engine": "CYCLES",
-    "render": {"cycles_device": "GPU"},
-    "dimensions": {"resolution": [1280, 1024], "percentage": 100.0},
-    "sampling": {"cycles_samples": 256, "cycles_preview_samples": 16},
+    "render": {
+        "cycles_device": "GPU"
+    },
+    "dimensions": {
+        "resolution": [1280, 1024],
+        "percentage": 100.0
+    },
+    "sampling": {
+        "cycles_samples": 256,
+        "cycles_preview_samples": 16
+    },
     "light_paths": {
-        "transparency": {"max_bounces": 1, "min_bounces": 1},
-        "bounces": {"max_bounces": 1, "min_bounces": 1},
+        "transparency": {
+            "max_bounces": 1,
+            "min_bounces": 1
+        },
+        "bounces": {
+            "max_bounces": 1,
+            "min_bounces": 1
+        },
         "diffuse": 1,
         "glossy": 1,
         "transmission": 1,
@@ -19,9 +33,14 @@ render = {
     },
     "performance": {
         "render_tile": [512, 512],
-        "threads": {"mode": "FIXED", "num_threads": 8},
+        "threads": {
+            "mode": "FIXED",
+            "num_threads": 8
+        },
     },
-    "layers": {"use_hair": False},
+    "layers": {
+        "use_hair": False
+    },
 }
 
 scene = {"units": {"length_units": "METRIC", "rotation_units": "DEGREES"}}
@@ -43,12 +62,24 @@ field = {
             "inp1": (0.247, 0.549, 0.0, 1),
             "inp2": (0.257, 0.272, 0.0, 1),
         },
-        "noise": {"inp": [5.0, 2.0, 0.0]},
-        "hsv": {"inp": [0.0, 0.0, 1.9, 1.0]},
-        "mix_up_grass_hsv": {"inp0": 0.455},
-        "mix_low_grass_field_lines": {"inp0": 0.4},
-        "mix_grass": {"inp0": 0.391},
-        "principled": {"roughness": 0.625},
+        "noise": {
+            "inp": [5.0, 2.0, 0.0]
+        },
+        "hsv": {
+            "inp": [0.0, 0.0, 1.9, 1.0]
+        },
+        "mix_up_grass_hsv": {
+            "inp0": 0.455
+        },
+        "mix_low_grass_field_lines": {
+            "inp0": 0.4
+        },
+        "mix_grass": {
+            "inp0": 0.391
+        },
+        "principled": {
+            "roughness": 0.625
+        },
     },
     "particle": {
         "use_adv_hair": True,
@@ -66,7 +97,10 @@ field = {
             "timestep": 0.025,
             "subframes": 1,
         },
-        "render": {"emitter": False, "parents": True},
+        "render": {
+            "emitter": False,
+            "parents": True
+        },
         "children": {
             "child_type": "INTERPOLATED",
             "child_num": 10,
@@ -92,19 +126,52 @@ field = {
         "noise_scale": 0.1,
         "nabla": 0.3,
         "mapping_coords": "ORCO",
-        "influence": {"use_hair_length": True, "hair_length_factor": 3.5},
+        "influence": {
+            "use_hair_length": True,
+            "hair_length_factor": 3.5
+        },
     },
 }
 
 ball = {
-    "initial_cond": {"segments": 16, "ring_count": 10, "calc_uvs": True},
-    "material": {"metallic": 0.0, "roughness": 0.35},
-    "subsurf_mod": {"levels": 1, "rend_levels": 4},
+    "initial_cond": {
+        "segments": 16,
+        "ring_count": 10,
+        "calc_uvs": True
+    },
+    "material": {
+        "metallic": 0.0,
+        "roughness": 0.35
+    },
+    "subsurf_mod": {
+        "levels": 1,
+        "rend_levels": 4
+    },
 }
 
 goal = {
-    "initial_cond": {"vertices": 32, "calc_uvs": True},
-    "corner_curve": {"fill": "FULL"},
-    "material": {"metallic": 0.0, "roughness": 0.35, "colour": (0.8, 0.8, 0.8, 1.0)},
-    "subsurf_mod": {"levels": 1, "rend_levels": 4},
+    "initial_cond": {
+        "vertices": 32,
+        "calc_uvs": True
+    },
+    "corner_curve": {
+        "fill": "FULL"
+    },
+    "material": {
+        "metallic": 0.0,
+        "roughness": 0.35,
+        "colour": (0.8, 0.8, 0.8, 1.0)
+    },
+    "subsurf_mod": {
+        "levels": 1,
+        "rend_levels": 4
+    },
+}
+
+robot = {
+    "material": {
+        "specular": 0.742,
+        "metallic": 0.0,
+        "roughness": 0.9,
+    }
 }

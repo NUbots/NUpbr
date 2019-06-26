@@ -5,7 +5,6 @@ import bpy
 
 from scene.blender_object import BlenderObject
 
-
 class Camera(BlenderObject):
     def __init__(self, name):
 
@@ -42,14 +41,27 @@ class Camera(BlenderObject):
         rot_copy_constr = self.obj.constraints["Copy Rotation"]
         rot_copy_constr.target = cam
 
-        if "Child Of" not in self.obj.constraints:
-            bpy.ops.object.constraint_add(type="CHILD_OF")
+        bpy.ops.object.constraint_add(type="CHILD_OF")
 
         child_constr = self.obj.constraints["Child Of"]
+        child_constr.name = "cam_child"
         child_constr.target = cam
         child_constr.use_rotation_x = False
         child_constr.use_rotation_y = False
         child_constr.use_rotation_z = False
+
+    def set_robot(self, robot, height_offset):
+        # Ensure object is selected to receive added constraints
+        bpy.context.scene.objects.active = self.obj
+
+        bpy.ops.object.constraint_add(type="CHILD_OF")
+        child_constr = self.obj.constraints["Child Of"]
+        child_constr.name = "robot_child"
+        child_constr.target = robot
+        # Invert child of
+        child_constr.inverse_matrix = robot.matrix_world.inverted()
+        # Apply height offset to move cam to head
+        self.obj.delta_location[2] = height_offset
 
     def update(self, cam_config):
 
@@ -65,6 +77,3 @@ class Camera(BlenderObject):
                 cam.type = "PERSP"
                 cam.lens_unit = "FOV"
                 cam.angle = cam_config["fov"]
-
-        self.move(cam_config["position"])
-        self.rotate(cam_config["rotation"])

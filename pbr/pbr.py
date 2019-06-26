@@ -26,6 +26,7 @@ from scene.camera import Camera
 from scene.shape import Shape
 from scene.camera_anchor import CameraAnchor
 from scene.shadowcatcher import ShadowCatcher
+from scene.robot import Robot
 
 # TODO: Reimplement field uv generation with Scikit-Image
 
@@ -59,6 +60,12 @@ def main():
         Goal(scene_config.resources["goal"]["mask"]["index"]),
     ]
 
+    # Create robots to fill the scene
+    robots = [
+        Robot("r{}".format(ii), scene_config.resources["robot"]["mask"]["index"], scene_config.resources["robot"])
+        for ii in range(scene_config.num_robots + 1)
+    ]
+
     # Construct our shadowcatcher
     shadowcatcher = ShadowCatcher()
 
@@ -76,6 +83,12 @@ def main():
     # Set left camera to be parent camera
     # (and so all right camera movements are relative to the left camera position)
     cam_r.set_stereo_pair(cam_l.obj)
+
+    # Attach camera to robot head (TODO: Remove hard-coded torso to cam offset)
+    cam_l.obj.delta_rotation_euler = (pi / 2., 0., -pi / 2.)
+    cam_l.set_robot(robots[0].obj, robots[0].obj.location[2] + 0.33)
+    # Disable rendering of head if camera is now inside
+    robots[0].objs[robots[0].name + "_Head"].hide_render = True
 
     # Create camera anchor target for random field images
     anch = CameraAnchor()
@@ -103,21 +116,29 @@ def main():
         with open(hdr_data["info_path"], "r") as f:
             env_info = json.load(f)
 
-        # Update camera
-        cam_l.update(config["camera"])
-        cam_r.move((config["camera"]["stereo_camera_distance"], 0, 0))
-
         # Update ball
         # If we are autoplacing update the configuration
         if config["ball"]["auto_position"] and not env_info["to_draw"]["field"]:
-            ground_point = util.point_on_field(
-                cam_l.obj, hdr_data["mask_path"], env_info
-            )
+            ground_point = util.point_on_field(cam_l.obj, hdr_data["mask_path"], env_info)
             config["ball"]["position"] = (
                 ground_point[0],
                 ground_point[1],
                 config["ball"]["position"][2],
             )
+
+        for ii in range(len(robots)):
+            # Update robot
+            # If we are autoplacing update the configuration
+            if config["robot"][ii]["auto_position"] and not env_info["to_draw"]["field"]:
+                ground_point = util.point_on_field(cam_l.obj, hdr_data["mask_path"], env_info)
+                config["robot"][ii]["position"] = (
+                    ground_point[0],
+                    ground_point[1],
+                    config["robot"][ii]["position"][2],
+                )
+
+            # Update robot (and camera)
+            robots[ii].update(config["robot"][ii])
 
         # Apply the updates
         ball.update(ball_data, config["ball"])
@@ -127,22 +148,16 @@ def main():
             g.update(config["goal"])
         goals[1].rotate((0, 0, pi))
         goal_height_offset = -3.0 if config["goal"]["shape"] == "square" else -1.0
-        goals[0].move(
-            (
-                config["field"]["length"] / 2.0,
-                0,
-                config["goal"]["height"]
-                + goal_height_offset * config["goal"]["post_width"],
-            )
-        )
-        goals[1].move(
-            (
-                -config["field"]["length"] / 2.0,
-                0,
-                config["goal"]["height"]
-                + goal_height_offset * config["goal"]["post_width"],
-            )
-        )
+        goals[0].move((
+            config["field"]["length"] / 2.0,
+            0,
+            config["goal"]["height"] + goal_height_offset * config["goal"]["post_width"],
+        ))
+        goals[1].move((
+            -config["field"]["length"] / 2.0,
+            0,
+            config["goal"]["height"] + goal_height_offset * config["goal"]["post_width"],
+        ))
 
         # Hide objects based on environment map
         ball.obj.hide_render = not env_info["to_draw"]["ball"]
@@ -159,13 +174,12 @@ def main():
             valid_tracks.append(ball)
         if env_info["to_draw"]["goal"]:  # Only track goals if they're rendered
             valid_tracks.append(random.choice(goals))
-        if env_info["to_draw"][
-            "field"
-        ]:  # Only pick random points if the field is rendered
+        if env_info["to_draw"]["field"]:  # Only pick random points if the field is rendered
             valid_tracks.append(anch)
 
         tracking_target = random.choice(valid_tracks).obj
         cam_l.set_tracking_target(tracking_target)
+        robots[0].set_tracking_target(tracking_target)
 
         print(
             '[INFO] Frame {0}: ball: "{1}", map: "{2}", target: {3}'.format(
@@ -202,7 +216,6 @@ def main():
             isMaskImage=False,
             toggle=render_layer_toggle,
             shadowcatcher=shadowcatcher,
-            ball=ball,
             world=world,
             env=env,
             hdr_path=hdr_data["raw_path"],
@@ -216,7 +229,6 @@ def main():
             isMaskImage=True,
             toggle=render_layer_toggle,
             shadowcatcher=shadowcatcher,
-            ball=ball,
             world=world,
             env=env,
             hdr_path=hdr_data["mask_path"],
@@ -243,9 +255,7 @@ def main():
                 )
 
         # Generate meta file
-        with open(
-            os.path.join(out_cfg.meta_dir, "{}.yaml".format(filename)), "w"
-        ) as meta_file:
+        with open(os.path.join(out_cfg.meta_dir, "{}.yaml".format(filename)), "w") as meta_file:
             # Gather metadata
             meta = config
 
@@ -273,13 +283,10 @@ def main():
                     },
                 }
 
-            meta["environment"]["file"] = os.path.relpath(
-                hdr_data["raw_path"], scene_config.res_path
-            )
+            meta["environment"]["file"] = os.path.relpath(hdr_data["raw_path"], scene_config.res_path)
 
             # Write metadata to file
             json.dump(meta, meta_file, indent=4, sort_keys=True)
-
 
 if __name__ == "__main__":
     main()
