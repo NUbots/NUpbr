@@ -136,7 +136,54 @@ def matrix_to_list(mat):
         [mat[3][0], mat[3][1], mat[3][2], mat[3][3]],
     ]
 
-def point_on_field(cam_location, mask_path, env_info):
+def project_to_ground(y, x, cam_location, img, env_info):
+    # Normalise the coordinates into a form useful for making unit vectors
+    phi = (y / img.shape[0]) * math.pi
+    theta = (0.5 - (x / img.shape[1])) * math.pi * 2
+    target_vector = np.array([
+        math.sin(phi) * math.cos(theta),
+        math.sin(phi) * math.sin(theta),
+        math.cos(phi),
+    ])
+
+    # Create rotation matrix
+    # Roll (x) pitch (y) yaw (z)
+    alpha = math.radians(env_info["rotation"]["roll"])
+    beta = math.radians(env_info["rotation"]["pitch"])
+    gamma = math.radians(env_info["rotation"]["yaw"])
+
+    sa = math.sin(alpha)
+    ca = math.cos(alpha)
+    sb = math.sin(beta)
+    cb = math.cos(beta)
+    sg = math.sin(gamma)
+    cg = math.cos(gamma)
+
+    rot_x = np.matrix([[1, 0, 0], [0, ca, -sa], [0, sa, ca]])  # yapf: disable
+    rot_y = np.matrix([[cb, 0, sb], [0, 1, 0], [-sb, 0, cb]])  # yapf: disable
+    rot_z = np.matrix([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])  # yapf: disable
+
+    rot = rot_z * rot_y * rot_x
+
+    # Rotate the target vector by the rotation of the environment
+    target_vector = target_vector * rot
+    target_vector = np.array([target_vector[0, 0], target_vector[0, 1], target_vector[0, 2]])
+
+    # Project the target vector to the ground plane to get a position
+    height = -cam_location[2]
+
+    # Get the position for the target
+    ground_point = target_vector * (height / target_vector[2])
+
+    # Move into the world coordinates
+    ground_point = np.array([ground_point[0], ground_point[1]])
+
+    # Offset x/y by the camera position
+    ground_point = ground_point + np.array([cam_location[0], cam_location[1]])
+
+    return (ground_point[0], ground_point[1])
+
+def point_on_field(cam_location, mask_path, env_info, num_points):
     try:
         img = cv2.imread(mask_path)
     except:
@@ -161,54 +208,14 @@ def point_on_field(cam_location, mask_path, env_info):
         ).nonzero(),
         axis=-1,
     )
+
+    ground_points = []
+
     # Check if environment map has field points, else set to origin
     if len(field_coords) > 0:
-        # Get random field point
-        y, x = field_coords[rand.randint(0, field_coords.shape[0] - 1)]
+        for ii in range(num_points):
+            # Get random field point
+            y, x = field_coords[rand.randint(0, field_coords.shape[0] - 1)]
 
-        # Normalise the coordinates into a form useful for making unit vectors
-        phi = (y / img.shape[0]) * math.pi
-        theta = (0.5 - (x / img.shape[1])) * math.pi * 2
-        target_vector = np.array([
-            math.sin(phi) * math.cos(theta),
-            math.sin(phi) * math.sin(theta),
-            math.cos(phi),
-        ])
-
-        # Create rotation matrix
-        # Roll (x) pitch (y) yaw (z)
-        alpha = math.radians(env_info["rotation"]["roll"])
-        beta = math.radians(env_info["rotation"]["pitch"])
-        gamma = math.radians(env_info["rotation"]["yaw"])
-
-        sa = math.sin(alpha)
-        ca = math.cos(alpha)
-        sb = math.sin(beta)
-        cb = math.cos(beta)
-        sg = math.sin(gamma)
-        cg = math.cos(gamma)
-
-        rot_x = np.matrix([[1, 0, 0], [0, ca, -sa], [0, sa, ca]])  # yapf: disable
-        rot_y = np.matrix([[cb, 0, sb], [0, 1, 0], [-sb, 0, cb]])  # yapf: disable
-        rot_z = np.matrix([[cg, -sg, 0], [sg, cg, 0], [0, 0, 1]])  # yapf: disable
-
-        rot = rot_z * rot_y * rot_x
-
-        # Rotate the target vector by the rotation of the environment
-        target_vector = target_vector * rot
-        target_vector = np.array([target_vector[0, 0], target_vector[0, 1], target_vector[0, 2]])
-
-        # Project the target vector to the ground plane to get a position
-        height = -cam_location[2]
-
-        # Get the position for the target
-        ground_point = target_vector * (height / target_vector[2])
-
-        # Move into the world coordinates
-        ground_point = np.array([ground_point[0], ground_point[1]])
-
-        # Offset x/y by the camera position
-        ground_point = ground_point + np.array([cam_location[0], cam_location[1]])
-
-        return (ground_point[0], ground_point[1])
-    return (0., 0.)
+            ground_points.append(project_to_ground(y, x, cam_location, img, env_info))
+    return ground_points

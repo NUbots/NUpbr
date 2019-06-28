@@ -104,6 +104,8 @@ def main():
         # Generate a new configuration
         config = scene_config.configure_scene()
 
+        cam_l.update(config["camera"])
+
         # Update shapes
         for ii in range(len(shapes)):
             shapes[ii].update(config["shape"][ii])
@@ -116,45 +118,43 @@ def main():
         with open(hdr_data["info_path"], "r") as f:
             env_info = json.load(f)
 
+        is_semi_synthetic = not env_info["to_draw"]["goal"] or not env_info["to_draw"]["field"]
+
         # In that case we must use the height provided by the file
-        if not env_info["to_draw"]["goal"] or not env_info["to_draw"]["field"]:
+        if is_semi_synthetic:
             config["robot"][0]["position"] = (0., 0., env_info["position"]["z"] - 0.33)
 
         # Calculate camera location
         camera_loc = (0., 0., env_info["position"]["z"])
         # Only move camera robot if we're generating the field
-        robot_start = 1 if not env_info["to_draw"]["field"] else 0
+        robot_start = 1 if is_semi_synthetic else 0
 
+        points_on_field = util.point_on_field(camera_loc, hdr_data["mask_path"], env_info, len(robots) + 1)
+        print(points_on_field)
         for ii in range(robot_start, len(robots)):
-            # Update robot (and camera)
-            robots[ii].update(config["robot"][ii])
             # If we are autoplacing update the configuration
-            if config["robot"][ii]["auto_position"] and not env_info["to_draw"]["field"]:
+            if config["robot"][ii]["auto_position"] and is_semi_synthetic and len(points_on_field) > 0:
                 # Generate new ground point based on camera (actually robot parent of camera)
-                ground_point = util.point_on_field(camera_loc, hdr_data["mask_path"], env_info)
                 config["robot"][ii]["position"] = (
-                    ground_point[0],
-                    ground_point[1],
+                    points_on_field[ii][0],
+                    points_on_field[ii][1],
                     env_info["position"]["z"] - 0.33 if ii == 0 else config["robot"][ii]["position"][2],
                 )
-                # Update robot (and camera)
-                robots[ii].update(config["robot"][ii])
+            # Update robot (and camera)
+            robots[ii].update(config["robot"][ii])
 
         # Update ball
         # If we are autoplacing update the configuration
-        if config["ball"]["auto_position"] and not env_info["to_draw"]["field"]:
+        if config["ball"]["auto_position"] and is_semi_synthetic and len(points_on_field) > 0:
             # Generate new ground point based on camera (actually robot parent of camera)
-            ground_point = util.point_on_field(camera_loc, hdr_data["mask_path"], env_info)
             config["ball"]["position"] = (
-                ground_point[0],
-                ground_point[1],
+                points_on_field[0][0],
+                points_on_field[0][1],
                 config["ball"]["position"][2],
             )
 
         # Apply the updates
         ball.update(ball_data, config["ball"])
-
-        cam_l.update(config["camera"])
 
         # Update goals
         for g in goals:
