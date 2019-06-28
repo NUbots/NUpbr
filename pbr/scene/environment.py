@@ -159,13 +159,13 @@ def update_hdri_env(world, img_path, env_info):
         if link is None:
             tl.new(n_map.outputs["Vector"], n_env_tex.inputs["Vector"])
             tl.new(n_env_tex.outputs[0], n_bg.inputs[0])
-            try:
-                img = bpy.data.images.load(img_path)
-            except:
-                raise NameError("Cannot load image {0}".format(img_path))
-                n_env_tex.image = img
-        elif link is not None:
-            tl.remove(link)
+        try:
+            img = bpy.data.images.load(img_path)
+        except:
+            raise NameError("Cannot load image {0}".format(img_path))
+        n_env_tex.image = img
+    elif link is not None:
+        tl.remove(link)
 
 def setup_image_seg_mat(total_classes):
     seg_mat = bpy.data.materials.new("Image_Seg")
