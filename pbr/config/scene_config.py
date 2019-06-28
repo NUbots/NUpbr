@@ -158,14 +158,14 @@ def configure_scene():
     cfg.update({
         "shape": [{
             "dimensions": (
-                random.uniform(0.05, 1.0),
-                random.uniform(0.05, 1.0),
-                random.uniform(0.05, 1.0),
+                random.uniform(0.05, 0.5),
+                random.uniform(0.05, 0.5),
+                random.uniform(0.05, 0.5),
             ),
             "position": (
                 random.uniform(-cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5),
                 random.uniform(-cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5),
-                random.uniform(0.05, 1.0),
+                random.uniform(0.2, 0.5),
             ),
             "rotation": (
                 random.uniform(-pi, +pi),
