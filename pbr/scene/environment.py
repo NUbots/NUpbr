@@ -148,22 +148,22 @@ def update_hdri_env(world, img_path, env_info):
         radians(env_info["rotation"]["yaw"]),
     )
 
-        # Attempt to find link to remove if necessary
-        link = None
-        for l in tl:
-            if l.from_node == n_env_tex and l.to_node == n_bg:
-                link = l
+    # Attempt to find link to remove if necessary
+    link = None
+    for l in tl:
+        if l.from_node == n_env_tex and l.to_node == n_bg:
+            link = l
 
         # If we have a image to load, link environment texture to background
     if img_path is not None:
-            if link is None:
-                tl.new(n_map.outputs["Vector"], n_env_tex.inputs["Vector"])
-                tl.new(n_env_tex.outputs[0], n_bg.inputs[0])
+        if link is None:
+            tl.new(n_map.outputs["Vector"], n_env_tex.inputs["Vector"])
+            tl.new(n_env_tex.outputs[0], n_bg.inputs[0])
             try:
-            img = bpy.data.images.load(img_path)
+                img = bpy.data.images.load(img_path)
             except:
-            raise NameError("Cannot load image {0}".format(img_path))
-            n_env_tex.image = img
+                raise NameError("Cannot load image {0}".format(img_path))
+                n_env_tex.image = img
         elif link is not None:
             tl.remove(link)
 
