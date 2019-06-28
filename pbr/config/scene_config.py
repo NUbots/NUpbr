@@ -141,18 +141,6 @@ def configure_scene():
                 },
             ]),
             "stereo_camera_distance": 0.1,
-            # Defines possible random placement range of x, y and z positional components
-            "position": (
-                random.uniform(-cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5),
-                random.uniform(-cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5),
-                random.uniform(0.8, 1.0),
-            ),
-            # Rotation limits (degrees)
-            "rotation": (
-                random.uniform(pi / 4, pi / 2),
-                random.uniform(-0.1, +0.1),
-                random.uniform(-pi, +pi),
-            ),
         }
     })
 
