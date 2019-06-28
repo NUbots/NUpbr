@@ -165,7 +165,7 @@ def configure_scene():
             "position": (
                 random.uniform(-cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5),
                 random.uniform(-cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5),
-                0,
+                random.uniform(0.05, 1.0),
             ),
             "rotation": (
                 random.uniform(-pi, +pi),
