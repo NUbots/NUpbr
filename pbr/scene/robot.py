@@ -14,7 +14,7 @@ from scene.blender_object import BlenderObject
 
 class Robot(BlenderObject):
     def __init__(self, name, class_index, robot_info):
-        self.mat = None
+        self.mat = {}
         self.sc_plane = None
         self.robot_parts = None
         self.pass_index = class_index
@@ -59,8 +59,8 @@ class Robot(BlenderObject):
                     nor_path = os.path.join(tex_path, file)
 
             # Set material for limb
-            self.mat = self.set_material(obj, p, col_path, nor_path)
-            obj.data.materials.append(self.mat)
+            self.mat.update({obj.name: self.set_material(obj, p, col_path, nor_path)})
+            obj.data.materials.append(self.mat[obj.name])
 
         self.initialise_kinematics()
 
@@ -172,5 +172,8 @@ class Robot(BlenderObject):
 
     def update(self, cfg):
         self.update_kinematics()
-
         self.obj.location = cfg["position"]
+        # Randomly reassign robot colour
+        col = randint(0, 1)
+        for k in self.objs.keys():
+            self.mat[k].node_tree.nodes['Mix'].inputs[2].default_value = (col, col, col, 1)
