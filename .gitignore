@@ -10,3 +10,6 @@ blender-2\.79b/
 
 # get-pip install script
 /pbr/get_pip.py
+
+# sublime
+*.sublime-workspace
