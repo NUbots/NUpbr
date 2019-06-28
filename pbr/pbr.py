@@ -116,6 +116,12 @@ def main():
         with open(hdr_data["info_path"], "r") as f:
             env_info = json.load(f)
 
+        # If we aren't rendering the goalposts it means we can't change the height
+        # In that case we must use the height provided by the file
+        robot_torso_height = config["robot"][0]["position"][2]
+        if not env_info["to_draw"]["goal"]:
+            robot_torso_height = env_info["position"]["z"] - 0.33
+
         # Update ball
         # If we are autoplacing update the configuration
         if config["ball"]["auto_position"] and not env_info["to_draw"]["field"]:
@@ -134,7 +140,7 @@ def main():
                 config["robot"][ii]["position"] = (
                     ground_point[0],
                     ground_point[1],
-                    config["robot"][ii]["position"][2],
+                    robot_torso_height,
                 )
 
             # Update robot (and camera)
