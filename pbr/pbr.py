@@ -117,23 +117,15 @@ def main():
             env_info = json.load(f)
 
         # In that case we must use the height provided by the file
-        robot_torso_height = config["robot"][0]["position"][2]
         if not env_info["to_draw"]["goal"] or not env_info["to_draw"]["field"]:
-            # Calculate robot height (as 33cm from cam)
-            robot_torso_height = env_info["position"]["z"] - 0.33
-            # Calculate a ground point to put eh robot based on origin
-            ground_point = util.point_on_field((0, 0, env_info["position"]["z"]), hdr_data["mask_path"], env_info)
-            # Set robot location
-            config["robot"][0]["position"] = (
-                ground_point[0],
-                ground_point[1],
-                robot_torso_height,
-            )
+            config["robot"][0]["position"] = (0., 0., env_info["position"]["z"] - 0.33)
 
         # Calculate camera location
-        camera_loc = config["robot"][0]["position"][:2] + (robot_torso_height + 0.33, )
+        camera_loc = (0., 0., env_info["position"]["z"])
+        # Only move camera robot if we're generating the field
+        robot_start = 1 if not env_info["to_draw"]["field"] else 0
 
-        for ii in range(len(robots)):
+        for ii in range(robot_start, len(robots)):
             # Update robot (and camera)
             robots[ii].update(config["robot"][ii])
             # If we are autoplacing update the configuration
@@ -143,7 +135,7 @@ def main():
                 config["robot"][ii]["position"] = (
                     ground_point[0],
                     ground_point[1],
-                    robot_torso_height if ii == 0 else config["robot"][ii]["position"][2],
+                    env_info["position"]["z"] - 0.33 if ii == 0 else config["robot"][ii]["position"][2],
                 )
                 # Update robot (and camera)
                 robots[ii].update(config["robot"][ii])
@@ -161,6 +153,8 @@ def main():
 
         # Apply the updates
         ball.update(ball_data, config["ball"])
+
+        cam_l.update(config["camera"])
 
         # Update goals
         for g in goals:
