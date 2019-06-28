@@ -136,7 +136,7 @@ def matrix_to_list(mat):
         [mat[3][0], mat[3][1], mat[3][2], mat[3][3]],
     ]
 
-def point_on_field(cam, mask_path, env_info):
+def point_on_field(cam_location, mask_path, env_info):
     try:
         img = cv2.imread(mask_path)
     except:
@@ -199,7 +199,7 @@ def point_on_field(cam, mask_path, env_info):
         target_vector = np.array([target_vector[0, 0], target_vector[0, 1], target_vector[0, 2]])
 
         # Project the target vector to the ground plane to get a position
-        height = -cam.location[2]
+        height = -cam_location[2]
 
         # Get the position for the target
         ground_point = target_vector * (height / target_vector[2])
@@ -208,7 +208,7 @@ def point_on_field(cam, mask_path, env_info):
         ground_point = np.array([ground_point[0], ground_point[1]])
 
         # Offset x/y by the camera position
-        ground_point = ground_point + np.array([cam.location[0], cam.location[1]])
+        ground_point = ground_point + np.array([cam_location[0], cam_location[1]])
 
         return (ground_point[0], ground_point[1])
     return (0., 0.)

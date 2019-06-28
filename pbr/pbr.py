@@ -116,35 +116,48 @@ def main():
         with open(hdr_data["info_path"], "r") as f:
             env_info = json.load(f)
 
-        # If we aren't rendering the goalposts it means we can't change the height
         # In that case we must use the height provided by the file
         robot_torso_height = config["robot"][0]["position"][2]
-        if not env_info["to_draw"]["goal"]:
+        if not env_info["to_draw"]["goal"] or not env_info["to_draw"]["field"]:
+            # Calculate robot height (as 33cm from cam)
             robot_torso_height = env_info["position"]["z"] - 0.33
+            # Calculate a ground point to put eh robot based on origin
+            ground_point = util.point_on_field((0, 0, env_info["position"]["z"]), hdr_data["mask_path"], env_info)
+            # Set robot location
+            config["robot"][0]["position"] = (
+                ground_point[0],
+                ground_point[1],
+                robot_torso_height,
+            )
+
+        # Calculate camera location
+        camera_loc = config["robot"][0]["position"][:2] + (robot_torso_height + 0.33, )
+
+        for ii in range(len(robots)):
+            # Update robot (and camera)
+            robots[ii].update(config["robot"][ii])
+            # If we are autoplacing update the configuration
+            if config["robot"][ii]["auto_position"] and not env_info["to_draw"]["field"]:
+                # Generate new ground point based on camera (actually robot parent of camera)
+                ground_point = util.point_on_field(camera_loc, hdr_data["mask_path"], env_info)
+                config["robot"][ii]["position"] = (
+                    ground_point[0],
+                    ground_point[1],
+                    robot_torso_height if ii == 0 else config["robot"][ii]["position"][2],
+                )
+                # Update robot (and camera)
+                robots[ii].update(config["robot"][ii])
 
         # Update ball
         # If we are autoplacing update the configuration
         if config["ball"]["auto_position"] and not env_info["to_draw"]["field"]:
-            ground_point = util.point_on_field(cam_l.obj, hdr_data["mask_path"], env_info)
+            # Generate new ground point based on camera (actually robot parent of camera)
+            ground_point = util.point_on_field(camera_loc, hdr_data["mask_path"], env_info)
             config["ball"]["position"] = (
                 ground_point[0],
                 ground_point[1],
                 config["ball"]["position"][2],
             )
-
-        for ii in range(len(robots)):
-            # Update robot
-            # If we are autoplacing update the configuration
-            if config["robot"][ii]["auto_position"] and not env_info["to_draw"]["field"]:
-                ground_point = util.point_on_field(cam_l.obj, hdr_data["mask_path"], env_info)
-                config["robot"][ii]["position"] = (
-                    ground_point[0],
-                    ground_point[1],
-                    robot_torso_height,
-                )
-
-            # Update robot (and camera)
-            robots[ii].update(config["robot"][ii])
 
         # Apply the updates
         ball.update(ball_data, config["ball"])
