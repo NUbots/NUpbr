@@ -12,6 +12,7 @@ from config import scene_config as scene_cfg
 
 from scene.blender_object import BlenderObject
 
+
 class Robot(BlenderObject):
     def __init__(self, name, class_index, robot_info):
         self.mat = {}
@@ -30,10 +31,12 @@ class Robot(BlenderObject):
         robot_obj = {}
 
         # Load kinematics information
-        with open(robot_info["kinematics_path"], 'r') as file:
+        with open(robot_info["kinematics_path"], "r") as file:
             self.robot_parts = json.loads(file.read())
         # Load robot object
-        bpy.ops.import_scene.fbx(filepath=robot_info["mesh_path"], axis_forward='X', axis_up='Z')
+        bpy.ops.import_scene.fbx(
+            filepath=robot_info["mesh_path"], axis_forward="X", axis_up="Z"
+        )
         # Add object to our list of parts
         for p in self.robot_parts.keys():
             obj = bpy.data.objects[p]
@@ -49,7 +52,9 @@ class Robot(BlenderObject):
             nor_re = r"Normal.*"
 
             # Use regex to find colour and normal map
-            tex_path = os.path.join(robot_info["texture_path"], self.robot_parts[p]["dir"])
+            tex_path = os.path.join(
+                robot_info["texture_path"], self.robot_parts[p]["dir"]
+            )
             col_path = ""
             nor_path = ""
             for file in os.listdir(tex_path):
@@ -90,7 +95,12 @@ class Robot(BlenderObject):
 
         # Create RGB mixer to change base colour of colour map
         n_mix_col_map = node_list.new("ShaderNodeMixRGB")
-        n_mix_col_map.inputs[2].default_value = (self.colour, self.colour, self.colour, 1.)
+        n_mix_col_map.inputs[2].default_value = (
+            self.colour,
+            self.colour,
+            self.colour,
+            1.0,
+        )
 
         # Create normal map node for texture
         if normal_path is not None:
@@ -108,8 +118,12 @@ class Robot(BlenderObject):
 
         # Create principled node
         n_principled = node_list.new("ShaderNodeBsdfPrincipled")
-        n_principled.inputs["Metallic"].default_value = blend_cfg.robot["material"]["metallic"]
-        n_principled.inputs["Roughness"].default_value = blend_cfg.robot["material"]["roughness"]
+        n_principled.inputs["Metallic"].default_value = blend_cfg.robot["material"][
+            "metallic"
+        ]
+        n_principled.inputs["Roughness"].default_value = blend_cfg.robot["material"][
+            "roughness"
+        ]
 
         # Create output node
         n_output = node_list.new("ShaderNodeOutputMaterial")
@@ -148,10 +162,12 @@ class Robot(BlenderObject):
             # Calculate min, max and mode limits
             lim = self.robot_parts[k]["limits"]
             # Calculate delta rotation for the relevant axis
-            delta_rot = [0., 0., 0.]
+            delta_rot = [0.0, 0.0, 0.0]
             delta_rot[self.robot_parts[k]["rot_axis"]] = radians(lim[1])
             # Add to output dictionary
-            bpy.data.objects["{}_{}".format(self.name, k)].delta_rotation_euler = delta_rot
+            bpy.data.objects[
+                "{}_{}".format(self.name, k)
+            ].delta_rotation_euler = delta_rot
 
     def update_kinematics(self):
         # Set all joints to neutral pose
@@ -165,10 +181,14 @@ class Robot(BlenderObject):
                 lim[1] - var * (lim[1] - lim[2]),
             )
             # Calculate delta rotation for the relevant axis
-            delta_rot = [0., 0., 0.]
-            delta_rot[self.robot_parts[k]["rot_axis"]] = radians(triangular(v_min, v_max, lim[1]))
+            delta_rot = [0.0, 0.0, 0.0]
+            delta_rot[self.robot_parts[k]["rot_axis"]] = radians(
+                triangular(v_min, v_max, lim[1])
+            )
             # Add to output dictionary
-            bpy.data.objects["{}_{}".format(self.name, k)].delta_rotation_euler = delta_rot
+            bpy.data.objects[
+                "{}_{}".format(self.name, k)
+            ].delta_rotation_euler = delta_rot
 
     def update(self, cfg):
         self.update_kinematics()
@@ -176,4 +196,9 @@ class Robot(BlenderObject):
         # Randomly reassign robot colour
         col = randint(0, 1)
         for k in self.objs.keys():
-            self.mat[k].node_tree.nodes['Mix'].inputs[2].default_value = (col, col, col, 1)
+            self.mat[k].node_tree.nodes["Mix"].inputs[2].default_value = (
+                col,
+                col,
+                col,
+                1,
+            )

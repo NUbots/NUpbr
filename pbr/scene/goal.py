@@ -9,6 +9,7 @@ from config import blend_config as blend_cfg
 
 from scene.blender_object import BlenderObject
 
+
 class Goal(BlenderObject):
     def __init__(self, class_index):
         self.mat = None
@@ -32,7 +33,9 @@ class Goal(BlenderObject):
         # Define corner radius to avoid extra multiplications
         corner_radius = goal_config["post_width"] / 2
 
-        goal_post = self.create_post(goal_config, name="Goal_Post", extrude=(0, 0, goal_config["height"]))
+        goal_post = self.create_post(
+            goal_config, name="Goal_Post", extrude=(0, 0, goal_config["height"])
+        )
 
         # Get corner curve
         curve = self.create_corner_curve(goal_config, blend_cfg.goal["corner_curve"])
@@ -55,8 +58,14 @@ class Goal(BlenderObject):
         )
 
         # Create crossbar
-        crossbar_y_loc = (corner_radius if goal_config["shape"] == "circular" else -corner_radius)
-        crossbar_ext_offset = (-(2 * corner_radius) if goal_config["shape"] == "circular" else 2 * corner_radius)
+        crossbar_y_loc = (
+            corner_radius if goal_config["shape"] == "circular" else -corner_radius
+        )
+        crossbar_ext_offset = (
+            -(2 * corner_radius)
+            if goal_config["shape"] == "circular"
+            else 2 * corner_radius
+        )
         crossbar = self.create_post(
             goal_config,
             name="Crossbar",
@@ -107,7 +116,9 @@ class Goal(BlenderObject):
         context["active_object"] = objs[0]
         context["selected_objects"] = objs
         # Select all of our available editable bases
-        context["selected_editable_bases"] = [bpy.context.scene.object_bases[obj.name] for obj in objs]
+        context["selected_editable_bases"] = [
+            bpy.context.scene.object_bases[obj.name] for obj in objs
+        ]
         # Join objects
         bpy.ops.object.join(context)
         bpy.data.objects[objs[0].name].select = True
@@ -174,7 +185,9 @@ class Goal(BlenderObject):
             curve.name = "Goal_Corner_Curve"
             curve.data.fill_mode = blend_cfg.goal["corner_curve"]["fill"]
             curve.data.bevel_depth = corner_radius
-            curve.data.bevel_resolution = int(blend_cfg.goal["initial_cond"]["vertices"] / 2)
+            curve.data.bevel_resolution = int(
+                blend_cfg.goal["initial_cond"]["vertices"] / 2
+            )
 
             [p0, p1] = [
                 curve.data.splines.active.bezier_points[0],
@@ -207,7 +220,9 @@ class Goal(BlenderObject):
         return curve
 
     # Create goal post
-    def create_post(self, goal_config, name, loc=(0, 0, 0), rot=(0, 0, 0), extrude=(0, 0, 0)):
+    def create_post(
+        self, goal_config, name, loc=(0, 0, 0), rot=(0, 0, 0), extrude=(0, 0, 0)
+    ):
         # Define corner radius to avoid extra multiplications
         corner_radius = goal_config["post_width"] / 2
 
@@ -359,20 +374,22 @@ class Goal(BlenderObject):
         )
 
         # Make single goal back object
-        self.join_objs([
-            lb_curve,
-            lb_post,
-            lt_curve,
-            lt_post,
-            rb_curve,
-            rb_post,
-            rt_curve,
-            rt_post,
-            bb_post,
-            bt_post,
-            lv_post,
-            rv_post,
-        ])
+        self.join_objs(
+            [
+                lb_curve,
+                lb_post,
+                lt_curve,
+                lt_post,
+                rb_curve,
+                rb_post,
+                rt_curve,
+                rt_post,
+                bb_post,
+                bt_post,
+                lv_post,
+                rv_post,
+            ]
+        )
 
         # Rename the object for clarity
         goal_back = lb_curve

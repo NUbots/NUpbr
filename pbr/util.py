@@ -45,14 +45,19 @@ def populate_assets(path, asset_list):
 
     return assets
 
+
 # Load ball and HDR map data from respective paths,
 #   traversing recursively through subdirectories
 def load_assets():
 
     resources = scene_config.resources
 
-    ball_img_ext = "(?:{})$".format("|".join([re.escape(s) for s in resources["ball"]["img_types"]]))
-    ball_mesh_ext = "(?:{})$".format("|".join([re.escape(s) for s in resources["ball"]["mesh_types"]]))
+    ball_img_ext = "(?:{})$".format(
+        "|".join([re.escape(s) for s in resources["ball"]["img_types"]])
+    )
+    ball_mesh_ext = "(?:{})$".format(
+        "|".join([re.escape(s) for s in resources["ball"]["mesh_types"]])
+    )
     ball_norm_re = r"norm(?:al)?s?.*" + ball_img_ext
     ball_colour_re = r"colou?rs?.*" + ball_img_ext
     ball_mesh_re = ball_mesh_ext
@@ -68,15 +73,23 @@ def load_assets():
     )
     print("[INFO] \tNumber of balls imported: {0}".format(len(balls)))
 
-    env_raw_ext = "(?:{})$".format("|".join([re.escape(s) for s in resources["environment"]["hdri_types"]]))
-    env_mask_ext = "(?:{})$".format("|".join([re.escape(s) for s in resources["environment"]["mask_types"]]))
+    env_raw_ext = "(?:{})$".format(
+        "|".join([re.escape(s) for s in resources["environment"]["hdri_types"]])
+    )
+    env_mask_ext = "(?:{})$".format(
+        "|".join([re.escape(s) for s in resources["environment"]["mask_types"]])
+    )
     env_meta_ext = "{}$".format(re.escape(resources["environment"]["info_type"]))
     env_raw_re = "raw.*" + env_raw_ext
     env_mask_re = "mask.*" + env_mask_ext
     env_meta_re = env_meta_ext
 
     # Populate list of hdr scenes
-    print("[INFO] Importing environments from '{0}'".format(resources["environment"]["path"]))
+    print(
+        "[INFO] Importing environments from '{0}'".format(
+            resources["environment"]["path"]
+        )
+    )
     hdrs = populate_assets(
         resources["environment"]["path"],
         [
@@ -89,6 +102,7 @@ def load_assets():
 
     return hdrs, balls
 
+
 def setup_environment(hdr, env_info):
     # Clear default environment
     env.clear_env()
@@ -100,17 +114,18 @@ def setup_environment(hdr, env_info):
     # Setup render layers (visual, segmentation and field lines)
     return env.setup_render_layers(len(scene_config.resources)), world
 
+
 # Renders image frame for either raw or mask image (defined by <isRawImage>)
 def render_image(
-        isMaskImage,
-        toggle,
-        shadowcatcher,
-        world,
-        env,
-        hdr_path,
-        strength,
-        env_info,
-        output_path,
+    isMaskImage,
+    toggle,
+    shadowcatcher,
+    world,
+    env,
+    hdr_path,
+    strength,
+    env_info,
+    output_path,
 ):
     # Turn off all render layers
     for l in bpy.context.scene.render.layers:
@@ -123,10 +138,13 @@ def render_image(
     shadowcatcher.obj.hide_render = isMaskImage
     # Update HDRI map
     env.update_hdri_env(world, hdr_path, env_info)
-    bpy.context.scene.world.node_tree.nodes["Background"].inputs["Strength"].default_value = strength
+    bpy.context.scene.world.node_tree.nodes["Background"].inputs[
+        "Strength"
+    ].default_value = strength
     # Update render output filepath
     bpy.data.scenes["Scene"].render.filepath = output_path
     bpy.ops.render.render(write_still=True)
+
 
 def matrix_to_list(mat):
     return [
@@ -136,15 +154,18 @@ def matrix_to_list(mat):
         [mat[3][0], mat[3][1], mat[3][2], mat[3][3]],
     ]
 
+
 def project_to_ground(y, x, cam_location, img, env_info):
     # Normalise the coordinates into a form useful for making unit vectors
     phi = (y / img.shape[0]) * math.pi
     theta = (0.5 - (x / img.shape[1])) * math.pi * 2
-    target_vector = np.array([
-        math.sin(phi) * math.cos(theta),
-        math.sin(phi) * math.sin(theta),
-        math.cos(phi),
-    ])
+    target_vector = np.array(
+        [
+            math.sin(phi) * math.cos(theta),
+            math.sin(phi) * math.sin(theta),
+            math.cos(phi),
+        ]
+    )
 
     # Create rotation matrix
     # Roll (x) pitch (y) yaw (z)
@@ -167,7 +188,9 @@ def project_to_ground(y, x, cam_location, img, env_info):
 
     # Rotate the target vector by the rotation of the environment
     target_vector = target_vector * rot
-    target_vector = np.array([target_vector[0, 0], target_vector[0, 1], target_vector[0, 2]])
+    target_vector = np.array(
+        [target_vector[0, 0], target_vector[0, 1], target_vector[0, 2]]
+    )
 
     # Project the target vector to the ground plane to get a position
     height = -cam_location[2]
@@ -183,6 +206,7 @@ def project_to_ground(y, x, cam_location, img, env_info):
 
     return (ground_point[0], ground_point[1])
 
+
 def point_on_field(cam_location, mask_path, env_info, num_points):
     try:
         img = cv2.imread(mask_path)
@@ -194,14 +218,31 @@ def point_on_field(cam_location, mask_path, env_info, num_points):
         (
             np.logical_or(
                 np.all(
-                    img == [[[int(round(v * 255)) for v in scene_config.resources["field"]["mask"]["colour"][:3][::-1]]]
-                            ],
+                    img
+                    == [
+                        [
+                            [
+                                int(round(v * 255))
+                                for v in scene_config.resources["field"]["mask"][
+                                    "colour"
+                                ][:3][::-1]
+                            ]
+                        ]
+                    ],
                     axis=-1,
                 ),
                 np.all(
-                    img == [[[
-                        int(round(v * 255)) for v in scene_config.resources["field"]["mask"]["line_colour"][:3][::-1]
-                    ]]],
+                    img
+                    == [
+                        [
+                            [
+                                int(round(v * 255))
+                                for v in scene_config.resources["field"]["mask"][
+                                    "line_colour"
+                                ][:3][::-1]
+                            ]
+                        ]
+                    ],
                     axis=-1,
                 ),
             )

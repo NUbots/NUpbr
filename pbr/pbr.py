@@ -32,6 +32,7 @@ from scene.robot import Robot
 
 import util
 
+
 def main():
     ##############################################
     ##              ASSET LOADING               ##
@@ -62,7 +63,11 @@ def main():
 
     # Create robots to fill the scene
     robots = [
-        Robot("r{}".format(ii), scene_config.resources["robot"]["mask"]["index"], scene_config.resources["robot"])
+        Robot(
+            "r{}".format(ii),
+            scene_config.resources["robot"]["mask"]["index"],
+            scene_config.resources["robot"],
+        )
         for ii in range(scene_config.num_robots + 1)
     ]
 
@@ -85,7 +90,7 @@ def main():
     cam_r.set_stereo_pair(cam_l.obj)
 
     # Attach camera to robot head (TODO: Remove hard-coded torso to cam offset)
-    cam_l.obj.delta_rotation_euler = (pi / 2., 0., -pi / 2.)
+    cam_l.obj.delta_rotation_euler = (pi / 2.0, 0.0, -pi / 2.0)
     cam_l.set_robot(robots[0].obj, robots[0].obj.location[2] + 0.33)
     # Disable rendering of head if camera is now inside
     robots[0].objs[robots[0].name + "_Head"].hide_render = True
@@ -118,34 +123,52 @@ def main():
         with open(hdr_data["info_path"], "r") as f:
             env_info = json.load(f)
 
-        is_semi_synthetic = not env_info["to_draw"]["goal"] or not env_info["to_draw"]["field"]
+        is_semi_synthetic = (
+            not env_info["to_draw"]["goal"] or not env_info["to_draw"]["field"]
+        )
 
         # In that case we must use the height provided by the file
         if is_semi_synthetic:
-            config["robot"][0]["position"] = (0., 0., env_info["position"]["z"] - 0.33)
+            config["robot"][0]["position"] = (
+                0.0,
+                0.0,
+                env_info["position"]["z"] - 0.33,
+            )
 
         # Calculate camera location
-        camera_loc = (0., 0., env_info["position"]["z"])
+        camera_loc = (0.0, 0.0, env_info["position"]["z"])
         # Only move camera robot if we're generating the field
         robot_start = 1 if is_semi_synthetic else 0
 
-        points_on_field = util.point_on_field(camera_loc, hdr_data["mask_path"], env_info, len(robots) + 1)
+        points_on_field = util.point_on_field(
+            camera_loc, hdr_data["mask_path"], env_info, len(robots) + 1
+        )
         print(points_on_field)
         for ii in range(robot_start, len(robots)):
             # If we are autoplacing update the configuration
-            if config["robot"][ii]["auto_position"] and is_semi_synthetic and len(points_on_field) > 0:
+            if (
+                config["robot"][ii]["auto_position"]
+                and is_semi_synthetic
+                and len(points_on_field) > 0
+            ):
                 # Generate new ground point based on camera (actually robot parent of camera)
                 config["robot"][ii]["position"] = (
                     points_on_field[ii][0],
                     points_on_field[ii][1],
-                    env_info["position"]["z"] - 0.33 if ii == 0 else config["robot"][ii]["position"][2],
+                    env_info["position"]["z"] - 0.33
+                    if ii == 0
+                    else config["robot"][ii]["position"][2],
                 )
             # Update robot (and camera)
             robots[ii].update(config["robot"][ii])
 
         # Update ball
         # If we are autoplacing update the configuration
-        if config["ball"]["auto_position"] and is_semi_synthetic and len(points_on_field) > 0:
+        if (
+            config["ball"]["auto_position"]
+            and is_semi_synthetic
+            and len(points_on_field) > 0
+        ):
             # Generate new ground point based on camera (actually robot parent of camera)
             config["ball"]["position"] = (
                 points_on_field[0][0],
@@ -161,16 +184,22 @@ def main():
             g.update(config["goal"])
         goals[1].rotate((0, 0, pi))
         goal_height_offset = -3.0 if config["goal"]["shape"] == "square" else -1.0
-        goals[0].move((
-            config["field"]["length"] / 2.0,
-            0,
-            config["goal"]["height"] + goal_height_offset * config["goal"]["post_width"],
-        ))
-        goals[1].move((
-            -config["field"]["length"] / 2.0,
-            0,
-            config["goal"]["height"] + goal_height_offset * config["goal"]["post_width"],
-        ))
+        goals[0].move(
+            (
+                config["field"]["length"] / 2.0,
+                0,
+                config["goal"]["height"]
+                + goal_height_offset * config["goal"]["post_width"],
+            )
+        )
+        goals[1].move(
+            (
+                -config["field"]["length"] / 2.0,
+                0,
+                config["goal"]["height"]
+                + goal_height_offset * config["goal"]["post_width"],
+            )
+        )
 
         # Hide objects based on environment map
         ball.obj.hide_render = not env_info["to_draw"]["ball"]
@@ -187,7 +216,9 @@ def main():
             valid_tracks.append(ball)
         if env_info["to_draw"]["goal"]:  # Only track goals if they're rendered
             valid_tracks.append(random.choice(goals))
-        if env_info["to_draw"]["field"]:  # Only pick random points if the field is rendered
+        if env_info["to_draw"][
+            "field"
+        ]:  # Only pick random points if the field is rendered
             valid_tracks.append(anch)
 
         tracking_target = random.choice(valid_tracks).obj
@@ -268,7 +299,9 @@ def main():
                 )
 
         # Generate meta file
-        with open(os.path.join(out_cfg.meta_dir, "{}.yaml".format(filename)), "w") as meta_file:
+        with open(
+            os.path.join(out_cfg.meta_dir, "{}.yaml".format(filename)), "w"
+        ) as meta_file:
             # Gather metadata
             meta = config
 
@@ -296,10 +329,13 @@ def main():
                     },
                 }
 
-            meta["environment"]["file"] = os.path.relpath(hdr_data["raw_path"], scene_config.res_path)
+            meta["environment"]["file"] = os.path.relpath(
+                hdr_data["raw_path"], scene_config.res_path
+            )
 
             # Write metadata to file
             json.dump(meta, meta_file, indent=4, sort_keys=True)
+
 
 if __name__ == "__main__":
     main()

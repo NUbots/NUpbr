@@ -12,6 +12,7 @@ from config import scene_config as scene_cfg
 
 from scene.blender_object import BlenderObject
 
+
 class Shape(BlenderObject):
     def __init__(self, name, class_index):
         self.mat = None
@@ -75,7 +76,7 @@ class Shape(BlenderObject):
         # Construct node tree
         # Create principled node
         n_principled = node_list.new("ShaderNodeBsdfPrincipled")
-        n_principled.inputs[0].default_value = (0., 0., 0., 1.)
+        n_principled.inputs[0].default_value = (0.0, 0.0, 0.0, 1.0)
 
         # Create output node
         n_output = node_list.new("ShaderNodeOutputMaterial")
@@ -92,9 +93,15 @@ class Shape(BlenderObject):
     def set_mat(self, cfg):
         node_list = self.mat.node_tree.nodes
 
-        node_list["Principled BSDF"].inputs[0].default_value = cfg["material"]["base_col"][:] + (1.0, )
-        node_list["Principled BSDF"].inputs[4].default_value = cfg["material"]["metallic"]
-        node_list["Principled BSDF"].inputs[7].default_value = cfg["material"]["roughness"]
+        node_list["Principled BSDF"].inputs[0].default_value = cfg["material"][
+            "base_col"
+        ][:] + (1.0,)
+        node_list["Principled BSDF"].inputs[4].default_value = cfg["material"][
+            "metallic"
+        ]
+        node_list["Principled BSDF"].inputs[7].default_value = cfg["material"][
+            "roughness"
+        ]
 
     def update(self, cfg):
         self.obj.location = cfg["position"]

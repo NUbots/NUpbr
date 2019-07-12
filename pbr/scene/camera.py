@@ -5,6 +5,7 @@ import bpy
 
 from scene.blender_object import BlenderObject
 
+
 class Camera(BlenderObject):
     def __init__(self, name):
 
