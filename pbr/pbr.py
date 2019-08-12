@@ -7,7 +7,7 @@ import bpy
 import re
 import json
 
-# Add our current position to path to include package
+# Add our current position to path to include package.
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
 from math import pi, sqrt, ceil
