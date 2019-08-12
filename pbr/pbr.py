@@ -14,7 +14,6 @@ from math import pi, sqrt, ceil
 
 from config import output_config as out_cfg
 from config import scene_config
-
 from scene import environment as env
 from scene.ball import Ball
 from scene.field import Field
