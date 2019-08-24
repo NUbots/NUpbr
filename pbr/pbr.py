@@ -55,7 +55,7 @@ def main():
         Goal(scene_config.resources["goal"]["mask"]["index"]),
     ]
 
-    #import rig object
+    #import rig object. Directory = stored directory of rig.blend file, filename = the group of the rig in the .blend file
     bpy.ops.wm.append(directory="D:\\Git\\NUPBR\\resources\\Robot_Rig_FK.blend\\Group\\", filename="Armature_Group")
 
     # Construct our shadowcatcher
