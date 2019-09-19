@@ -58,6 +58,33 @@ def main():
     #import rig object. Directory = stored directory of rig.blend file, filename = the group of the rig in the .blend file
     bpy.ops.wm.append(directory="D:\\Git\\NUPBR\\resources\\Robot_Rig_FK.blend\\Group\\", filename="Armature_Group")
 
+    rig1 = bpy.data.objects['Armature']
+    bpy.context.scene.objects.active = rig1
+
+    #bpy.ops.object.mode_set(mode='POSE')
+
+    rig1.pose.bones['Arm_Lower_r'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-10,120)))
+    rig1.pose.bones['Head'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-30,30)))
+    rig1.pose.bones['Head'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-45,45)))
+
+    rig1.pose.bones['Hip_Bone_l'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-20,20)))
+    rig1.pose.bones['Leg_Upper_l'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-55,60)))
+    rig1.pose.bones['Leg_Lower_l'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,20)))
+    rig1.pose.bones['Foot_l'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,10)))
+    rig1.pose.bones['Shoulder_l'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-45,45)))
+    rig1.pose.bones['Arm_Upper_l'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-80,15)))
+    rig1.pose.bones['Arm_Lower_l'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-120,10)))
+
+    rig1.pose.bones['Hip_Bone_r'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-20,20)))
+    rig1.pose.bones['Leg_Upper_r'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-55,60)))
+    rig1.pose.bones['Leg_Lower_r'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,20)))
+    rig1.pose.bones['Foot_r'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,10)))
+    rig1.pose.bones['Shoulder_r'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-45,45)))
+    rig1.pose.bones['Arm_Upper_r'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-15,80)))
+    rig1.pose.bones['Arm_Lower_r'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-10,120)))
+
+    bpy.ops.object.mode_set(mode='OBJECT')
+
     # Construct our shadowcatcher
     shadowcatcher = ShadowCatcher()
 
