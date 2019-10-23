@@ -6,6 +6,7 @@ import random
 import bpy
 import re
 import json
+import math
 
 # Add our current position to path to include package
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
@@ -54,36 +55,6 @@ def main():
         Goal(scene_config.resources["goal"]["mask"]["index"]),
         Goal(scene_config.resources["goal"]["mask"]["index"]),
     ]
-
-    #import rig object. Directory = stored directory of rig.blend file, filename = the group of the rig in the .blend file
-    bpy.ops.wm.append(directory="D:\\Git\\NUPBR\\resources\\Robot_Rig_FK.blend\\Group\\", filename="Armature_Group")
-
-    rig1 = bpy.data.objects['Armature']
-    bpy.context.scene.objects.active = rig1
-
-    #bpy.ops.object.mode_set(mode='POSE')
-
-    rig1.pose.bones['Arm_Lower_r'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-10,120)))
-    rig1.pose.bones['Head'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-30,30)))
-    rig1.pose.bones['Head'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-45,45)))
-
-    rig1.pose.bones['Hip_Bone_l'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-20,20)))
-    rig1.pose.bones['Leg_Upper_l'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-55,60)))
-    rig1.pose.bones['Leg_Lower_l'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,20)))
-    rig1.pose.bones['Foot_l'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,10)))
-    rig1.pose.bones['Shoulder_l'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-45,45)))
-    rig1.pose.bones['Arm_Upper_l'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-80,15)))
-    rig1.pose.bones['Arm_Lower_l'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-120,10)))
-
-    rig1.pose.bones['Hip_Bone_r'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-20,20)))
-    rig1.pose.bones['Leg_Upper_r'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-55,60)))
-    rig1.pose.bones['Leg_Lower_r'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,20)))
-    rig1.pose.bones['Foot_r'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,10)))
-    rig1.pose.bones['Shoulder_r'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-45,45)))
-    rig1.pose.bones['Arm_Upper_r'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-15,80)))
-    rig1.pose.bones['Arm_Lower_r'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-10,120)))
-
-    bpy.ops.object.mode_set(mode='OBJECT')
 
     # Construct our shadowcatcher
     shadowcatcher = ShadowCatcher()
@@ -196,109 +167,166 @@ def main():
             )
         )
 
-        # Updates scene to rectify rotation and location matrices
-        bpy.context.scene.update()
+    #import rig object. Directory = stored directory of rig.blend file, filename = the group of the rig in the .blend file
+    #import rig object
+    bpy.ops.wm.append(directory="D:\\Git\\NUPBR\\resources\\Robot_MatteShaded_Rig.blend\\Group\\", filename="Armature_Group")
 
-        ##############################################
-        ##                RENDERING                 ##
-        ##############################################
+    #rotate bones
+    rig1 = bpy.data.objects['Armature.000']
+    bpy.context.scene.objects.active = rig1
 
-        filename = str(frame_num).zfill(out_cfg.filename_len)
+    #with open("bonedict.json", 'r') as f:
+        #bone_dict = json.loads(f)
 
-        if out_cfg.output_depth:
-            # Set depth filename
-            render_layer_toggle[2].file_slots[0].path = filename + ".exr"
+    #for k in bone_dict:
+        #Set bone rotation based on rotation axis and limits
+    #    rig1.pose.bones[k].rotation_euler.rotate_axis(bone_dict[k]["axis"], math.radians(random.randrange(bone_dict[k]["limits"][0], bone_dict[k]["limits"][1])),)
 
-        # Render for the main camera only
-        bpy.context.scene.camera = cam_l.obj
+    rig1.pose.bones['Head'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-30,30)))
+    rig1.pose.bones['Head'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-45,45)))
 
-        # Use multiview stereo if stereo output is enabled
-        # (this will automatically render the second camera)
-        if out_cfg.output_stereo:
-            bpy.context.scene.render.use_multiview = True
+    rig1.pose.bones['Hip_Bone_L'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-20,20)))
+    rig1.pose.bones['Leg_Upper_L'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-55,60)))
+    rig1.pose.bones['Leg_Lower_L'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,20)))
+    rig1.pose.bones['Foot_L'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,10)))
+    rig1.pose.bones['Shoulder_L'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-45,45)))
+    rig1.pose.bones['Arm_Upper_L'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-80,15)))
+    rig1.pose.bones['Arm_Lower_L'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-120,10)))
 
-        # Render raw image
-        util.render_image(
-            isMaskImage=False,
-            toggle=render_layer_toggle,
-            shadowcatcher=shadowcatcher,
-            ball=ball,
-            world=world,
-            env=env,
-            hdr_path=hdr_data["raw_path"],
-            strength=config["environment"]["strength"],
-            env_info=env_info,
-            output_path=os.path.join(out_cfg.image_dir, "{}.png".format(filename)),
-        )
+    rig1.pose.bones['Hip_Bone_R'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-20,20)))
+    rig1.pose.bones['Leg_Upper_R'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-55,60)))
+    rig1.pose.bones['Leg_Lower_R'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,20)))
+    rig1.pose.bones['Foot_R'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,10)))
+    rig1.pose.bones['Shoulder_R'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-45,45)))
+    rig1.pose.bones['Arm_Upper_R'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-15,80)))
+    rig1.pose.bones['Arm_Lower_R'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-10,120)))
+    rig1.pose.bones['Main_Torso'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-5,5)))
+    rig1.pose.bones['Main_Torso'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(0,360)))
+    rig1.pose.bones['Main_Torso'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-5,5)))
+
+    rig1.location[0] =random.uniform(-4.5,4.5)
+    rig1.location[1] =random.uniform(-3,3)
+
+    #grass particle with objects
+    #import grass blade object and assign it
+    bpy.ops.wm.append(directory="D:\\Git\\NUPBR\\resources\\Singleblade.blend\\Group\\", filename="Grass_Group")
+    grass_blade = bpy.data.objects['Grassblade_000']
+
+    #setup particle system to use objects instead
+    bpy.data.particles["ParticleSettings"].render_type = 'OBJECT'
+    bpy.data.particles["ParticleSettings"].dupli_object = grass_blade
+
+    #setup random size particles
+    bpy.data.particles["ParticleSettings"].particle_size = random.uniform(0.4,0.7)
+    bpy.data.particles["ParticleSettings"].use_render_emitter = True
+
+    #hide imported grassblade
+    grass_blade.location[2] = -50
+    bpy.data.objects['MainControlShape'].location[2] = -50
+
+    # Updates scene to rectify rotation and location matrices
+    bpy.context.scene.update()
+
+    ##############################################
+    ##                RENDERING                 ##
+    ##############################################
+
+    filename = str(frame_num).zfill(out_cfg.filename_len)
+
+    if out_cfg.output_depth:
+        # Set depth filename
+        render_layer_toggle[2].file_slots[0].path = filename + ".exr"
+
+    # Render for the main camera only
+    #bpy.context.scene.camera = cam_l.obj
+
+    # Use multiview stereo if stereo output is enabled
+    # (this will automatically render the second camera)
+    if out_cfg.output_stereo:
+        bpy.context.scene.render.use_multiview = True
+
+    # Render raw image
+    util.render_image(
+        isMaskImage=False,
+        toggle=render_layer_toggle,
+        shadowcatcher=shadowcatcher,
+        ball=ball,
+        world=world,
+        env=env,
+        hdr_path=hdr_data["raw_path"],
+        strength=config["environment"]["strength"],
+        env_info=env_info,
+        output_path=os.path.join(out_cfg.image_dir, "{}.png".format(filename)),
+    )
 
         # Render mask image
-        util.render_image(
-            isMaskImage=True,
-            toggle=render_layer_toggle,
-            shadowcatcher=shadowcatcher,
-            ball=ball,
-            world=world,
-            env=env,
-            hdr_path=hdr_data["mask_path"],
-            strength=1.0,
-            env_info=env_info,
-            output_path=os.path.join(out_cfg.mask_dir, "{}.png".format(filename)),
-        )
+    util.render_image(
+        isMaskImage=True,
+        toggle=render_layer_toggle,
+        shadowcatcher=shadowcatcher,
+        ball=ball,
+        world=world,
+        env=env,
+        hdr_path=hdr_data["mask_path"],
+        strength=1.0,
+        env_info=env_info,
+        output_path=os.path.join(out_cfg.mask_dir, "{}.png".format(filename)),
+    )
 
-        if out_cfg.output_depth:
-            # Rename our mis-named depth file(s) due to Blender's file output node naming scheme!
-            if out_cfg.output_stereo:
-                os.rename(
-                    os.path.join(out_cfg.depth_dir, filename) + "_L.exr0001",
-                    os.path.join(out_cfg.depth_dir, filename) + "_L.exr",
-                )
-                os.rename(
-                    os.path.join(out_cfg.depth_dir, filename) + "_R.exr0001",
-                    os.path.join(out_cfg.depth_dir, filename) + "_R.exr",
-                )
-            else:
-                os.rename(
-                    os.path.join(out_cfg.depth_dir, filename) + ".exr0001",
-                    os.path.join(out_cfg.depth_dir, filename) + ".exr",
-                )
-
-        # Generate meta file
-        with open(
-            os.path.join(out_cfg.meta_dir, "{}.yaml".format(filename)), "w"
-        ) as meta_file:
-            # Gather metadata
-            meta = config
-
-            meta.update({"rendered": env_info["to_draw"]})
-
-            # Add basic camera information
-            meta["camera"]["focus"] = tracking_target.name
-            meta["camera"]["lens"] = {}
-            meta["camera"]["lens"]["sensor_height"] = cam_l.cam.sensor_height
-            meta["camera"]["lens"]["sensor_width"] = cam_l.cam.sensor_width
-
-            # Add the final camera matrices
-            if not out_cfg.output_stereo:
-                meta["camera"]["matrix"] = util.matrix_to_list(cam_l.obj.matrix_world)
-            else:
-                template = meta["camera"]
-                meta["camera"] = {
-                    "left": {
-                        **template,
-                        "matrix": util.matrix_to_list(cam_l.obj.matrix_world),
-                    },
-                    "right": {
-                        **template,
-                        "matrix": util.matrix_to_list(cam_r.obj.matrix_world),
-                    },
-                }
-
-            meta["environment"]["file"] = os.path.relpath(
-                hdr_data["raw_path"], scene_config.res_path
+    if out_cfg.output_depth:
+        # Rename our mis-named depth file(s) due to Blender's file output node naming scheme!
+        if out_cfg.output_stereo:
+            os.rename(
+                os.path.join(out_cfg.depth_dir, filename) + "_L.exr0001",
+                os.path.join(out_cfg.depth_dir, filename) + "_L.exr",
+            )
+            os.rename(
+                os.path.join(out_cfg.depth_dir, filename) + "_R.exr0001",
+                os.path.join(out_cfg.depth_dir, filename) + "_R.exr",
+            )
+        else:
+            os.rename(
+                os.path.join(out_cfg.depth_dir, filename) + ".exr0001",
+                os.path.join(out_cfg.depth_dir, filename) + ".exr",
             )
 
-            # Write metadata to file
-            json.dump(meta, meta_file, indent=4, sort_keys=True)
+        # Generate meta file
+    with open(
+        os.path.join(out_cfg.meta_dir, "{}.yaml".format(filename)), "w"
+    ) as meta_file:
+        # Gather metadata
+        meta = config
+
+        meta.update({"rendered": env_info["to_draw"]})
+
+        # Add basic camera information
+        meta["camera"]["focus"] = tracking_target.name
+        meta["camera"]["lens"] = {}
+        meta["camera"]["lens"]["sensor_height"] = cam_l.cam.sensor_height
+        meta["camera"]["lens"]["sensor_width"] = cam_l.cam.sensor_width
+
+        # Add the final camera matrices
+        if not out_cfg.output_stereo:
+            meta["camera"]["matrix"] = util.matrix_to_list(cam_l.obj.matrix_world)
+        else:
+            template = meta["camera"]
+            meta["camera"] = {
+                "left": {
+                    **template,
+                    "matrix": util.matrix_to_list(cam_l.obj.matrix_world),
+                },
+                "right": {
+                    **template,
+                    "matrix": util.matrix_to_list(cam_r.obj.matrix_world),
+                },
+            }
+
+        meta["environment"]["file"] = os.path.relpath(
+            hdr_data["raw_path"], scene_config.res_path
+        )
+
+        # Write metadata to file
+        json.dump(meta, meta_file, indent=4, sort_keys=True)
 
 
 if __name__ == "__main__":
