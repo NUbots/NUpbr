@@ -167,42 +167,20 @@ def main():
             )
         )
 
-    #import rig object. Directory = stored directory of rig.blend file, filename = the group of the rig in the .blend file
+       #import rig object. Directory = stored directory of rig.blend file, filename = the group of the rig in the .blend file
     #import rig object
     bpy.ops.wm.append(directory="D:\\Git\\NUPBR\\resources\\Robot_MatteShaded_Rig.blend\\Group\\", filename="Armature_Group")
 
     #rotate bones
     rig1 = bpy.data.objects['Armature.000']
-    bpy.context.scene.objects.active = rig1
+    #bpy.context.scene.objects.active = rig1
 
-    #with open("bonedict.json", 'r') as f:
-        #bone_dict = json.loads(f)
+    with open("bonedict.json", 'r') as f:
+        bone_dict = json.load(f)
 
-    #for k in bone_dict:
-        #Set bone rotation based on rotation axis and limits
-    #    rig1.pose.bones[k].rotation_euler.rotate_axis(bone_dict[k]["axis"], math.radians(random.randrange(bone_dict[k]["limits"][0], bone_dict[k]["limits"][1])),)
-
-    rig1.pose.bones['Head'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-30,30)))
-    rig1.pose.bones['Head'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-45,45)))
-
-    rig1.pose.bones['Hip_Bone_L'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-20,20)))
-    rig1.pose.bones['Leg_Upper_L'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-55,60)))
-    rig1.pose.bones['Leg_Lower_L'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,20)))
-    rig1.pose.bones['Foot_L'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,10)))
-    rig1.pose.bones['Shoulder_L'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-45,45)))
-    rig1.pose.bones['Arm_Upper_L'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-80,15)))
-    rig1.pose.bones['Arm_Lower_L'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-120,10)))
-
-    rig1.pose.bones['Hip_Bone_R'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-20,20)))
-    rig1.pose.bones['Leg_Upper_R'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-55,60)))
-    rig1.pose.bones['Leg_Lower_R'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,20)))
-    rig1.pose.bones['Foot_R'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-20,10)))
-    rig1.pose.bones['Shoulder_R'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(-45,45)))
-    rig1.pose.bones['Arm_Upper_R'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-15,80)))
-    rig1.pose.bones['Arm_Lower_R'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-10,120)))
-    rig1.pose.bones['Main_Torso'].rotation_euler.rotate_axis('X', math.radians(random.randrange(-5,5)))
-    rig1.pose.bones['Main_Torso'].rotation_euler.rotate_axis('Y', math.radians(random.randrange(0,360)))
-    rig1.pose.bones['Main_Torso'].rotation_euler.rotate_axis('Z', math.radians(random.randrange(-5,5)))
+    for k in bone_dict:
+        #set bone rotation based on rotation axis and limits
+       rig1.pose.bones[k].rotation_euler.rotate_axis(bone_dict[k]["axis"], math.radians(random.randrange(bone_dict[k]["limits"][0], bone_dict[k]["limits"][1])),)
 
     rig1.location[0] =random.uniform(-4.5,4.5)
     rig1.location[1] =random.uniform(-3,3)
@@ -217,7 +195,7 @@ def main():
     bpy.data.particles["ParticleSettings"].dupli_object = grass_blade
 
     #setup random size particles
-    bpy.data.particles["ParticleSettings"].particle_size = random.uniform(0.4,0.7)
+    bpy.data.particles["ParticleSettings"].particle_size = random.uniform(0.5,1)
     bpy.data.particles["ParticleSettings"].use_render_emitter = True
 
     #hide imported grassblade
