@@ -20,6 +20,11 @@ resources = {
         "path": path.abspath(path.join(res_path, "balls")),
         "mask": {"index": 1, "colour": (1, 0, 0, 1)},
     },
+    "grass": {
+        "img_types": [".jpg", ".png"],
+        "path": path.abspath(path.join(res_path, "grass")),
+        "mask": {"index": 4, "colour": (1, 0, 0, 0)},
+    },
     "environment": {
         "path": path.abspath(path.join(res_path, "hdr")),
         "hdri_types": [".hdr"],

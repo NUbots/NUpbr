@@ -33,7 +33,7 @@ def main():
     ##              ASSET LOADING               ##
     ##############################################
 
-    hdrs, balls = util.load_assets()
+    hdrs, balls, grass = util.load_assets()
 
     ##############################################
     ##             ENVIRONMENT SETUP            ##
@@ -229,6 +229,7 @@ def main():
         toggle=render_layer_toggle,
         shadowcatcher=shadowcatcher,
         ball=ball,
+        grass=grass,
         world=world,
         env=env,
         hdr_path=hdr_data["raw_path"],
@@ -243,6 +244,7 @@ def main():
         toggle=render_layer_toggle,
         shadowcatcher=shadowcatcher,
         ball=ball,
+        grass=grass,
         world=world,
         env=env,
         hdr_path=hdr_data["mask_path"],
