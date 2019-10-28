@@ -169,7 +169,7 @@ def main():
 
        #import rig object. Directory = stored directory of rig.blend file, filename = the group of the rig in the .blend file
     #import rig object
-    bpy.ops.wm.append(directory="D:\\Git\\NUPBR\\resources\\Robot_MatteShaded_Rig.blend\\Group\\", filename="Armature_Group")
+    bpy.ops.wm.append(directory="E:\\Git\\NUPBR\\resources\\Robot_MatteShaded_Rig.blend\\Group\\", filename="Armature_Group")
 
     #rotate bones
     rig1 = bpy.data.objects['Armature.000']
@@ -187,7 +187,7 @@ def main():
 
     #grass particle with objects
     #import grass blade object and assign it
-    bpy.ops.wm.append(directory="D:\\Git\\NUPBR\\resources\\Singleblade.blend\\Group\\", filename="Grass_Group")
+    bpy.ops.wm.append(directory="E:\\Git\\NUPBR\\resources\\Singleblade.blend\\Group\\", filename="Grass_Group")
     grass_blade = bpy.data.objects['Grassblade_000']
 
     #setup particle system to use objects instead
@@ -196,7 +196,7 @@ def main():
 
     #setup random size particles
     bpy.data.particles["ParticleSettings"].particle_size = random.uniform(0.5,1)
-    bpy.data.particles["ParticleSettings"].use_render_emitter = True
+    #bpy.data.particles["ParticleSettings"].use_render_emitter = True
 
     #hide imported grassblade
     grass_blade.location[2] = -50

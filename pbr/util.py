@@ -4,7 +4,7 @@ import bpy
 import random as rand
 import numpy as np
 import math
-import cv2
+#import cv2
 
 from config import scene_config
 from scene import environment as env
@@ -100,7 +100,22 @@ def load_assets():
     )
     print("[INFO] \tNumber of environments imported: {0}".format(len(hdrs)))
 
-    return hdrs, balls
+    #Ethan Code: Populate list of grass textures here.
+    grass_img_ext = "(?:{})$".format(
+       "|".join([re.escape(s) for s in resources["grass"]["img_types"]])
+    )
+    grass_colour_re = r"colou?rs?.*" + grass_img_ext
+
+    print("[INFO] Importing grass from '{0}'".format(resources["grass"]["path"]))
+    grass = populate_assets(
+        resources["grass"]["path"],
+        [
+            ("colour_path", grass_colour_re),
+        ],
+    )
+    print("[INFO] \tNumber of grass imported: {0}".format(len(grass)))
+
+    return hdrs, balls, grass
 
 
 def setup_environment(hdr, env_info):
@@ -121,6 +136,7 @@ def render_image(
     toggle,
     shadowcatcher,
     ball,
+    grass,
     world,
     env,
     hdr_path,

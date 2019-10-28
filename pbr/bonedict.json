@@ -1,0 +1,21 @@
+{
+   "Head": {"axis": "X", "limits":[-30, 30]},
+   "Head": {"axis": "Y", "limits":[-45, 45]},
+   "Hip_Bone_L": {"axis": "Y", "limits":[-20, 20]},
+   "Leg_Upper_L": {"axis": "X", "limits":[-55, 60]},
+   "Leg_Lower_L": {"axis": "X", "limits":[-20, 20]},
+   "Foot_L": {"axis": "X", "limits":[-20, 10]},
+   "Shoulder_L": {"axis": "Y", "limits":[-45, 45]},
+   "Arm_Upper_L": {"axis": "Z", "limits":[-80, 15]},
+   "Arm_Lower_L": {"axis": "Z", "limits":[-120, 10]},
+   "Hip_Bone_R": {"axis": "Y", "limits":[-20, 20]},
+   "Leg_Upper_R": {"axis": "X", "limits":[-55, 60]},
+   "Leg_Lower_R": {"axis": "X", "limits":[-20, 20]},
+   "Foot_R": {"axis": "X", "limits":[-20, 10]},
+   "Shoulder_R": {"axis": "Y", "limits":[-45, 45]},
+   "Arm_Upper_R": {"axis": "Z", "limits":[-15, 80]},
+   "Arm_Lower_R": {"axis": "Z", "limits":[-10, 120]},
+   "Main_Torso": {"axis": "X", "limits":[-5,5]},
+   "Main_Torso": {"axis": "Y", "limits":[0,360]},
+   "Main_Torso": {"axis": "Z", "limits":[-5,5]}
+   }
