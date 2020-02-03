@@ -1,53 +1,64 @@
 #!/usr/bin/env python3
 
-# We want to use packages that don't come with blender by default
+# We want to use packages that don't come with Blender by default
 # To do this we need to make sure we have pip and can install the packages
 
 
-def _install_pip():
-    import os
-    import requests
-    import sys
-
-    # Get the get-pip.py install file
-    print(
-        "Pip is not installed, installing it now, restart the script after this is done"
-    )
-    try:
-        r = requests.get("https://bootstrap.pypa.io/get-pip.py", stream=True)
-        if r.status_code == 200:
-            with open("get_pip.py", "wb") as f:
-                for chunk in r:
-                    f.write(chunk)
-    except:
-        if not os.path.isfile("get_pip.py"):
-            print("We were unable to download https://bootstrap.pypa.io/get-pip.py")
-            print(
-                "Download it manually and put at {}".format(
-                    os.path.join(os.path.dirname(__file__), "get_pip.py")
-                )
-            )
-
-    # We need to clobber sys.argv so we don't confuse get-pip.py
-    sys.argv = []
-    import get_pip
-
-    get_pip.main()
-    exit(0)
-
-
-def _install_package(args):
+def _install_package(pkg):
+    # Import/Install pip
     try:
         import pip
-        from pip._internal import main as pip_main
-
-        pip_main(args)
     except:
-        _install_pip()
+        # Use ensurepip module that is packaged with Blender
+        import ensurepip
+
+        ensurepip.bootstrap(upgrade=True)
+
+        import pip
+
+        print("[INFO] pip version {} installed".format(pip.__version__))
+        print("[INFO] Please restart to use the installed pip")
+        exit(0)
+
+    # Alias pip main function for different implementations within pip versions
+    pip_main = lambda x: pip.main(x) if hasattr(pip, "main") else pip._internal.main(x)
+
+    print("[INFO] Upgrading pip version...")
+
+    # Upgrade pip to newest version
+    pip_main(
+        [
+            "install",
+            "--trusted-host",
+            "pypi.python.org",
+            "--trusted-host",
+            "pypi.org",
+            "--trusted-host",
+            "files.pythonhosted.org",
+            "--upgrade",
+            "pip",
+        ]
+    )
+
+    print("[INFO] Installing '{}'...".format(pkg))
+
+    # Install package
+    pip_main(
+        [
+            "install",
+            "--trusted-host",
+            "pypi.python.org",
+            "--trusted-host",
+            "pypi.org",
+            "--trusted-host",
+            "files.pythonhosted.org",
+            pkg,
+        ]
+    )
 
 
 # Try to install our dependencies
 try:
     import cv2
 except:
-    _install_package(["install", "--no-deps", "opencv-contrib-python"])
+    _install_package("opencv-contrib-python")
