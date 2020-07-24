@@ -50,49 +50,11 @@ field = {
         "mix_grass": {"inp0": 0.391},
         "principled": {"roughness": 0.625},
     },
-    "particle": {
-        "use_adv_hair": True,
-        "type": "HAIR",
-        "emission": {
-            "count": 5000,
-            "hair_length": 0.09,
-            "emit_from": "FACE",
-            "emit_random": True,
-            "even_dist": False,
-        },
-        "physics": {
-            "type": "NEWTON",
-            "brownian_factor": 0.01,
-            "timestep": 0.025,
-            "subframes": 1,
-        },
-        "render": {"emitter": False, "parents": True},
-        "children": {
-            "child_type": "INTERPOLATED",
-            "child_num": 10,
-            "rendered_children": 90,
-            "length": 0.5,
-        },
-        "cycles_hair": {
-            "shape": -0.12,
-            "root": 0.03,
-            "tip": 0.0,
-            "scaling": 0.08,
-            "close_tip": True,
-        },
-    },
     "lower_plane": {
         "colour": (0.003, 0.04, 0.0, 1.0),
-        "specular": 0.225,
+        "principled": {"specular": 0.225, "roughness": 1.0},
         "roughness": 1.0,
-    },
-    "noise": {
-        "type": "VORONOI",
-        "contrast": 0.8,
-        "noise_scale": 0.1,
-        "nabla": 0.3,
-        "mapping_coords": "ORCO",
-        "influence": {"use_hair_length": True, "hair_length_factor": 3.5},
+        "mapping": {"scale": (0.5, 0.5, 1.0)},
     },
 }
 
