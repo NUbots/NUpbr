@@ -151,8 +151,8 @@ class Field(BlenderObject):
         n_bump = node_list.new("ShaderNodeBump")
 
         n_princ = node_list.new("ShaderNodeBsdfPrincipled")
-        n_princ.inputs[5].default_value = p_cfg["principled"]["specular"]
-        n_princ.inputs[7].default_value = p_cfg["principled"]["roughness"]
+        n_princ.inputs["Specular"].default_value = p_cfg["principled"]["specular"]
+        n_princ.inputs["Roughness"].default_value = p_cfg["principled"]["roughness"]
 
         n_output = node_list.new("ShaderNodeOutputMaterial")
 
@@ -207,7 +207,8 @@ class Field(BlenderObject):
         n_field_lines.image = img
 
         n_princ = node_list.new("ShaderNodeBsdfPrincipled")
-        n_princ.inputs[7].default_value = m_cfg["principled"]["roughness"]
+        n_princ.inputs["Specular"].default_value = m_cfg["principled"]["specular"]
+        n_princ.inputs["Roughness"].default_value = m_cfg["principled"]["roughness"]
 
         n_output = node_list.new("ShaderNodeOutputMaterial")
 
