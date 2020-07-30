@@ -100,7 +100,29 @@ def load_assets():
     )
     print("[INFO] \tNumber of environments imported: {0}".format(len(hdrs)))
 
-    return hdrs, balls
+    # Populate list of grass textures
+    grass_img_ext = "(?:{})$".format(
+        "|".join([re.escape(s) for s in resources["field"]["grass"]["img_types"]])
+    )
+    grass_diffuse_re = r"diffuse.*" + grass_img_ext
+    grass_normal_re = r"normal.*" + grass_img_ext
+    grass_bump_re = r"bump.*" + grass_img_ext
+    print(
+        "[INFO] Importing grass textures from '{0}'".format(
+            resources["field"]["grass"]["path"]
+        )
+    )
+    grasses = populate_assets(
+        resources["field"]["grass"]["path"],
+        [
+            ("diffuse", grass_diffuse_re),
+            ("normal", grass_normal_re),
+            ("bump", grass_bump_re),
+        ],
+    )
+    print("[INFO] \tNumber of grass textures imported: {0}".format(len(grasses)))
+
+    return hdrs, balls, grasses
 
 
 def setup_environment(hdr, env_info):

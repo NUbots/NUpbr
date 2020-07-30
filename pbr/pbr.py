@@ -38,7 +38,7 @@ def main():
     ##              ASSET LOADING               ##
     ##############################################
 
-    hdrs, balls = util.load_assets()
+    hdrs, balls, grasses = util.load_assets()
 
     ##############################################
     ##             ENVIRONMENT SETUP            ##
@@ -79,7 +79,6 @@ def main():
 
     # Construct our grass field
     field = Field(scene_config.resources["field"]["mask"]["index"])
-    field.update(config["field"])
 
     # Construct cameras
     cam_l = Camera("Camera_L")
@@ -115,9 +114,10 @@ def main():
         for ii in range(len(shapes)):
             shapes[ii].update(config["shape"][ii])
 
-        # Select the ball and environment to use
+        # Select the ball, environment, and grass to use
         hdr_data = random.choice(hdrs)
         ball_data = random.choice(balls)
+        grass_data = random.choice(grasses)
 
         # Load the environment information
         with open(hdr_data["info_path"], "r") as f:
@@ -177,6 +177,7 @@ def main():
             )
 
         # Apply the updates
+        field.update(grass_data, config["field"])
         ball.update(ball_data, config["ball"])
 
         # Update goals
