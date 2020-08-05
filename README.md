@@ -2,7 +2,7 @@
 
 This repository holds code to generate a configurable, Physically Based Rendered (PBR) football field.
 
-See NUbook for a more detailed documentation of this project: https://nubook.netlify.app/system/nupbr.
+See NUbook for a more detailed documentation of this project: <https://nubook.netlify.app/system/tools/nupbr>.
 
 ![Field Example](./docs/outputs/goals_example.gif)
 
