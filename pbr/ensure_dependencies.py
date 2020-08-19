@@ -39,9 +39,7 @@ def _install_pip():
 def _install_package(args):
     try:
         import pip
-        from pip._internal import main as pip_main
-
-        pip_main(args)
+        pip.main(args)
     except:
         _install_pip()
 
