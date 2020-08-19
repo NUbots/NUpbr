@@ -1,5 +1,6 @@
 # python extras
 __pycache__
+*.pyc
 
 # outputs
 outputs/*
