@@ -47,5 +47,14 @@ def _install_package(args):
 # Try to install our dependencies
 try:
     import cv2
+    print("cv2 found")
 except:
-    _install_package(["install", "--no-deps", "opencv-contrib-python"])
+    print("cv2 not found, installing now")
+    _install_package(["install", "opencv-contrib-python"])
+
+try:
+    import PIL
+    print("PIL found")
+except:
+    print("PIL not found, installing now")
+    _install_package(["install", "Pillow"])
