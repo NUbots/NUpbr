@@ -112,16 +112,17 @@ class Goal(BlenderObject):
     def join_objs(self, objs):
         # Create copy of context
         context = bpy.context.copy()
+
         # Select our active and selected objects
         context["active_object"] = objs[0]
         context["selected_objects"] = objs
+
         # Select all of our available editable bases
         context["selected_editable_bases"] = [
             bpy.context.scene.object_bases[obj.name] for obj in objs
         ]
         # Join objects
         bpy.ops.object.join(context)
-        bpy.data.objects[objs[0].name].select = True
 
     # Utility function for copying objects
     def copy_obj(self, obj, name, loc, rot):
@@ -265,10 +266,11 @@ class Goal(BlenderObject):
     def create_goal_rear(self, goal_config, curve):
         # Define corner radius to avoid extra multiplications
         corner_radius = goal_config["post_width"] / 2
+
         # Left bottom
         lb_curve = self.copy_obj(
             curve,
-            name="LT_Curve",
+            name="LB_Curve",
             loc=(goal_config["depth"], corner_radius / 4, corner_radius),
             rot=(0, pi / 2, 0),
         )
@@ -282,7 +284,7 @@ class Goal(BlenderObject):
         # Left top
         lt_curve = self.copy_obj(
             curve,
-            name="LB_Curve",
+            name="LT_Curve",
             loc=(goal_config["depth"], corner_radius / 4, goal_config["net_height"]),
             rot=(0, pi / 2, 0),
         )
