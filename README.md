@@ -42,9 +42,23 @@ The following resources are used for texturing the scene:
 
 The path to those resources can be configured in the [`pbr/config/scene_config.py`](./pbr/config/scene_config.py) file.
 
-### Field
+### Field UV
 
-The field UV map is a transparent image with white pixels where the field lines are. Currently, the it is created offline, with the file path specified in the config file at `field["uv_file"]`. The default file is available in the `resources.zip` file described in the [Set Up](#set-up) section above.
+The field UV map is a transparent image with white pixels where the field lines are. Currently, the it is created offline, with the file path specified in the config file at `field["uv_file"]`.
+
+The default field UV map is available in the `resources.zip` file described in the [Set Up](#set-up) section above.
+
+### Field Grass
+
+Custom field grass textures to be considered for selection when generating the scene can be placed in the grass directory (by default `resources/grass`).
+
+Each grass asset should be placed in a sub directory with the corresponding bump, diffuse, and normal files. For example:
+
+- `resources/grass/grass_001/grass_001_bump.jpg` (name must include `bump`)
+- `resources/grass/grass_001/grass_001_diffuse.jpg` (name must include `diffuse`)
+- `resources/grass/grass_001/grass_001_normal.jpg` (name must include `normal`)
+
+The `resources.zip` file described in the [Set Up](#set-up) section above has a sample grass texture.
 
 ### Ball
 
@@ -56,6 +70,8 @@ Each ball asset should be placed in a sub directory with the corresponding color
 - `resources/balls/ball_001/ball_001_mesh.fbx` (extension must match the mesh file types configured at `ball["mesh_types"]`)
 - `resources/balls/ball_001/ball_001_normal.png` (name must include `normal`)
 
+The `resources.zip` file described in the [Set Up](#set-up) section above has a sample ball texture.
+
 ### Environment
 
 Similarly to the ball UV maps, a random HDRI environment image is selected from the pool of images within the scene HDR directory (by default `resources/hdr`).
@@ -65,3 +81,5 @@ Each HDRI image should be placed in a sub directory with the corresponding JSON 
 - `resources/hdr/hdr_001/001.json` (must match the info file type configured at `environment["info_type"]`)
 - `resources/hdr/hdr_001/001_mask.png` (must match the mask file types configured at `environment["mask_types"]`)
 - `resources/hdr/hdr_001/001_raw.hdr` (must match the HDRI file types configured at `environment["hdri_types"]`)
+
+The `resources.zip` file described in the [Set Up](#set-up) section above has a sample HDRI image.
