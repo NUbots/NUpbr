@@ -43,15 +43,13 @@ resources = {
     },
     ## Always make sure that the field has the last index so field lines can be index + 1
     "field": {
-        "type": ".png",
         "mode": "RGBA",
         "pixels_per_metre": 100,
-        "uv_path": path.abspath(path.join(res_path, "field_uv")),
+        "uv_file": path.abspath(path.join(res_path, "field_uv", "default_uv.png")),
         "grass": {
             "path": path.abspath(path.join(res_path, "grass")),
             "img_types": [".jpg", ".png"],
         },
-        "name": "default_uv",
         "orientation": "portrait",
         "mask": {"index": 4, "colour": (0, 1, 0, 1), "line_colour": (1, 1, 1, 1)},
     },

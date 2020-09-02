@@ -85,6 +85,4 @@ def main():
         field_img = field_img.rotate(90, expand=True)
 
     # Store our field image
-    field_img.save(
-        path.join(cfg.field_uv["uv_path"], cfg.field_uv["name"] + cfg.field_uv["type"])
-    )
+    field_img.save(cfg.field_uv["uv_file"])

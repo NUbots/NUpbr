@@ -196,10 +196,7 @@ class Field(BlenderObject):
 
         # Create texture image of field UV map
         n_field_lines = node_list.new("ShaderNodeTexImage")
-        img_path = os.path.join(
-            scene_cfg.resources["field"]["uv_path"],
-            scene_cfg.resources["field"]["name"] + scene_cfg.resources["field"]["type"],
-        )
+        img_path = scene_cfg.resources["field"]["uv_file"]
         try:
             img = bpy.data.images.load(img_path)
         except:

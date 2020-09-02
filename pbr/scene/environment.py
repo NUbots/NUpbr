@@ -251,11 +251,7 @@ def setup_field_seg_mat(index, total_classes):
     n_obj_info = node_list.new("ShaderNodeObjectInfo")
     # Create node texture image of field UV map
     n_field_lines = node_list.new("ShaderNodeTexImage")
-    img_path = os.path.join(
-        scene_config.resources["field"]["uv_path"],
-        scene_config.resources["field"]["name"]
-        + scene_config.resources["field"]["type"],
-    )
+    img_path = scene_config.resources["field"]["uv_file"]
     try:
         img = bpy.data.images.load(img_path)
     except:
