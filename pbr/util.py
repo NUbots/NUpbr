@@ -9,39 +9,48 @@ import cv2
 from config import scene_config
 from scene import environment as env
 
-# Import assets from path as defined by asset_list
-# Where asset list ('assets') is a list of two-tuples, each containing
-#   - the dictionary key and
-#   - regex string for each field
-def populate_assets(path, asset_list):
-    # Populate list of assets at path
-    files = os.listdir(path)
+# Get a list of files and directores in the given path
+# as a tuple with (files, directories)
+def list_files_and_dirs(path, absolute=False):
+    files = []
+    dirs = []
 
-    # Create container for asset entries
-    assets = []
+    for child in os.listdir(path):
+        child_path = os.path.join(path, child)
+        if os.path.isdir(child_path):
+            dirs.append(child_path if absolute else child)
+        else:
+            files.append(child_path if absolute else child)
 
-    # Initialise field paths as None
-    fields = {}
-    for item in asset_list:
-        fields.update({item[0]: None})
+    return (files, dirs)
 
-    # Search through each file in folder to try to find raw and mask image paths
-    for file in files:
-        for item in asset_list:
-            result = re.search(item[1], file, re.I)
-            if result is not None:
-                fields.update({item[0]: os.path.join(path, file)})
 
-    # If we have a mandatory field (first field listed in asset_list)
-    if fields[asset_list[0][0]] is not None:
-        assets.append(fields)
+# Populate the given assets list with assets from path as defined by asset_fields
+# Where asset_fields is a list of two-tuples, each containing
+#   - the field's dictionary key and
+#   - the field's regex string
+def populate_assets(assets, path, asset_fields):
+    # Get the files and folders at the given path
+    files, subdirs = list_files_and_dirs(path, absolute=True)
 
-    # Populate list of subdirectories at path
-    subdirs = sorted([x for x in files if os.path.isdir(os.path.join(path, x))])
+    # Initialise asset with fields as None
+    asset = {}
+    for field in asset_fields:
+        asset.update({field[0]: None})
+
+    # Search through each file and add them to the asset if they match an asset field
+    for file_path in files:
+        for field_name, field_re in asset_fields:
+            if re.search(field_re, file_path, re.I) is not None:
+                asset.update({field_name: file_path})
+
+    # Add the asset if the first field (the mandatory one) has a file
+    if asset[asset_fields[0][0]] is not None:
+        assets.append(asset)
 
     # For each subdirectory, recursively populate assets
-    for subdir in subdirs:
-        assets += populate_assets(os.path.join(path, subdir), asset_list)
+    for subdir in sorted(subdirs):
+        populate_assets(assets, subdir, asset_fields)
 
     return assets
 
@@ -49,7 +58,6 @@ def populate_assets(path, asset_list):
 # Load ball and HDR map data from respective paths,
 #   traversing recursively through subdirectories
 def load_assets():
-
     resources = scene_config.resources
 
     ball_img_ext = "(?:{})$".format(
@@ -64,6 +72,7 @@ def load_assets():
 
     print("[INFO] Importing balls from '{0}'".format(resources["ball"]["path"]))
     balls = populate_assets(
+        [],
         resources["ball"]["path"],
         [
             ("colour_path", ball_colour_re),
@@ -91,6 +100,7 @@ def load_assets():
         )
     )
     hdrs = populate_assets(
+        [],
         resources["environment"]["path"],
         [
             ("raw_path", env_raw_re),
@@ -113,6 +123,7 @@ def load_assets():
         )
     )
     grasses = populate_assets(
+        [],
         resources["field"]["grass"]["path"],
         [
             ("diffuse", grass_diffuse_re),

@@ -51,7 +51,7 @@ resources = {
             "path": path.abspath(path.join(res_path, "grass")),
             "img_types": [".jpg", ".png"],
         },
-        "name": "default",
+        "name": "default_uv",
         "orientation": "portrait",
         "mask": {"index": 4, "colour": (0, 1, 0, 1), "line_colour": (1, 1, 1, 1)},
     },
