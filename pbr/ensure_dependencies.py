@@ -39,7 +39,10 @@ def _install_pip():
 def _install_package(args):
     try:
         import pip
-        pip.main(args)
+        import subprocess
+        import sys
+
+        subprocess.check_call([sys.executable, '-m', 'pip'] + args)
     except:
         _install_pip()
 
