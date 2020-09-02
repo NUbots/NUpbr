@@ -121,8 +121,10 @@ class Goal(BlenderObject):
         context["selected_editable_bases"] = [
             bpy.context.scene.object_bases[obj.name] for obj in objs
         ]
+
         # Join objects
         bpy.ops.object.join(context)
+
 
     # Utility function for copying objects
     def copy_obj(self, obj, name, loc, rot):
@@ -281,6 +283,7 @@ class Goal(BlenderObject):
             rot=(0, -pi / 2, 0),
             extrude=(goal_config["depth"] - corner_radius / 2, 0, 0),
         )
+
         # Left top
         lt_curve = self.copy_obj(
             curve,
@@ -314,6 +317,7 @@ class Goal(BlenderObject):
             rot=(0, -pi / 2, 0),
             extrude=(goal_config["depth"] - corner_radius / 2, 0, 0),
         )
+
         # Right top
         rt_curve = self.copy_obj(
             curve,

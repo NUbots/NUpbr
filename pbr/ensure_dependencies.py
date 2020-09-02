@@ -24,9 +24,7 @@ def _install_pip():
     except:
         if not os.path.isfile(install_file):
             print("We were unable to download https://bootstrap.pypa.io/get-pip.py")
-            print(
-                "Download it manually and put at {}".format(install_file)
-            )
+            print("Download it manually and put at {}".format(install_file))
 
     # We need to clobber sys.argv so we don't confuse get-pip.py
     sys.argv = [""] if os.name == "nt" else []
@@ -42,7 +40,7 @@ def _install_package(args):
         import subprocess
         import sys
 
-        subprocess.check_call([sys.executable, '-m', 'pip'] + args)
+        subprocess.check_call([sys.executable, "-m", "pip"] + args)
     except:
         _install_pip()
 
@@ -50,6 +48,7 @@ def _install_package(args):
 # Try to install our dependencies
 try:
     import cv2
+
     print("cv2 found")
 except:
     print("cv2 not found, installing now")
@@ -57,6 +56,7 @@ except:
 
 try:
     import PIL
+
     print("PIL found")
 except:
     print("PIL not found, installing now")
