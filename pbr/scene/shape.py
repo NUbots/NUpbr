@@ -54,7 +54,7 @@ class Shape(BlenderObject):
         self.obj.pass_index = self.pass_index
 
         # Make ball active object
-        bpy.context.scene.objects.active = self.obj
+        bpy.context.view_layer.objects.active = self.obj
         bpy.ops.object.shade_smooth()
 
         # Rename our created shape

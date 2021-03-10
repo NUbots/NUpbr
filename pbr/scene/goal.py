@@ -23,11 +23,11 @@ class Goal(BlenderObject):
         # Delete object if it already exists
         if self.obj is not None:
             bpy.ops.object.select_all(action="DESELECT")
-            self.obj.select = True
+            self.obj.select_set(state=True)
             bpy.ops.object.delete()
         if self.rear is not None:
             bpy.ops.object.select_all(action="DESELECT")
-            self.rear.select = True
+            self.rear.select_set(state=True)
             bpy.ops.object.delete()
 
         # Define corner radius to avoid extra multiplications
@@ -114,14 +114,10 @@ class Goal(BlenderObject):
         context = bpy.context.copy()
         # Select our active and selected objects
         context["active_object"] = objs[0]
-        context["selected_objects"] = objs
-        # Select all of our available editable bases
-        context["selected_editable_bases"] = [
-            bpy.context.scene.object_bases[obj.name] for obj in objs
-        ]
+        context["selected_editable_objects"] = objs
         # Join objects
         bpy.ops.object.join(context)
-        bpy.data.objects[objs[0].name].select = True
+        bpy.data.objects[objs[0].name].select_set(state=True)
 
     # Utility function for copying objects
     def copy_obj(self, obj, name, loc, rot):
@@ -131,10 +127,10 @@ class Goal(BlenderObject):
         obj_copy.location = loc
         obj_copy.rotation_euler = rot
         obj_copy.animation_data_clear()
-        bpy.context.scene.objects.link(obj_copy)
+        bpy.context.collection.objects.link(obj_copy)
 
-        bpy.data.objects[obj.name].select = False
-        bpy.data.objects[obj_copy.name].select = False
+        bpy.data.objects[obj.name].select_set(state=False)
+        bpy.data.objects[obj_copy.name].select_set(state=False)
 
         return obj_copy
 
@@ -238,7 +234,7 @@ class Goal(BlenderObject):
             goal_post = bpy.data.objects["Circle"]
         elif goal_config["shape"] == "square":
             mesh = bpy.ops.mesh.primitive_plane_add(
-                radius=corner_radius,
+                size=corner_radius, #corner_radius needs to be multiplied by 2 because in Blender 2.79, size=corner_radius was radius=corner_radius
                 calc_uvs=blend_cfg.ball["initial_cond"]["calc_uvs"],
                 rotation=rot,
             )

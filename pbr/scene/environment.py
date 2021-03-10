@@ -39,7 +39,7 @@ def setup_render():
     scene.cycles.device = rend_cfg["render"]["cycles_device"]
 
     # Select which GPU to use
-    devices = bpy.context.user_preferences.addons["cycles"].preferences.get_devices()[0]
+    devices = bpy.context.preferences.addons["cycles"].preferences.get_devices()[0]
     if "CUDA_DEVICE_NO" in os.environ:
         for d in devices:
             d.use = False
@@ -47,7 +47,7 @@ def setup_render():
             devices[int(no)].use = True
 
     # Set denoising settings
-    context.scene.render.layers[0].cycles.use_denoising = blend_cfg.layers["denoising"][
+    context.scene.view_layers[0].cycles.use_denoising = blend_cfg.layers["denoising"][
         "use_denoising"
     ]
 
@@ -86,7 +86,7 @@ def setup_render():
     ]["render_tile"]
 
     # Disable splash screen
-    context.user_preferences.view.show_splash = False
+    context.preferences.view.show_splash = False
 
     # Limit blender thread usage
     if rend_cfg["performance"]["threads"]["mode"] == "FIXED":
@@ -157,7 +157,7 @@ def update_hdri_env(world, img_path, env_info):
 
     tl = bpy.data.worlds["World_HDR"].node_tree.links
 
-    n_map.rotation = (
+    n_map.inputs['Rotation'].default_value = (
         radians(env_info["rotation"]["roll"]),
         radians(env_info["rotation"]["pitch"]),
         radians(env_info["rotation"]["yaw"]),
@@ -377,12 +377,12 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
 
 def setup_render_layers(num_objects):
     scene = bpy.context.scene
-    render_layers = scene.render.layers
+    render_layers = scene.view_layers
 
     # Setup raw image render layer
-    render_layers["RenderLayer"].use_pass_object_index = False
-    render_layers["RenderLayer"].use_pass_combined = False
-    render_layers["RenderLayer"].use_pass_mist = True
+    render_layers["View Layer"].use_pass_object_index = False
+    render_layers["View Layer"].use_pass_combined = False
+    render_layers["View Layer"].use_pass_mist = True
 
     # Setup image segmentation (without field lines) render layer
     l_image_seg = render_layers.new("Image_Seg")
@@ -400,4 +400,4 @@ def setup_render_layers(num_objects):
     l_field_seg.material_override = field_seg_mat
 
     # Setup scene render layer composite and return switch to control raw image or mask
-    return setup_scene_composite(render_layers["RenderLayer"], l_image_seg, l_field_seg)
+    return setup_scene_composite(render_layers["View Layer"], l_image_seg, l_field_seg)

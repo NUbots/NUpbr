@@ -29,7 +29,7 @@ class Ball(BlenderObject):
         # If there already exists a ball object bound to this class, destroy it
         if self.obj is not None:
             bpy.ops.object.select_all(action="DESELECT")
-            self.obj.select = True
+            self.obj.select_set(state=True)
             bpy.ops.object.delete()
 
         # Load mesh or create UV sphere
@@ -59,7 +59,7 @@ class Ball(BlenderObject):
         ball.dimensions = (radius * 2.0, radius * 2.0, radius * 2.0)
 
         # Make ball active object
-        bpy.context.scene.objects.active = ball
+        bpy.context.view_layer.objects.active = ball
 
         # Add UV sphere for ball
         ball.name = self.name
@@ -112,13 +112,13 @@ class Ball(BlenderObject):
         if normal_path is not None:
             n_norm_map = node_list.new("ShaderNodeTexImage")
             n_norm_map.name = "Norm_Map"
-            n_norm_map.color_space = "NONE"
 
             try:
                 norm_map = bpy.data.images.load(normal_path)
             except:
                 raise NameError("Cannot load image {0}".format(normal_path))
             n_norm_map.image = norm_map
+            n_norm_map.image.colorspace_settings.is_data = True
 
         # Create principled node
         n_principled = node_list.new("ShaderNodeBsdfPrincipled")

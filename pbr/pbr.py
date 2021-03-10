@@ -236,7 +236,7 @@ def main():
         )
 
         # Updates scene to rectify rotation and location matrices
-        bpy.context.scene.update()
+        bpy.context.view_layer.update()
 
         ##############################################
         ##                RENDERING                 ##

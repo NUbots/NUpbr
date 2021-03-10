@@ -150,11 +150,11 @@ def render_image(
     output_path,
 ):
     # Turn off all render layers
-    for l in bpy.context.scene.render.layers:
+    for l in bpy.context.scene.view_layers:
         l.use = isMaskImage
 
     # Enable raw image rendering if required
-    bpy.context.scene.render.layers["RenderLayer"].use = not isMaskImage
+    bpy.context.scene.view_layers["View Layer"].use = not isMaskImage
     toggle[0].check = isMaskImage
     toggle[1].inputs[0].default_value = 1 if isMaskImage else 0
     shadowcatcher.obj.hide_render = isMaskImage

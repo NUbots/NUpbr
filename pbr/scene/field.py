@@ -20,11 +20,11 @@ class Field(BlenderObject):
         # Delete the old field if it exists
         if self.obj is not None:
             bpy.ops.object.select_all(action="DESELECT")
-            self.obj.select = True
+            self.obj.select_set(state=True)
             bpy.ops.object.delete()
         if self.lower_plane is not None:
             bpy.ops.object.select_all(action="DESELECT")
-            self.lower_plane.select = True
+            self.lower_plane.select_set(state=True)
             bpy.ops.object.delete()
 
         # Add plane for field
@@ -113,21 +113,18 @@ class Field(BlenderObject):
         # Create mapping to allow repetition of texture across plane
         n_mapping = node_list.new("ShaderNodeMapping")
         n_mapping.vector_type = "TEXTURE"
-        n_mapping.scale = p_cfg["mapping"]["scale"]
+        n_mapping.inputs['Scale'].default_value = p_cfg["mapping"]["scale"]
 
         # Create image textures
         n_tex_diffuse = node_list.new("ShaderNodeTexImage")
-        n_tex_diffuse.color_space = "COLOR"
         n_tex_diffuse.projection = "FLAT"
         n_tex_diffuse.interpolation = "Linear"
         n_tex_diffuse.extension = "REPEAT"
         n_tex_normal = node_list.new("ShaderNodeTexImage")
-        n_tex_normal.color_space = "NONE"
         n_tex_normal.projection = "FLAT"
         n_tex_normal.interpolation = "Linear"
         n_tex_normal.extension = "REPEAT"
         n_tex_bump = node_list.new("ShaderNodeTexImage")
-        n_tex_bump.color_space = "NONE"
         n_tex_bump.projection = "FLAT"
         n_tex_bump.interpolation = "Linear"
         n_tex_bump.extension = "REPEAT"
@@ -146,6 +143,11 @@ class Field(BlenderObject):
         n_tex_diffuse.image = img_diffuse
         n_tex_normal.image = img_normal
         n_tex_bump.image = img_bump
+
+        #After images are loaded, Color Space is set for each image texture
+        n_tex_diffuse.image.colorspace_settings.is_data = False
+        n_tex_normal.image.colorspace_settings.is_data = True
+        n_tex_bump.image.colorspace_settings.is_data = True
 
         # Create bump node to mix bump map and normal map
         n_bump = node_list.new("ShaderNodeBump")
