@@ -35,12 +35,13 @@ The ball UV map, grass texture, and HRDI environment image are randomly selected
 
 The following resources are used for texturing the scene:
 
-| Resource    | Default path         | Config key               |
-| :---------- | :------------------- | :----------------------- |
-| Ball        | `resources/balls`    | `ball["path"]`           |
-| Field UV    | `resources/field_uv` | `field["uv_file"]`       |
-| Field grass | `resources/grass`    | `field["grass"]["path"]` |
-| Environment | `resources/hdr`      | `environment["path"]`    |
+| Resource           | Default path         | Config key            |
+| :----------------- | :------------------- | :-------------------- |
+| Ball               | `resources/balls`    | `ball["path"]`        |
+| Field UV file type | `.png`               | `field["type"]`       |
+| Field UV file path | `resources/field_uv` | `field["uv_path"]`    |
+| Field UV file name | `default`            | `field["name"]`       |
+| Environment        | `resources/hdr`      | `environment["path"]` |
 
 The path to those resources can be configured in the [`pbr/config/scene_config.py`](./pbr/config/scene_config.py) file.
 
