@@ -78,15 +78,15 @@ The `resources.zip` file described in the [Set Up](#set-up) section above has a 
 
 Similarly to the ball UV maps, a random HDRI environment image is selected from the pool of images within the scene HDR directory (by default `resources/hdr`).
 
-Each HDRI image should be placed in a sub directory with the corresponding JSON info, mask, and raw HDRI files. For example:
+Each HDRI image should be placed in a sub directory with the corresponding JSON metadata, mask, and raw HDRI files. For example:
 
-- `resources/hdr/hdr_001/001.json` (must match the info file type configured at `environment["info_type"]`)
+- `resources/hdr/hdr_001/001.json` (must match the metadata file type configured at `environment["info_type"]`)
 - `resources/hdr/hdr_001/001_mask.png` (must match the mask file types configured at `environment["mask_types"]`)
 - `resources/hdr/hdr_001/001_raw.hdr` (must match the HDRI file types configured at `environment["hdri_types"]`)
 
 The `resources.zip` file described in the [Set Up](#set-up) section above has a sample HDRI image.
 
-The HDR JSON info file may have the following fields:
+The HDR JSON metadata file may have the following fields:
 
 | Field                     | Description                                                                                                                                           |
 | :------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -96,7 +96,7 @@ The HDR JSON info file may have the following fields:
 | `ball_limits["position"]` | Specifies a region in which the ball can be randomly placed.                                                                                          |
 
 <details>
-<summary>View sample HDR JSON file</summary>
+<summary>View sample metadata file</summary>
 
 ```json
 {
