@@ -17,19 +17,18 @@ Before starting, download and install [Blender 2.79](https://www.blender.org/dow
 - Clone this repo
 - Change into the cloned `NUpbr` directory, then into `pbr`
 - Install dependencies by running `ensure_dependencies.py` _using the Python binary installed with Blender_. You may have to run it twice: first to install Pip, and then to install the dependencies.
-- Download the [resources.zip](http://10.1.0.223:8080/share.cgi?ssid=05GE7Tx) file from the NUbots NAS and copy the `resources` directory from it into the `NUpbr` root directory. Note: to access the download, you need to be in the NUbots lab and connected to the local network.
+- Download the [resources.zip](http://10.1.0.223:8080/share.cgi?ssid=05GE7Tx) file from the NUbots NAS and copy the `resources` directory from it into the `NUpbr` root directory. **_NOTE:_** to access the download, you need to be in the NUbots lab and connected to the local network.
 
 ## Building a Scene
 
 To generate a scene with default field UV map, do the following:
 
-- Change into the `pbr` directory
-- Run `pbr.py` using Blender's Python API: `blender --python pbr.py`
-- To run the script without the Blender UI, use: `blender -b --python pbr.py`
+- Run `pbr.py` using Blender's Python API: `blender --python pbr/pbr.py`
+- To run the script without the Blender UI, use: `blender -b --python pbr/pbr.py`
 
 This will create a scene, rendering a ball, goals and a field depending on the HDR metadata. The output files will be placed in `output/run_#` where `#` is the auto-generated run number.
 
-The ball UV map, grass texture, and HRDI environment image are randomly selected from the directories configured in [`scene_config.py`](./pbr/config/scene_config.py).
+The ball UV map, grass texture, and HDRI environment image are randomly selected from the directories configured in [`scene_config.py`](./pbr/config/scene_config.py).
 
 ## Specifying Custom Resources
 
