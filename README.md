@@ -81,7 +81,7 @@ Similarly to the ball UV maps, a random HDRI environment image is selected from 
 Each HDRI image should be placed in a sub directory with the corresponding JSON metadata, mask, and raw HDRI files. For example:
 
 - `resources/hdr/hdr_001/001.json` (must match the metadata file type configured at `environment["info_type"]`)
-- `resources/hdr/hdr_001/001_mask.png` (must match the mask file types configured at `environment["mask_types"]`)
+- `resources/hdr/hdr_001/001_mask.png` (optional; if present, must match the mask file types configured at `environment["mask_types"]`)
 - `resources/hdr/hdr_001/001_raw.hdr` (must match the HDRI file types configured at `environment["hdri_types"]`)
 
 The `resources.zip` file described in the [Set Up](#set-up) section above has a sample HDRI image.
