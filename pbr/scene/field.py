@@ -47,8 +47,12 @@ class Field(BlenderObject):
             )
         )
 
+        #Set grass to edit mode to unwrap UV
+        bpy.ops.object.mode_set(mode='EDIT')
         # Apply UV mapping to grass
         bpy.ops.uv.smart_project()
+        #Set grass back to object mode after unwrapping UV
+        bpy.ops.object.mode_set(mode='OBJECT')
 
         self.lower_plane = lower_plane
 
@@ -59,7 +63,7 @@ class Field(BlenderObject):
         field.pass_index = self.pass_index
 
         # Define location and dimensions of field
-        field.location = (0, 0, 0)
+        field.location = (0, 0, 0.001)
         field.dimensions = (
             2 * field_config["border_width"] + field_config["length"],
             2 * field_config["border_width"] + field_config["width"],
@@ -71,8 +75,12 @@ class Field(BlenderObject):
             self.create_field_mat(field, blend_cfg.field["material"])
         )
 
-        # Apply UV mapping to grass
+        #Set field lines to edit mode to unwrap UV
+        bpy.ops.object.mode_set(mode='EDIT')
+        # Apply UV mapping to field lines
         bpy.ops.uv.smart_project()
+        #Set field lines back to object mode after unwrapping UV
+        bpy.ops.object.mode_set(mode='OBJECT')
 
         self.obj = field
 
@@ -178,6 +186,11 @@ class Field(BlenderObject):
         # Enable use of material nodes
         f_mat.use_nodes = True
 
+        # Allow the use of texture images with transparency
+        f_mat.blend_method = "BLEND"
+        # Remove shadow from field lines plane
+        f_object.cycles_visibility.shadow = False
+
         # Get our node list to construct our material
         node_list = f_mat.node_tree.nodes
 
@@ -186,10 +199,16 @@ class Field(BlenderObject):
             node_list.remove(node)
 
         #
-        # Texture Coordinate -> Image Texture -> Principled BSDF   -> Material Output
-        #  UV output             Field image      Base color input     Surface input
-        #  Object: Field         Color output     BSDF output
-        #
+        # Texture Coordinate -> Image Texture                               |
+        #  Generated output      Field image                                |   Mix Shader         -> Material Output
+        #  Object: Field         Alpha output ----------------------------->|  -> Fac input             Surface input
+        #                        Color output ----> Principled BSDF ------->|  -> Shader 2 input
+        #                                           Base color input        |
+        #                                           BSDF output             |
+        #                                                                   |
+        #                                           Transparent BSDF ------>|  -> Shader 1 input
+        #                                           BSDF output             |
+        #                                                                   |     Shader output
 
         # Construct node tree
         # Get texture and object coordinates from object
@@ -211,14 +230,22 @@ class Field(BlenderObject):
         n_princ = node_list.new("ShaderNodeBsdfPrincipled")
         n_princ.inputs["Specular"].default_value = m_cfg["principled"]["specular"]
         n_princ.inputs["Roughness"].default_value = m_cfg["principled"]["roughness"]
+        # Adjusts the transparency of the field lines
+        n_princ.inputs["Alpha"].default_value = m_cfg["principled"]["alpha"]
+
+        n_mix = node_list.new("ShaderNodeMixShader")
+        n_transparent = node_list.new("ShaderNodeBsdfTransparent")
 
         n_output = node_list.new("ShaderNodeOutputMaterial")
 
         # Link shaders
         tl = f_mat.node_tree.links
-        tl.new(n_tex_coord.outputs["UV"], n_field_lines.inputs["Vector"])
+        tl.new(n_tex_coord.outputs["Generated"], n_field_lines.inputs["Vector"])
         tl.new(n_field_lines.outputs["Color"], n_princ.inputs["Base Color"])
-        tl.new(n_princ.outputs["BSDF"], n_output.inputs["Surface"])
+        tl.new(n_princ.outputs["BSDF"], n_mix.inputs[2])
+        tl.new(n_transparent.outputs["BSDF"], n_mix.inputs[1])
+        tl.new(n_field_lines.outputs["Alpha"], n_mix.inputs[0])
+        tl.new(n_mix.outputs["Shader"], n_output.inputs["Surface"])
 
         return f_mat
 

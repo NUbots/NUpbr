@@ -5,7 +5,7 @@ import os
 ##############################################
 
 # Number of images to generate
-num_images = 10
+num_images = 3
 
 # Stereo output
 output_stereo = False

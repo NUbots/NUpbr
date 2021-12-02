@@ -32,10 +32,7 @@ class Camera(BlenderObject):
         # Ensure object is selected to receive added constraints
         bpy.context.view_layer.objects.active = self.obj
 
-        # Make main camera the slow parent to use as a location, rotation and scale basis
         self.obj.parent = cam
-        #Slow Parent no longer an option in blender 2.8 -- still attempting to fix
-        #self.obj.use_slow_parent = True
 
         if "Copy Rotation" not in self.obj.constraints:
             bpy.ops.object.constraint_add(type="COPY_ROTATION")
@@ -51,6 +48,9 @@ class Camera(BlenderObject):
         child_constr.use_rotation_x = False
         child_constr.use_rotation_y = False
         child_constr.use_rotation_z = False
+        child_constr.use_location_x = False
+        child_constr.use_location_y = False
+        child_constr.use_location_z = False
 
     def set_robot(self, robot, height_offset):
         # Ensure object is selected to receive added constraints
