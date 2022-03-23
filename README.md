@@ -8,7 +8,7 @@ See NUbook for a more detailed documentation of this project: <https://nubook.ne
 
 # Prerequisite
 
-Before starting, download and install [Blender 2.79](https://www.blender.org/download/previous-versions/).
+Before starting, download and install [Blender 2.93 LTS](https://www.blender.org/download/lts/2-93/).
 
 # Usage
 

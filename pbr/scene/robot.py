@@ -106,13 +106,13 @@ class Robot(BlenderObject):
         if normal_path is not None:
             n_norm_map = node_list.new("ShaderNodeTexImage")
             n_norm_map.name = "Norm_Map"
-            n_norm_map.color_space = "NONE"
 
             try:
                 norm_map = bpy.data.images.load(normal_path)
             except:
                 raise NameError("Cannot load image {0}".format(normal_path))
             n_norm_map.image = norm_map
+            n_norm_map.image.colorspace_settings.is_data = True
         n_norm_map_conv = node_list.new("ShaderNodeNormalMap")
         n_norm_map_conv.name = "Norm_Map_Conv"
 
@@ -143,7 +143,7 @@ class Robot(BlenderObject):
 
     def set_tracking_target(self, target):
         # Ensure object is selected to receive added constraints
-        bpy.context.scene.objects.active = self.obj
+        bpy.context.view_layer.objects.active = self.obj
 
         if "Copy Rotation" not in self.obj.constraints:
             bpy.ops.object.constraint_add(type="COPY_ROTATION")

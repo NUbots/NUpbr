@@ -17,7 +17,7 @@ class Camera(BlenderObject):
 
     # Sets target for camera to track
     def set_tracking_target(self, target):
-        bpy.context.scene.objects.active = self.obj
+        bpy.context.view_layer.objects.active = self.obj
 
         if "Damped Track" not in self.obj.constraints:
             bpy.ops.object.constraint_add(type="DAMPED_TRACK")
@@ -30,11 +30,9 @@ class Camera(BlenderObject):
     # Add parent camera for stereo vision
     def set_stereo_pair(self, cam):
         # Ensure object is selected to receive added constraints
-        bpy.context.scene.objects.active = self.obj
+        bpy.context.view_layer.objects.active = self.obj
 
-        # Make main camera the slow parent to use as a location, rotation and scale basis
         self.obj.parent = cam
-        self.obj.use_slow_parent = True
 
         if "Copy Rotation" not in self.obj.constraints:
             bpy.ops.object.constraint_add(type="COPY_ROTATION")
@@ -50,10 +48,13 @@ class Camera(BlenderObject):
         child_constr.use_rotation_x = False
         child_constr.use_rotation_y = False
         child_constr.use_rotation_z = False
+        child_constr.use_location_x = False
+        child_constr.use_location_y = False
+        child_constr.use_location_z = False
 
     def set_robot(self, robot, height_offset):
         # Ensure object is selected to receive added constraints
-        bpy.context.scene.objects.active = self.obj
+        bpy.context.view_layer.objects.active = self.obj
 
         bpy.ops.object.constraint_add(type="CHILD_OF")
         child_constr = self.obj.constraints["Child Of"]

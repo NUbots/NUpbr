@@ -48,7 +48,7 @@ field = {
         "mix_up_grass_hsv": {"inp0": 0.455},
         "mix_low_grass_field_lines": {"inp0": 0.4},
         "mix_grass": {"inp0": 0.391},
-        "principled": {"specular": 0.225, "roughness": 0.625},
+        "principled": {"specular": 0.225, "roughness": 0.625, "alpha": 0.25},
     },
     "lower_plane": {
         "colour": (0.003, 0.04, 0.0, 1.0),
