@@ -13,7 +13,7 @@ from config import scene_config as scene_cfg
 from scene.blender_object import BlenderObject
 
 
-class Robot(BlenderObject):
+class DarwinRobot(BlenderObject):
     def __init__(self, name, class_index, robot_info):
         self.mat = {}
         self.sc_plane = None

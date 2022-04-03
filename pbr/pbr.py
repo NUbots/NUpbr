@@ -27,6 +27,7 @@ from scene.shape import Shape
 from scene.camera_anchor import CameraAnchor
 from scene.shadowcatcher import ShadowCatcher
 from scene.robot import Robot
+from scene.darwin_robot import DarwinRobot
 
 # TODO: Reimplement field uv generation with Scikit-Image
 
@@ -69,6 +70,15 @@ def main():
             scene_config.resources["robot"],
         )
         for ii in range(scene_config.num_robots + 1)
+    ]
+
+    darwin_robots = [
+        DarwinRobot(
+            "r{}".format(len(robots) + ii),
+            scene_config.resources["darwin_robot"]["mask"]["index"],
+            scene_config.resources["darwin_robot"],
+        )
+        for ii in range(scene_config.num_darwin_robots)
     ]
 
     # Construct our shadowcatcher
@@ -161,6 +171,9 @@ def main():
                 )
             # Update robot (and camera)
             robots[ii].update(config["robot"][ii])
+
+        for ii in range(len(darwin_robots)):
+            darwin_robots[ii].update(config["darwin_robot"][ii])
 
         # Update ball
         # If we are autoplacing update the configuration

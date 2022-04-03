@@ -19,9 +19,17 @@ num_shapes = 8
 
 # Number of robots to fill the scene
 num_robots = 3
+num_darwin_robots = 3
 
 resources = {
     "robot": {
+        "mesh_path": path.abspath(path.join(res_path, "robot", "NUgus.fbx")),
+        "texture_path": path.abspath(path.join(res_path, "robot", "textures")),
+        "kinematics_path": path.abspath(path.join(res_path, "robot", "NUgus.json")),
+        "kinematics_variance": 0.5,  ## Determines how much variance the random poses will have
+        "mask": {"index": 3, "colour": (0, 0, 1, 1)},
+    },
+    "darwin_robot": {
         "mesh_path": path.abspath(path.join(res_path, "robot", "NUgus.fbx")),
         "texture_path": path.abspath(path.join(res_path, "robot", "textures")),
         "kinematics_path": path.abspath(path.join(res_path, "robot", "NUgus.json")),
@@ -209,6 +217,28 @@ def configure_scene():
                     ),
                 }
                 for ii in range(num_robots + 1)
+            ]
+        }
+    )
+
+    # Add robot information
+    cfg.update(
+        {
+            "darwin_robot": [
+                {
+                    "auto_position": True,
+                    # Defines possible random placement range of x, y and z positional components
+                    "position": (
+                        random.uniform(
+                            -cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5
+                        ),
+                        random.uniform(
+                            -cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5
+                        ),
+                        random.uniform(0.45, 0.5),
+                    ),
+                }
+                for ii in range(num_darwin_robots)
             ]
         }
     )
