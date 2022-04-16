@@ -30,10 +30,7 @@ resources = {
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
     },
     "darwin_robot": {
-        "mesh_path": path.abspath(path.join(res_path, "robot", "NUgus.fbx")),
-        "texture_path": path.abspath(path.join(res_path, "robot", "textures")),
-        "kinematics_path": path.abspath(path.join(res_path, "robot", "NUgus.json")),
-        "kinematics_variance": 0.5,  ## Determines how much variance the random poses will have
+        "mesh_path": path.abspath(path.join(res_path, "robot", "darwin.fbx")),
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
     },
     "ball": {
@@ -236,6 +233,9 @@ def configure_scene():
                             -cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5
                         ),
                         random.uniform(0.45, 0.5),
+                    ),
+                    "rotation": (
+                        0, 0, random.uniform(0, 359),
                     ),
                 }
                 for ii in range(num_darwin_robots)
