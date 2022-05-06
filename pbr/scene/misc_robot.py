@@ -13,7 +13,7 @@ from config import scene_config as scene_cfg
 from scene.blender_object import BlenderObject
 
 
-class DarwinRobot(BlenderObject):
+class MiscRobot(BlenderObject):
     def __init__(self, name, class_index, robot_info):
         self.mat = {}
         self.sc_plane = None
@@ -29,21 +29,23 @@ class DarwinRobot(BlenderObject):
     def construct(self, robot_info):
         robot_mesh = None
         robot_obj = {}
+        mesh_path = scene_cfg.new_misc_robot()
 
         # Load robot object
         bpy.ops.import_scene.fbx(
-            filepath=robot_info["mesh_path"], axis_forward="X", axis_up="Z"
+            filepath= mesh_path, axis_forward="X", axis_up="Z"
         )
 
-        obj = bpy.data.objects["darwin"]
+        obj = bpy.data.objects["misc_robot"]
         obj.name = "{}".format(self.name)
         self.objs.update({obj.name: obj})
         # Configure robot to have correct pass index
         obj.pass_index = self.pass_index
 
+        # TODO: Make materials not embedded in FBX files
         # Set material for robot
-        self.mat.update({obj.name: self.set_material(obj, "darwin_tex")})
-        obj.data.materials.append(self.mat[obj.name])
+        # self.mat.update({obj.name: self.set_material(obj, "misc_robot_tex")})
+        # obj.data.materials.append(self.mat[obj.name])
 
     def set_material(self, obj, mat_name):
         l_mat = bpy.data.materials.new(mat_name)
@@ -61,13 +63,13 @@ class DarwinRobot(BlenderObject):
         # Construct node tree
         # Create principled node
         n_principled = node_list.new("ShaderNodeBsdfPrincipled")
-        n_principled.inputs["Metallic"].default_value = blend_cfg.darwin_robot["material"][
+        n_principled.inputs["Metallic"].default_value = blend_cfg.misc_robot["material"][
             "metallic"
         ]
-        n_principled.inputs["Roughness"].default_value = blend_cfg.darwin_robot["material"][
+        n_principled.inputs["Roughness"].default_value = blend_cfg.misc_robot["material"][
             "roughness"
         ]
-        n_principled.inputs[0].default_value = blend_cfg.darwin_robot["material"][
+        n_principled.inputs[0].default_value = blend_cfg.misc_robot["material"][
             "base_col"
         ]
 

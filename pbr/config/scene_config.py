@@ -19,7 +19,7 @@ num_shapes = 8
 
 # Number of robots to fill the scene
 num_robots = 3
-num_darwin_robots = 3
+num_misc_robots = 3
 
 resources = {
     "robot": {
@@ -29,8 +29,8 @@ resources = {
         "kinematics_variance": 0.5,  ## Determines how much variance the random poses will have
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
     },
-    "darwin_robot": {
-        "mesh_path": path.abspath(path.join(res_path, "robot", "darwin.fbx")),
+    "misc_robot": {
+        "robot_list": ["darwin.fbx", "nao.fbx", "wolfgang.fbx"],
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
     },
     "ball": {
@@ -63,6 +63,9 @@ resources = {
     "goal": {"mask": {"index": 2, "colour": (1, 1, 0, 1)}},
 }
 
+def new_misc_robot():
+    mesh_path = ''.join(path.abspath(path.join(res_path, "robot", random.choice(resources["misc_robot"]["robot_list"]))))
+    return mesh_path
 
 def configure_scene():
 
@@ -221,7 +224,7 @@ def configure_scene():
     # Add robot information
     cfg.update(
         {
-            "darwin_robot": [
+            "misc_robot": [
                 {
                     "auto_position": True,
                     # Defines possible random placement range of x, y and z positional components
@@ -238,7 +241,7 @@ def configure_scene():
                         0, 0, random.uniform(0, 359),
                     ),
                 }
-                for ii in range(num_darwin_robots)
+                for ii in range(num_misc_robots)
             ]
         }
     )
