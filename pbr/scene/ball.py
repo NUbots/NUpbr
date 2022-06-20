@@ -75,7 +75,7 @@ class Ball(BlenderObject):
         # Create subdiv surface modifiers if we have a new UV sphere
         if ball_info["mesh_path"] is None:
             bpy.ops.object.modifier_add(type="SUBSURF")
-            ball.modifiers["Subsurf"].name = "Ball_Subsurf"
+            ball.modifiers["Subdivision"].name = "Ball_Subsurf"
             ball_subsurf = ball.modifiers["Ball_Subsurf"]
             ball_subsurf.levels = blend_cfg.ball["subsurf_mod"]["levels"]
             ball_subsurf.render_levels = blend_cfg.ball["subsurf_mod"]["rend_levels"]
