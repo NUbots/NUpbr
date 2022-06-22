@@ -100,7 +100,8 @@ def main():
 
     # Attach camera to robot head (TODO: Remove hard-coded torso to cam offset)
     cam_l.obj.delta_rotation_euler = (pi / 2.0, 0.0, -pi / 2.0)
-    cam_l.set_robot(robots[0].obj, robots[0].obj.location[2] + 0.33)
+    cam_l.set_robot(robots[0].obj, robots[0].obj.location[2] +
+                    0.33, robots[0].obj.location[0] + 0.2)
     # Disable rendering of head if camera is now inside
     robots[0].objs[robots[0].name + "_Head"].hide_render = True
 

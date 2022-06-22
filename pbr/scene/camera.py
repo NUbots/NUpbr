@@ -52,7 +52,7 @@ class Camera(BlenderObject):
         child_constr.use_location_y = False
         child_constr.use_location_z = False
 
-    def set_robot(self, robot, height_offset):
+    def set_robot(self, robot, height_offset, forward_offset):
         # Ensure object is selected to receive added constraints
         bpy.context.view_layer.objects.active = self.obj
 
@@ -64,6 +64,7 @@ class Camera(BlenderObject):
         child_constr.inverse_matrix = robot.matrix_world.inverted()
         # Apply height offset to move cam to head
         self.obj.delta_location[2] = height_offset
+        self.obj.delta_location[0] = forward_offset
 
     def update(self, cam_config):
 
