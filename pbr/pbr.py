@@ -269,6 +269,9 @@ def main():
         if out_cfg.output_stereo:
             bpy.context.scene.render.use_multiview = True
 
+        for obj in bpy.data.objects:
+            obj.cycles_visibility.shadow = False
+
         # Render raw image
         util.render_image(
             isMaskImage=False,

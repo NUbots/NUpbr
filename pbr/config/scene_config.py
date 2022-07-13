@@ -41,7 +41,7 @@ resources = {
     },
     "environment": {
         "path": path.abspath(path.join(res_path, "hdr")),
-        "hdri_types": [".hdr"],
+        "hdri_types": [".png"],
         "mask_types": [".png"],
         "info_type": ".json",
         "mask": {"index": 0, "colour": (0, 0, 0, 1)},

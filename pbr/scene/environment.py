@@ -105,6 +105,9 @@ def setup_render():
 
 # Setup background HDRI environment
 def setup_hdri_env(img_path, env_info):
+    
+    bpy.ops.object.light_add(type='SUN', location=(0, 0, 7))
+
     # Get world
     world = bpy.data.worlds["World"]
     world.name = "World_HDR"
@@ -224,7 +227,7 @@ def setup_image_seg_mat(total_classes):
     # Link our shaders
     tl = seg_mat.node_tree.links
     # Link object index to divide node
-    tl.new(n_obj_info.outputs[2], n_div.inputs[0])
+    tl.new(n_obj_info.outputs["Object Index"], n_div.inputs[0])
     # Link divide to colour ramp factor
     tl.new(n_div.outputs[0], n_col_ramp.inputs[0])
     # Link colour ramp output to emission
