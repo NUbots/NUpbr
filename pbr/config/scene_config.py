@@ -22,11 +22,11 @@ num_robots = 3
 
 resources = {
     "robot": {
-        "mesh_path": path.abspath(path.join(res_path, "robot", "NUgus.fbx")),
+        "mesh_path": path.abspath(path.join(res_path, "robot", "NUgus_esh.fbx")),
         "texture_path": path.abspath(path.join(res_path, "robot", "textures")),
-        "kinematics_path": path.abspath(path.join(res_path, "robot", "NUgus.json")),
+        "kinematics_path": path.abspath(path.join(res_path, "robot", "NUgus_esh.json")),
         "kinematics_variance": 0.5,  ## Determines how much variance the random poses will have
-        "mask": {"index": 3, "colour": (0, 0, 1, 1)},
+        "mask": {"index": 6, "colour": (0, 0, 1, 1)},
     },
     "ball": {
         "img_types": [".jpg", ".png"],
@@ -200,10 +200,11 @@ def configure_scene():
                     # Defines possible random placement range of x, y and z positional components
                     "position": (
                         random.uniform(
-                            -cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5
+                            -cfg["field"]["length"] * 0.95,
+                            cfg["field"]["length"] * 0.85,
                         ),
                         random.uniform(
-                            -cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5
+                            -cfg["field"]["width"] * 0.85, cfg["field"]["width"] * 0.785
                         ),
                         random.uniform(0.45, 0.5),
                     ),

@@ -52,18 +52,22 @@ class Camera(BlenderObject):
         child_constr.use_location_y = False
         child_constr.use_location_z = False
 
-    def set_robot(self, robot, height_offset):
+    def set_robot(self, robot, left_eye=True):
         # Ensure object is selected to receive added constraints
         bpy.context.view_layer.objects.active = self.obj
 
         bpy.ops.object.constraint_add(type="CHILD_OF")
         child_constr = self.obj.constraints["Child Of"]
         child_constr.name = "robot_child"
-        child_constr.target = robot
+
+        # Bind to robot's chosen eye position - must make sure that the main robot being used is the NUgus_esh
+        if left_eye:
+            child_constr.target = bpy.data.objects[f"{robot.name[:2]}_L_Eye_Socket"]
+        else:
+            child_constr.target = bpy.data.objects[f"{robot.name[:2]}_R_Eye_Socket"]
+
         # Invert child of
         child_constr.inverse_matrix = robot.matrix_world.inverted()
-        # Apply height offset to move cam to head
-        self.obj.delta_location[2] = height_offset
 
     def update(self, cam_config):
 

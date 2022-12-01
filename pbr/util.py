@@ -80,7 +80,7 @@ def load_assets():
         "|".join([re.escape(s) for s in resources["environment"]["mask_types"]])
     )
     env_meta_ext = "{}$".format(re.escape(resources["environment"]["info_type"]))
-    env_raw_re = "raw.*" + env_raw_ext
+    env_raw_re = "raw.*" + "png"
     env_mask_re = "mask.*" + env_mask_ext
     env_meta_re = env_meta_ext
 
