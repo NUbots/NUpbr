@@ -164,8 +164,16 @@ def render_image(
         "Strength"
     ].default_value = strength
     # Update render output filepath
-    bpy.data.scenes["Scene"].render.filepath = output_path
-    bpy.ops.render.render(write_still=True)
+    scene = bpy.data.scenes["Scene"]
+    scene.render.filepath = output_path
+
+    if isMaskImage == True:
+        scene.view_settings.view_transform = 'Raw' # render.image_settings.color_management = 'OVERRIDE'
+        scene.render.image_settings.color_depth = '16'
+        scene.render.image_settings.compression = 0
+        bpy.ops.render.render(write_still=True)
+    else:
+        bpy.ops.render.render(write_still=True)
 
 
 def matrix_to_list(mat):
