@@ -167,13 +167,16 @@ def render_image(
     scene = bpy.data.scenes["Scene"]
     scene.render.filepath = output_path
 
-    if isMaskImage == True:
-        scene.view_settings.view_transform = 'Raw' # render.image_settings.color_management = 'OVERRIDE'
-        scene.render.image_settings.color_depth = '16'
-        scene.render.image_settings.compression = 0
-        bpy.ops.render.render(write_still=True)
+    #change the settings so that we lighten the seg/mask image
+    if isMaskImage:
+        scene.view_settings.view_transform = 'Standard' # render.image_settings.color_management = 'OVERRIDE'
     else:
-        bpy.ops.render.render(write_still=True)
+        scene.view_settings.view_transform = 'Filmic'
+
+    scene.render.image_settings.color_depth = '16'
+    scene.render.image_settings.compression = 0
+    bpy.ops.render.render(write_still=True)
+
 
 
 def matrix_to_list(mat):
