@@ -200,13 +200,13 @@ def configure_scene():
                     # Defines possible random placement range of x, y and z positional components
                     "position": (
                         random.uniform(
-                            -cfg["field"]["length"] * 0.95,
-                            cfg["field"]["length"] * 0.85,
+                            -cfg["field"]["length"] * 0.5,
+                            cfg["field"]["length"] * 0.5,
                         ),
                         random.uniform(
-                            -cfg["field"]["width"] * 0.85, cfg["field"]["width"] * 0.785
+                            -cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5
                         ),
-                        random.uniform(0.45, 0.5),
+                        random.uniform(0.5, 0.5),
                     ),
                 }
                 for ii in range(num_robots + 1)

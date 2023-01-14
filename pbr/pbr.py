@@ -88,11 +88,11 @@ def main():
     # (and so all right camera movements are relative to the left camera position)
     cam_r.set_stereo_pair(cam_l.obj)
 
-    # Attach camera to robot head (TODO: Remove hard-coded torso to cam offset)
-    cam_l.obj.delta_rotation_euler = (pi / 2.0, 0.0, -pi / 2.0)
     # Mount cameras to eye sockets
     cam_l.set_robot(robots[0].obj)
     cam_r.set_robot(robots[0].obj, left_eye=False)
+    # Account for parenting transforms
+    cam_l.rotate((0, 0, 90))
 
     # Create camera anchor target for random field images
     anch = CameraAnchor()
@@ -143,7 +143,7 @@ def main():
         points_on_field = util.point_on_field(
             camera_loc, hdr_data["mask_path"], env_info, len(robots) + 1
         )
-        print(points_on_field)
+
         for ii in range(robot_start, len(robots)):
             # If we are autoplacing update the configuration
             if (
