@@ -40,7 +40,7 @@ class Robot(BlenderObject):
         # Add object to our list of parts
         for p in self.robot_parts.keys():
             obj = bpy.data.objects[p]
-            print(obj)
+
             # Set base hip as main robot object
             if obj.parent == None:
                 self.obj = obj
@@ -63,8 +63,7 @@ class Robot(BlenderObject):
                     col_path = os.path.join(tex_path, file)
                 if re.search(nor_re, file, re.I) is not None:
                     nor_path = os.path.join(tex_path, file)
-            print(f"col_path: {col_path}")
-            print(f"nor_path: {nor_path}")
+
             # Set material for limb
             self.mat.update({obj.name: self.set_material(obj, p, col_path, nor_path)})
             obj.data.materials.append(self.mat[obj.name])
