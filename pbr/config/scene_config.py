@@ -26,7 +26,7 @@ resources = {
         "texture_path": path.abspath(path.join(res_path, "robot", "textures")),
         "kinematics_path": path.abspath(path.join(res_path, "robot", "NUgus_esh.json")),
         "kinematics_variance": 0.5,  ## Determines how much variance the random poses will have
-        "mask": {"index": 6, "colour": (0, 0, 1, 1)},
+        "mask": {"index": 3, "colour": (0, 0, 1, 1)},
     },
     "ball": {
         "img_types": [".jpg", ".png"],
