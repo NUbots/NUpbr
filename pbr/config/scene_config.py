@@ -1,10 +1,11 @@
 # Field-specific Configuration Settings
 #   * All measurements are in SI units
 
-from math import pi, radians
+from math import pi
 from os import path, pardir
 import random
 import colorsys
+import numpy as np
 
 # Get project path
 proj_path = path.abspath(
@@ -36,7 +37,7 @@ resources = {
     },
     "environment": {
         "path": path.abspath(path.join(res_path, "hdr")),
-        "hdri_types": [".hdr"],
+        "hdri_types": [".png"],
         "mask_types": [".png"],
         "info_type": ".json",
         "mask": {"index": 0, "colour": (0, 0, 0, 1)},
@@ -191,24 +192,47 @@ def configure_scene():
             ]
         }
     )
+
     # Add robot information
+    xbound = (2 * cfg["field"]["border_width"] + cfg["field"]["length"]) / 2
+    ybound = (2 * cfg["field"]["border_width"] + cfg["field"]["width"]) / 2
+    # Let the robot's personal space be a tenth of the width. (Should be added to config somewhere)
+    r = cfg["field"]["width"] / 5
+
+    # This recursive function makes sure that the robots will not overlap
+    def _generate_positions(
+        num_robots,
+        radius,
+        bounds=[(-xbound, xbound), (-ybound, ybound)],
+        positions=[],
+    ):
+        # Unpack bounds and assign names for clarity
+        xbounds, ybounds = bounds
+        xmin, xmax = xbounds
+        ymin, ymax = ybounds
+
+        if len(positions) == num_robots:
+            return positions
+
+        else:
+            xnew, ynew = np.random.uniform(xmin, xmax), np.random.uniform(ymin, ymax)
+            if any(
+                (xnew - p[0]) ** 2 + (ynew - p[1]) ** 2 < radius**2 for p in positions
+            ):
+                return _generate_positions(num_robots, radius, bounds, positions)
+            else:
+                positions.append((xnew, ynew))
+                return _generate_positions(num_robots, radius, bounds, positions)
+
     cfg.update(
         {
             "robot": [
                 {
                     "auto_position": True,
-                    # Defines possible random placement range of x, y and z positional components
-                    "position": (
-                        random.uniform(
-                            -cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5
-                        ),
-                        random.uniform(
-                            -cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5
-                        ),
-                        random.uniform(0.45, 0.5),
-                    ),
+                    # Defines possible random placement range of x, y and z positional components (same z coordinate as the plane)
+                    "position": (p[0], p[1], np.random.uniform(0.45, 0.485)),
                 }
-                for ii in range(num_robots + 1)
+                for p in _generate_positions(num_robots + 1, r)
             ]
         }
     )
