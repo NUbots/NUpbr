@@ -211,15 +211,22 @@ def configure_scene():
         xmin, xmax = xbounds
         ymin, ymax = ybounds
 
+        # Base case
         if len(positions) == num_robots:
             return positions
 
         else:
+            # Grab random xy position
             xnew, ynew = np.random.uniform(xmin, xmax), np.random.uniform(ymin, ymax)
+
+            # If any value in the list so far is within the radius of the new position, try again
+            # any() checks if there are any True values in the list comprehension
             if any(
                 (xnew - p[0]) ** 2 + (ynew - p[1]) ** 2 < radius**2 for p in positions
             ):
                 return _generate_positions(num_robots, radius, bounds, positions)
+
+            # Otherwise, add the new position to the list and continue until the length of the list is equal to the number of robots
             else:
                 positions.append((xnew, ynew))
                 return _generate_positions(num_robots, radius, bounds, positions)
