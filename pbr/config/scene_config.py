@@ -196,8 +196,15 @@ def configure_scene():
     # Add robot information
     xbound = (2 * cfg["field"]["border_width"] + cfg["field"]["length"]) / 2
     ybound = (2 * cfg["field"]["border_width"] + cfg["field"]["width"]) / 2
-    # Let the robot's personal space be a tenth of the width. (Should be added to config somewhere)
-    r = cfg["field"]["width"] / 5
+
+    # Let the robot's personal space proportional to the field size and inversely proportional to the number of robots by some separation factor
+    # If a maximum recursion depth error is thrown, increase the separation factor here. Be careful to not increase it too much, as this value approaches infinity
+    # the robots will be more likely to be too close / overlap
+    separation_factor = 4
+    r = (
+        (cfg["field"]["width"] * cfg["field"]["length"])
+        - (4 * cfg["field"]["border_width"])
+    ) / (num_robots * separation_factor)
 
     # This recursive function makes sure that the robots will not overlap
     def _generate_positions(
