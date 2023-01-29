@@ -164,7 +164,17 @@ def render_image(
         "Strength"
     ].default_value = strength
     # Update render output filepath
-    bpy.data.scenes["Scene"].render.filepath = output_path
+    scene = bpy.data.scenes["Scene"]
+    scene.render.filepath = output_path
+
+    # Prevent colour transform settings from being applied to the seg image output
+    if isMaskImage:
+        scene.view_settings.view_transform = 'Standard'
+    else:
+        scene.view_settings.view_transform = 'Filmic'
+
+    scene.render.image_settings.color_depth = '16'
+    scene.render.image_settings.compression = 0
     bpy.ops.render.render(write_still=True)
 
 
