@@ -19,7 +19,8 @@ res_path = path.join(proj_path, "resources")
 num_shapes = 8
 
 # Number of robots to fill the scene
-num_robots = 3
+num_robots = 5
+radius_robot = 4
 
 resources = {
     "robot": {
@@ -194,59 +195,23 @@ def configure_scene():
     )
 
     # Add robot information
-    xbound = (2 * cfg["field"]["border_width"] + cfg["field"]["length"]) / 2
-    ybound = (2 * cfg["field"]["border_width"] + cfg["field"]["width"]) / 2
-
-    # Let the robot's personal space proportional to the field size and inversely proportional to the number of robots by some separation factor
-    # If a maximum recursion depth error is thrown, increase the separation factor here. Be careful to not increase it too much, as this value approaches infinity
-    # the robots will be more likely to be too close / overlap
-    separation_factor = 4
-    r = (
-        (cfg["field"]["width"] * cfg["field"]["length"])
-        - (4 * cfg["field"]["border_width"])
-    ) / (num_robots * separation_factor)
-
-    # This recursive function makes sure that the robots will not overlap
-    def _generate_positions(
-        num_robots,
-        radius,
-        bounds=[(-xbound, xbound), (-ybound, ybound)],
-        positions=[],
-    ):
-        # Unpack bounds and assign names for clarity
-        xbounds, ybounds = bounds
-        xmin, xmax = xbounds
-        ymin, ymax = ybounds
-
-        # Base case
-        if len(positions) == num_robots:
-            return positions
-
-        else:
-            # Grab random xy position
-            xnew, ynew = np.random.uniform(xmin, xmax), np.random.uniform(ymin, ymax)
-
-            # If any value in the list so far is within the radius of the new position, try again
-            # any() checks if there are any True values in the list comprehension
-            if any(
-                (xnew - p[0]) ** 2 + (ynew - p[1]) ** 2 < radius**2 for p in positions
-            ):
-                return _generate_positions(num_robots, radius, bounds, positions)
-
-            # Otherwise, add the new position to the list and continue until the length of the list is equal to the number of robots
-            else:
-                positions.append((xnew, ynew))
-                return _generate_positions(num_robots, radius, bounds, positions)
-
     cfg.update(
         {
             "robot": [
                 {
                     "auto_position": True,
-                    # Defines possible random placement range of x, y and z positional components (same z coordinate as the plane)
-                    "position": (p[0], p[1], np.random.uniform(0.45, 0.485)),
+                    # Defines possible random placement range of x, y and z positional components
+                    "position": (
+                        random.uniform(
+                            -cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5
+                        ),
+                        random.uniform(
+                            -cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5
+                        ),
+                        random.uniform(0.45, 0.5),
+                    ),
                 }
-                for p in _generate_positions(num_robots + 1, r)
+                for ii in range(num_robots + 1)
             ]
         }
     )

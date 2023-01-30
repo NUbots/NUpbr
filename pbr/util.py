@@ -276,9 +276,21 @@ def point_on_field(cam_location, mask_path, env_info, num_points):
 
     # Check if environment map has field points, else set to origin
     if len(field_coords) > 0:
-        for ii in range(num_points):
+        while len(ground_points) < scene_config.num_robots:
             # Get random field point
             y, x = field_coords[rand.randint(0, field_coords.shape[0] - 1)]
+            yproj, xproj = project_to_ground(y, x, cam_location, img, env_info)
+
+            if any(
+                [
+                    (p[0] - xproj) ** 2 + (p[1] - yproj) ** 2
+                    < scene_config.radius_robot**2
+                    for p in ground_points
+                ]
+            ):
+                print("Skipping point")
+                continue
 
             ground_points.append(project_to_ground(y, x, cam_location, img, env_info))
+
     return ground_points

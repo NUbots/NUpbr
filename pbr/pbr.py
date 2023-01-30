@@ -151,10 +151,11 @@ def main():
                 and is_semi_synthetic
                 and len(points_on_field) > 0
             ):
+
                 # Generate new ground point based on camera (actually robot parent of camera)
                 config["robot"][ii]["position"] = (
-                    points_on_field[ii][0],
-                    points_on_field[ii][1],
+                    points_on_field[ii - 1][0],
+                    points_on_field[ii - 1][1],
                     env_info["position"]["z"] - 0.33
                     if ii == 0
                     else config["robot"][ii]["position"][2],
