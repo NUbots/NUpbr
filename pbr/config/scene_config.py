@@ -19,8 +19,7 @@ res_path = path.join(proj_path, "resources")
 num_shapes = 8
 
 # Number of robots to fill the scene
-num_robots = 5
-radius_robot = 4
+num_robots = 3
 
 resources = {
     "robot": {
