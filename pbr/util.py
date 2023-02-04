@@ -169,11 +169,11 @@ def render_image(
 
     # Prevent colour transform settings from being applied to the seg image output
     if isMaskImage:
-        scene.view_settings.view_transform = 'Standard'
+        scene.view_settings.view_transform = "Standard"
     else:
-        scene.view_settings.view_transform = 'Filmic'
+        scene.view_settings.view_transform = "Filmic"
 
-    scene.render.image_settings.color_depth = '16'
+    scene.render.image_settings.color_depth = "16"
     scene.render.image_settings.compression = 0
     bpy.ops.render.render(write_still=True)
 
@@ -304,3 +304,29 @@ def point_on_field(cam_location, mask_path, env_info, num_points):
             ground_points.append(project_to_ground(y, x, cam_location, img, env_info))
 
     return ground_points
+
+
+def generate_moves(field_obj, z_coord=0.3, radius=0.7):
+    # Use the field dimensions to generate a set of moves, mainly for the robots
+    abs_x, abs_y, _ = field_obj.dimensions
+
+    world_points = []
+
+    while len(world_points) < scene_config.num_robots:
+        # Get random field point
+        point = np.random.uniform(
+            low=(-abs_x / 2, -abs_y / 2), high=(abs_x / 2, abs_y / 2)
+        )
+
+        if any(
+            [
+                (p[0] - point[0]) ** 2 + (p[1] - p[1]) ** 2 < radius**2
+                for p in world_points
+            ]
+        ):
+            print("Skipping point")
+            continue
+
+        world_points.append((*point, z_coord))
+
+    return world_points

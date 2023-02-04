@@ -119,6 +119,9 @@ def main():
         ball_data = random.choice(balls)
         grass_data = random.choice(grasses)
 
+        if frame_num == 1:
+            field.update(grass_data, config["field"])
+
         # Load the environment information
         with open(hdr_data["info_path"], "r") as f:
             env_info = json.load(f)
@@ -144,6 +147,7 @@ def main():
             camera_loc, hdr_data["mask_path"], env_info, len(robots) + 1
         )
         print(points_on_field)
+        world_points = util.generate_moves(field.obj)
         for ii in range(robot_start, len(robots)):
             # If we are autoplacing update the configuration
             if (
@@ -154,9 +158,9 @@ def main():
 
                 # Generate new ground point based on camera (actually robot parent of camera)
                 config["robot"][ii]["position"] = (
-                    points_on_field[ii - 1][0],
-                    points_on_field[ii - 1][1],
-                    env_info["position"]["z"] - 0.33
+                    world_points[ii - 1][0],
+                    world_points[ii - 1][1],
+                    world_points[ii - 1][2]
                     if ii == 0
                     else config["robot"][ii]["position"][2],
                 )
