@@ -109,10 +109,14 @@ def main():
         config = scene_config.configure_scene()
 
         cam_l.update(config["camera"])
+        cam_l.obj.keyframe_insert(data_path="location", frame=frame_num)
+        cam_l.obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
 
         # Update shapes
         for ii in range(len(shapes)):
             shapes[ii].update(config["shape"][ii])
+            shapes[ii].obj.keyframe_insert(data_path="location", frame=frame_num)
+            shapes[ii].obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
 
         # Select the ball, environment, and grass to use
         hdr_data = random.choice(hdrs)
@@ -161,6 +165,8 @@ def main():
                 )
             # Update robot (and camera)
             robots[ii].update(config["robot"][ii])
+            robots[ii].obj.keyframe_insert(data_path="location", frame=frame_num)
+            robots[ii].obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
 
         # Update ball
         # If we are autoplacing update the configuration
@@ -178,12 +184,18 @@ def main():
 
         # Apply the updates
         field.update(grass_data, config["field"])
+        field.obj.keyframe_insert(data_path="location", frame=frame_num)
+        field.obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
+
         ball.update(ball_data, config["ball"])
+        ball.obj.keyframe_insert(data_path="location", frame=frame_num)
+        ball.obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
 
         # Update goals
         for g in goals:
             g.update(config["goal"])
         goals[1].rotate((0, 0, pi))
+
         goal_height_offset = -3.0 if config["goal"]["shape"] == "square" else -1.0
         goals[0].move(
             (
@@ -193,6 +205,9 @@ def main():
                 + goal_height_offset * config["goal"]["post_width"],
             )
         )
+        goals[0].obj.keyframe_insert(data_path="location", frame=frame_num)
+        goals[0].obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
+
         goals[1].move(
             (
                 -config["field"]["length"] / 2.0,
@@ -201,6 +216,9 @@ def main():
                 + goal_height_offset * config["goal"]["post_width"],
             )
         )
+
+        goals[1].obj.keyframe_insert(data_path="location", frame=frame_num)
+        goals[1].obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
 
         # Hide objects based on environment map
         ball.obj.hide_render = not env_info["to_draw"]["ball"]
@@ -237,6 +255,9 @@ def main():
 
         # Updates scene to rectify rotation and location matrices
         bpy.context.view_layer.update()
+
+        # Set frame number for current scene
+        bpy.context.scene.frame_set(frame_num)
 
         ##############################################
         ##                RENDERING                 ##
