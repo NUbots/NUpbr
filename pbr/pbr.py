@@ -119,7 +119,8 @@ def main():
             shapes[ii].obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
 
         # Select the ball, environment, and grass to use
-        hdr_data = random.choice(hdrs)
+        # hdr_data = random.choice(hdrs) REMEMBER TO PUT THIS BACK LOL
+        hdr_data = {'raw_path': 'C:\\Users\\angel\\NUBots\\NUpbr\\resources\\hdr\\hdr_002\\002_raw.hdr', 'mask_path': 'C:\\Users\\angel\\NUBots\\NUpbr\\resources\\hdr\\hdr_002\\002_mask.png', 'info_path': 'C:\\Users\\angel\\NUBots\\NUpbr\\resources\\hdr\\hdr_002\\002.json'}
         ball_data = random.choice(balls)
         grass_data = random.choice(grasses)
 
