@@ -2,7 +2,7 @@
 
 import os
 import bpy
-
+import numpy as np
 from scene.blender_object import BlenderObject
 
 
@@ -69,8 +69,7 @@ class Camera(BlenderObject):
         # Invert child of
         child_constr.inverse_matrix = robot.matrix_world.inverted()
 
-    def update(self, cam_config):
-
+    def update(self, cam_config, targets=None):
         # Fix for blender being stupid
         for k in bpy.data.cameras.keys():
             cam = bpy.data.cameras[k]
@@ -83,3 +82,19 @@ class Camera(BlenderObject):
                 cam.type = "PERSP"
                 cam.lens_unit = "FOV"
                 cam.angle = cam_config["fov"]
+
+        if targets is not None:
+            # Generate camera object following the right hand rule orientation (Front of camera points towards +x, +z is up)
+            self.obj.location = [0, 0, 0]
+            self.obj.rotation_euler = [np.pi / 2, 0, -np.pi / 2]
+
+            robot_loc = targets["robot"]["obj"].matrix_world.translation
+            left_eye_loc = targets["robot"]["left_eye"].location
+
+            rRTw = np.array(robot_loc) - np.array(targets["target"].location)
+            new_yaw = np.arctan2(rRTw[1], rRTw[0])
+
+            self.obj.location = left_eye_loc
+            self.obj.rotation_euler[2] = new_yaw - np.pi / 2
+
+            self.set_tracking_target(target=targets["target"])

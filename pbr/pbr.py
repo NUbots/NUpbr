@@ -91,8 +91,6 @@ def main():
     # Mount cameras to eye sockets
     cam_l.set_robot(robots[0].obj)
     cam_r.set_robot(robots[0].obj, left_eye=False)
-    # Account for parenting transforms
-    cam_l.rotate((0, 0, 90))
 
     # Create camera anchor target for random field images
     anch = CameraAnchor()
@@ -223,8 +221,20 @@ def main():
             valid_tracks.append(anch)
 
         tracking_target = random.choice(valid_tracks).obj
-        cam_l.set_tracking_target(tracking_target)
-        robots[0].set_tracking_target(tracking_target)
+        # cam_l.set_tracking_target(tracking_target)
+        cam_l.update(
+            config["camera"],
+            targets={
+                "robot": {
+                    "obj": robots[0].obj,
+                    "left_eye": bpy.data.objects["r0_L_Eye_Socket"],
+                },
+                "target": tracking_target,
+            },
+        )
+        # robots[0].set_tracking_target(tracking_target)
+        # Align main robot to target
+        robots[0].update_main_robot(tracking_target)
 
         print(
             '[INFO] Frame {0}: ball: "{1}", map: "{2}", target: {3}'.format(
