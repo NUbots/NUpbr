@@ -306,6 +306,9 @@ def point_on_field(cam_location, mask_path, env_info, num_points):
     return ground_points
 
 
+# The function above will try and project the robots on to the ground
+# If the projection model is equidistant, the projection spawns the robots on top of one another on the origin
+# This function is a workaround to generate a set of random points on the field instead of just on the origin
 def generate_moves(field_obj, z_coord=0.3, radius=0.7):
     # Use the field dimensions to generate a set of moves, mainly for the robots
     abs_x, abs_y, _ = field_obj.dimensions
