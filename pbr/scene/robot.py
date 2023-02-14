@@ -209,6 +209,6 @@ class Robot(BlenderObject):
     # This function specifically updates the main robot's yaw to properly track the target
     def update_main_robot(self, target):
         r0_loc = self.obj.location
-        rRTw = np.array(r0_loc) - np.array(target.location)
-        new_yaw = np.arctan2(rRTw[1], rRTw[0])
+        rTRw = np.array(target.location) - np.array(r0_loc)
+        new_yaw = np.arctan2(rTRw[1], rTRw[0])
         self.obj.rotation_euler[2] = new_yaw
