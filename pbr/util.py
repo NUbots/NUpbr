@@ -323,7 +323,7 @@ def generate_moves(field_obj, z_coord=0.3, radius=0.7):
 
         if any(
             [
-                (p[0] - point[0]) ** 2 + (p[1] - p[1]) ** 2 < radius**2
+                (p[0] - point[0]) ** 2 + (p[1] - point[1]) ** 2 < radius**2
                 for p in world_points
             ]
         ):
