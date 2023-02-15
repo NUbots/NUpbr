@@ -169,11 +169,11 @@ def render_image(
 
     # Prevent colour transform settings from being applied to the seg image output
     if isMaskImage:
-        scene.view_settings.view_transform = 'Standard'
+        scene.view_settings.view_transform = "Standard"
     else:
-        scene.view_settings.view_transform = 'Filmic'
+        scene.view_settings.view_transform = "Filmic"
 
-    scene.render.image_settings.color_depth = '16'
+    scene.render.image_settings.color_depth = "16"
     scene.render.image_settings.compression = 0
     bpy.ops.render.render(write_still=True)
 

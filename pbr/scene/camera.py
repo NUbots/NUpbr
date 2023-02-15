@@ -87,13 +87,7 @@ class Camera(BlenderObject):
             # Generate camera object following the right hand rule orientation (Front of camera points towards +x, +z is up)
             self.obj.location = [0, 0, 0]
             self.obj.rotation_euler = [np.pi / 2, 0, -np.pi / 2]
-
-            robot_loc = targets["robot"]["obj"].matrix_world.translation
             left_eye_loc = targets["robot"]["left_eye"].location
 
-            rTRw = np.array(targets["target"].location) - np.array(robot_loc)
-            new_yaw = np.arctan2(rTRw[1], rTRw[0])
-
             self.obj.location = left_eye_loc
-            self.obj.rotation_euler[2] = new_yaw
             self.set_tracking_target(target=targets["target"])

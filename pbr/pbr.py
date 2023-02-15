@@ -108,7 +108,6 @@ def main():
 
         cam_l.update(config["camera"])
         cam_l.obj.keyframe_insert(data_path="location", frame=frame_num)
-        cam_l.obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
 
         # Update shapes
         for ii in range(len(shapes)):
@@ -262,11 +261,12 @@ def main():
             )
         )
 
-        # Updates scene to rectify rotation and location matrices
-        bpy.context.view_layer.update()
-
-        # Set frame number for current scene
+        # Update the camera then insert the rotation keyframe after rotating the camera
+        # Updates scene to rectify rotation and location matrices and set the frame number for the current scene
+        cam_l.rotate((0, 0, pi / 2))
+        cam_l.obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
         bpy.context.scene.frame_set(frame_num)
+        bpy.context.view_layer.update()
 
         ##############################################
         ##                RENDERING                 ##
