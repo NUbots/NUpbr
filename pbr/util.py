@@ -298,7 +298,6 @@ def point_on_field(cam_location, mask_path, env_info, num_points):
                     for p in ground_points
                 ]
             ):
-                print("Skipping point")
                 continue
 
             ground_points.append(project_to_ground(y, x, cam_location, img, env_info))
@@ -346,7 +345,6 @@ def generate_moves(field_meta, z_coord=0.3):
                 for p in world_points
             ]
         ):
-            print("Skipping point")
             continue
 
         # Add the point to the list if the current iteration is not skipped
