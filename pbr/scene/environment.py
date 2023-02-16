@@ -36,7 +36,13 @@ def setup_render():
     context.scene.render.use_file_extension = False
 
     # Set render submenu settings
+    cycles = context.preferences.addons["cycles"]
+    cycles.preferences.compute_device_type = "CUDA"
     scene.cycles.device = rend_cfg["render"]["cycles_device"]
+    
+    #cycles.preferences.get_devices()
+    for d in cycles.preferences.devices:
+        d["use"] = 1
 
     # Select which GPU to use
     devices = bpy.context.preferences.addons["cycles"].preferences.get_devices()[0]
