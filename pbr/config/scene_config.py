@@ -38,9 +38,9 @@ field_dims = {
 
 resources = {
     "robot": {
-        "mesh_path": path.abspath(path.join(res_path, "robot", "NUgus.fbx")),
+        "mesh_path": path.abspath(path.join(res_path, "robot", "NUgus_esh.fbx")),
         "texture_path": path.abspath(path.join(res_path, "robot", "textures")),
-        "kinematics_path": path.abspath(path.join(res_path, "robot", "NUgus.json")),
+        "kinematics_path": path.abspath(path.join(res_path, "robot", "NUgus_esh.json")),
         "kinematics_variance": 0.5,  ## Determines how much variance the random poses will have
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
     },
@@ -217,12 +217,13 @@ def configure_scene():
                     # Defines possible random placement range of x, y and z positional components
                     "position": (
                         random.uniform(
-                            -cfg["field"]["length"] * 0.5, cfg["field"]["length"] * 0.5
+                            -cfg["field"]["length"] * 0.5,
+                            cfg["field"]["length"] * 0.5,
                         ),
                         random.uniform(
                             -cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5
                         ),
-                        random.uniform(0.45, 0.5),
+                        random.uniform(0.5, 0.5),
                     ),
                 }
                 for ii in range(num_robots + 1)
