@@ -329,7 +329,7 @@ def generate_moves(field_meta, z_coord=0.3):
     )
 
     # Use the field dimensions to generate a set of moves for the robots
-    abs_x, abs_y, _ = field_dims
+    abs_x, abs_y = field_dims
 
     world_points = []
 
