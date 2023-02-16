@@ -17,7 +17,7 @@ Before starting, download and install [Blender 2.93 LTS](https://www.blender.org
 - Clone this repo
 - Change into the cloned `NUpbr` directory, then into `pbr`
 - Install dependencies by running `ensure_dependencies.py` _using the Python binary installed with Blender_. You may have to run it twice: first to install Pip, and then to install the dependencies.
-- Download the [resources.zip](http://10.1.0.223:8080/share.cgi?ssid=05GE7Tx) file from the NUbots NAS and copy the `resources` directory from it into the `NUpbr` root directory. **_NOTE:_** to access the download, you need to be in the NUbots lab and connected to the local network.
+- Download the [resources.zip](http://10.1.0.223:8080/share.cgi?ssid=a65f6f07d4e441d9847192ca8a9bec44) file from the NUbots NAS and copy the `resources` directory from it into the `NUpbr` root directory. **_NOTE:_** to access the download, you need to be in the NUbots lab and connected to the local network.
 
 ## Building a Scene
 
