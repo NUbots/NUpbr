@@ -294,7 +294,7 @@ def point_on_field(cam_location, mask_path, env_info, num_points):
             if any(
                 [
                     (p[0] - xproj) ** 2 + (p[1] - yproj) ** 2
-                    < scene_config.radius_robot**2
+                    < scene_config.robot_radius**2
                     for p in ground_points
                 ]
             ):
