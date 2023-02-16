@@ -310,7 +310,19 @@ def point_on_field(cam_location, mask_path, env_info, num_points):
 # If the projection model is equidistant, the projection spawns the robots on top of one another on the origin
 # This function is a workaround to generate a set of random points on the field instead of just on the origin
 def generate_moves(field_meta, z_coord=0.3):
+    """
+    Generates world coordinates for all of the robots in world space
+    Arguments:
+        field_meta (dict): The field meta data - this is where the field dimensions are derived from
+        z_coord (float): The z coordinate of the base hip (if the robot mesh is NUgus_esh, and torso if it is just NUgus) from z=0.0
+    Returns:
+        world_points (list): A list of world coordinates for each robot
 
+    Note: This function also relies from a config value in scene_config.py called robot_radius.
+          This radius defines the area around a robot that is considered to be occupied.
+          It can also be interpreted as the minimum distance between any two robots.
+          This is to make sure that no two robots can look like they have spawned on top of one another.
+    """
     field_dims = (
         field_meta["length"] + 2 * field_meta["border_width"],
         field_meta["width"] + 2 * field_meta["border_width"],
@@ -326,7 +338,7 @@ def generate_moves(field_meta, z_coord=0.3):
         point = np.random.uniform(
             low=(-abs_x / 2, -abs_y / 2), high=(abs_x / 2, abs_y / 2)
         )
-
+        # If any of the points are within the radius of a robot, skip this point
         if any(
             [
                 (p[0] - point[0]) ** 2 + (p[1] - point[1]) ** 2
@@ -337,6 +349,7 @@ def generate_moves(field_meta, z_coord=0.3):
             print("Skipping point")
             continue
 
+        # Add the point to the list if the current iteration is not skipped
         world_points.append((*point, z_coord))
 
     return world_points
