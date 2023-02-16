@@ -164,7 +164,17 @@ def render_image(
         "Strength"
     ].default_value = strength
     # Update render output filepath
-    bpy.data.scenes["Scene"].render.filepath = output_path
+    scene = bpy.data.scenes["Scene"]
+    scene.render.filepath = output_path
+
+    # Prevent colour transform settings from being applied to the seg image output
+    if isMaskImage:
+        scene.view_settings.view_transform = "Standard"
+    else:
+        scene.view_settings.view_transform = "Filmic"
+
+    scene.render.image_settings.color_depth = "16"
+    scene.render.image_settings.compression = 0
     bpy.ops.render.render(write_still=True)
 
 
@@ -276,9 +286,65 @@ def point_on_field(cam_location, mask_path, env_info, num_points):
 
     # Check if environment map has field points, else set to origin
     if len(field_coords) > 0:
-        for ii in range(num_points):
+        while len(ground_points) < scene_config.num_robots:
             # Get random field point
             y, x = field_coords[rand.randint(0, field_coords.shape[0] - 1)]
+            yproj, xproj = project_to_ground(y, x, cam_location, img, env_info)
+
+            if any(
+                [
+                    (p[0] - xproj) ** 2 + (p[1] - yproj) ** 2
+                    < scene_config.robot_radius**2
+                    for p in ground_points
+                ]
+            ):
+                continue
 
             ground_points.append(project_to_ground(y, x, cam_location, img, env_info))
+
     return ground_points
+
+
+def generate_moves(field_meta, z_coord=0.3):
+    """
+    Generates world coordinates for all of the robots in world space
+    Arguments:
+        field_meta (dict): The field meta data - this is where the field dimensions are derived from
+        z_coord (float): The z coordinate of the base hip (if the robot mesh is NUgus_esh, and torso if it is just NUgus) from z=0.0
+    Returns:
+        world_points (list): A list of world coordinates for each robot
+
+    Note: This function also relies from a config value in scene_config.py called robot_radius.
+          This radius defines the area around a robot that is considered to be occupied.
+          It can also be interpreted as the minimum distance between any two robots.
+          This is to make sure that no two robots can look like they have spawned on top of one another.
+    """
+    field_dims = (
+        field_meta["length"] + 2 * field_meta["border_width"],
+        field_meta["width"] + 2 * field_meta["border_width"],
+    )
+
+    # Use the field dimensions to generate a set of moves for the robots
+    abs_x, abs_y = field_dims
+
+    world_points = []
+
+    while len(world_points) < scene_config.num_robots:
+        # Get random field point
+        point = np.random.uniform(
+            low=(-abs_x / 2, -abs_y / 2), high=(abs_x / 2, abs_y / 2)
+        )
+        # If any of the points are within the radius of a robot, skip this point
+        if any(
+            [
+                (p[0] - point[0]) ** 2 + (p[1] - point[1]) ** 2
+                < scene_config.robot_radius**2
+                for p in world_points
+            ]
+        ):
+            continue
+
+        # Add the point to the list if the current iteration is not skipped
+        world_points.append((*point, z_coord))
+
+    return world_points

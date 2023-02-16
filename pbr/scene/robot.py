@@ -12,6 +12,8 @@ from config import scene_config as scene_cfg
 
 from scene.blender_object import BlenderObject
 
+import numpy as np
+
 
 class Robot(BlenderObject):
     def __init__(self, name, class_index, robot_info):
@@ -40,7 +42,8 @@ class Robot(BlenderObject):
         # Add object to our list of parts
         for p in self.robot_parts.keys():
             obj = bpy.data.objects[p]
-            # Set torso as main robot object
+
+            # Set base hip as main robot object
             if obj.parent == None:
                 self.obj = obj
             obj.name = "{}_{}".format(self.name, p)
@@ -202,3 +205,10 @@ class Robot(BlenderObject):
                 col,
                 1,
             )
+
+    # This function specifically updates the main robot's yaw to properly track the target
+    def update_main_robot(self, target):
+        r0_loc = self.obj.location
+        rTRw = np.array(target.location) - np.array(r0_loc)
+        new_yaw = np.arctan2(rTRw[1], rTRw[0])
+        self.obj.rotation_euler[2] = new_yaw
