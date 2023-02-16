@@ -328,7 +328,7 @@ def generate_moves(field_meta, z_coord=0.3):
         field_meta["width"] + 2 * field_meta["border_width"],
     )
 
-    # Use the field dimensions to generate a set of moves, mainly for the robots
+    # Use the field dimensions to generate a set of moves for the robots
     abs_x, abs_y, _ = field_dims
 
     world_points = []
