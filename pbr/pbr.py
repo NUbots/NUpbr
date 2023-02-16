@@ -144,7 +144,9 @@ def main():
         points_on_field = util.point_on_field(
             camera_loc, hdr_data["mask_path"], env_info, len(robots) + 1
         )
-
+        print(points_on_field)
+        # Generate new world points for the robots and use this to update their location
+        world_points = util.generate_moves(scene_config.field_dims)
         for ii in range(robot_start, len(robots)):
             # If we are autoplacing update the configuration
             if (
@@ -152,11 +154,12 @@ def main():
                 and is_semi_synthetic
                 and len(points_on_field) > 0
             ):
+
                 # Generate new ground point based on camera (actually robot parent of camera)
                 config["robot"][ii]["position"] = (
-                    points_on_field[ii][0],
-                    points_on_field[ii][1],
-                    env_info["position"]["z"] - 0.33
+                    world_points[ii - 1][0],
+                    world_points[ii - 1][1],
+                    world_points[ii - 1][2]
                     if ii == 0
                     else config["robot"][ii]["position"][2],
                 )

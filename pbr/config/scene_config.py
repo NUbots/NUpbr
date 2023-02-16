@@ -1,10 +1,11 @@
 # Field-specific Configuration Settings
 #   * All measurements are in SI units
 
-from math import pi, radians
+from math import pi
 from os import path, pardir
 import random
 import colorsys
+import numpy as np
 
 # Get project path
 proj_path = path.abspath(
@@ -19,6 +20,21 @@ num_shapes = 8
 
 # Number of robots to fill the scene
 num_robots = 3
+
+# The radius that defines the personal space of a robot
+robot_radius = 0.7
+
+# Field dimensions
+field_dims = {
+    "length": 9,
+    "width": 6,
+    "goal_area": {"length": 1, "width": 5},
+    "penalty_mark_dist": 2.1,
+    "centre_circle_radius": 0.75,
+    "border_width": 0.7,
+    "field_line_width": 0.05,
+    "grass_height": random.uniform(0.02, 0.05),
+}
 
 resources = {
     "robot": {
@@ -191,6 +207,7 @@ def configure_scene():
             ]
         }
     )
+
     # Add robot information
     cfg.update(
         {
