@@ -148,6 +148,7 @@ def main():
             camera_loc, hdr_data["mask_path"], env_info, len(robots) + 1
         )
         print(points_on_field)
+        # Generate new world points for the robots and use this to update their location
         world_points = util.generate_moves(scene_config.field_dims)
         for ii in range(robot_start, len(robots)):
             # If we are autoplacing update the configuration
