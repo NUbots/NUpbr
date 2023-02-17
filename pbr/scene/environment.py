@@ -35,12 +35,11 @@ def setup_render():
     # Disable file extension (so frame number is not appended)
     context.scene.render.use_file_extension = False
 
-    # Set render submenu settings
+    # Enable rendering devices
     cycles = context.preferences.addons["cycles"]
     cycles.preferences.compute_device_type = "CUDA"
     scene.cycles.device = rend_cfg["render"]["cycles_device"]
     
-    #cycles.preferences.get_devices()
     for d in cycles.preferences.devices:
         d["use"] = 1
 
