@@ -43,14 +43,6 @@ def setup_render():
     for d in cycles.preferences.devices:
         d["use"] = 1
 
-    # Select which GPU to use
-    devices = bpy.context.preferences.addons["cycles"].preferences.get_devices()[0]
-    if "CUDA_DEVICE_NO" in os.environ:
-        for d in devices:
-            d.use = False
-        for no in os.environ["CUDA_DEVICE_NO"].split(","):
-            devices[int(no)].use = True
-
     # Set denoising settings
     context.scene.view_layers[0].cycles.use_denoising = blend_cfg.layers["denoising"][
         "use_denoising"
