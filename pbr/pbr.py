@@ -178,7 +178,14 @@ def main():
             robots[ii].obj.keyframe_insert(data_path="location", frame=frame_num)
             robots[ii].obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
 
+        num_robots = len(robots) - 1
+
         for ii in range(len(misc_robots)):
+            config["misc_robot"][ii]["position"] = (
+                world_points[ii - 1 + num_robots][0],
+                world_points[ii - 1 + num_robots][1],
+                world_points[ii - 1 + num_robots][2]
+            )
             misc_robots[ii].update(config["misc_robot"][ii])
 
         # Update ball
