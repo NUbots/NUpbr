@@ -37,6 +37,7 @@ class MiscRobot(BlenderObject):
         )
 
         obj = bpy.data.objects["misc_robot"]
+        self.obj = obj
         obj.name = "{}".format(self.name)
         self.objs.update({obj.name: obj})
         # Configure robot to have correct pass index

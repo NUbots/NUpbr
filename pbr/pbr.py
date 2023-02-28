@@ -182,11 +182,13 @@ def main():
 
         for ii in range(len(misc_robots)):
             config["misc_robot"][ii]["position"] = (
-                world_points[ii - 1 + num_robots][0],
-                world_points[ii - 1 + num_robots][1],
-                world_points[ii - 1 + num_robots][2]
+                world_points[ii + num_robots][0],
+                world_points[ii + num_robots][1],
+                config["misc_robot"][ii]["position"][2]
             )
             misc_robots[ii].update(config["misc_robot"][ii])
+            misc_robots[ii].obj.keyframe_insert(data_path="location", frame=frame_num)
+            misc_robots[ii].obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
 
         # Update ball
         # If we are autoplacing update the configuration
