@@ -58,11 +58,11 @@ class Camera(BlenderObject):
         bpy.context.view_layer.objects.active = self.obj
 
         bpy.ops.object.constraint_add(type="COPY_LOCATION")
-        child_constr = self.obj.constraints["Copy Location"]
-        child_constr.name = "robot_L_Eye_Loc"
+        loc_constr = self.obj.constraints["Copy Location"]
+        loc_constr.name = "robot_L_Eye_Loc"
 
         # Bind to robot's chosen eye position - must make sure that the main robot being used is the NUgus_esh
-        child_constr.target = bpy.data.objects[f"{robot.name[:2]}_L_Eye_Socket"]
+        loc_constr.target = bpy.data.objects[f"{robot.name[:2]}_L_Eye_Socket"]
         self.obj.rotation_euler = [np.pi / 2, 0, np.pi / 2]
 
     def update(self, cam_config, targets=None):
