@@ -88,11 +88,9 @@ def main():
     # (and so all right camera movements are relative to the left camera position)
     cam_r.set_stereo_pair(cam_l.obj)
 
-    # Attach camera to robot head (TODO: Remove hard-coded torso to cam offset)
-    cam_l.obj.delta_rotation_euler = (pi / 2.0, 0.0, -pi / 2.0)
-    cam_l.set_robot(robots[0].obj, robots[0].obj.location[2] + 0.33)
-    # Disable rendering of head if camera is now inside
-    robots[0].objs[robots[0].name + "_Head"].hide_render = True
+    # Mount cameras to eye sockets
+    cam_l.set_robot(robots[0].obj)
+    cam_r.set_robot(robots[0].obj)
 
     # Create camera anchor target for random field images
     anch = CameraAnchor()
@@ -110,7 +108,6 @@ def main():
 
         cam_l.update(config["camera"])
         cam_l.obj.keyframe_insert(data_path="location", frame=frame_num)
-        cam_l.obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
 
         # Update shapes
         for ii in range(len(shapes)):
@@ -149,6 +146,8 @@ def main():
             camera_loc, hdr_data["mask_path"], env_info, len(robots) + 1
         )
         print(points_on_field)
+        # Generate new world points for the robots and use this to update their location
+        world_points = util.generate_moves(scene_config.field_dims)
         for ii in range(robot_start, len(robots)):
             # If we are autoplacing update the configuration
             if (
@@ -156,11 +155,12 @@ def main():
                 and is_semi_synthetic
                 and len(points_on_field) > 0
             ):
+
                 # Generate new ground point based on camera (actually robot parent of camera)
                 config["robot"][ii]["position"] = (
-                    points_on_field[ii][0],
-                    points_on_field[ii][1],
-                    env_info["position"]["z"] - 0.33
+                    world_points[ii - 1][0],
+                    world_points[ii - 1][1],
+                    world_points[ii - 1][2]
                     if ii == 0
                     else config["robot"][ii]["position"][2],
                 )
@@ -242,8 +242,19 @@ def main():
             valid_tracks.append(anch)
 
         tracking_target = random.choice(valid_tracks).obj
-        cam_l.set_tracking_target(tracking_target)
-        robots[0].set_tracking_target(tracking_target)
+        # cam_l.set_tracking_target(tracking_target)
+        robots[0].update_main_robot(tracking_target)
+        cam_l.update(
+            config["camera"],
+            targets={
+                "robot": {
+                    "obj": robots[0].obj,
+                    "left_eye": bpy.data.objects["r0_L_Eye_Socket"],
+                },
+                "target": tracking_target,
+            },
+        )
+        # robots[0].set_tracking_target(tracking_target)
 
         print(
             '[INFO] Frame {0}: ball: "{1}", map: "{2}", target: {3}'.format(
@@ -254,7 +265,11 @@ def main():
             )
         )
 
-        # Updates scene to rectify rotation and location matrices
+        # Update the camera then insert the rotation keyframe after rotating the camera
+        # Updates scene to rectify rotation and location matrices and set the frame number for the current scene
+        cam_l.rotate((0, 0, pi / 2))
+        cam_l.obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
+        bpy.context.scene.frame_set(frame_num)
         bpy.context.view_layer.update()
 
         # Set frame number for current scene
