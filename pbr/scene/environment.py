@@ -163,6 +163,13 @@ def update_hdri_env(world, img_path, env_info):
         radians(env_info["rotation"]["yaw"]),
     )
 
+    if "location" in env_info:
+        n_map.inputs['Location'].default_value = (
+            env_info["location"]["x"],
+            env_info["location"]["y"],
+            env_info["location"]["z"],
+        )
+
     # Attempt to find link to remove if necessary
     link = None
     for l in tl:

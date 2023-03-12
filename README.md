@@ -90,6 +90,7 @@ The HDR JSON metadata file may have the following fields:
 
 | Field                     | Description                                                                                                                                           |
 | :------------------------ | :---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `location`                | Specifies the location of the environment. Adjusting the 'z' variable can be used to move the environment map up and down, to make the background in proportion to the rest of the scene              |
 | `rotation`                | Specifies the rotation of the environment. Used to rotate the environment map in Blender, and used when projecting points to the ground.              |
 | `position`                | Used to place the camera and the robot in the scene. Specifically uses `position["z"]` for the camera height and the robot position along the z axis. |
 | `to_draw`                 | Specifies which objects (ball, goal, field) to draw. Objects set to `true` are drawn, and those set to `false` are not.                               |
