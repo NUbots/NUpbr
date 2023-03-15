@@ -17,6 +17,7 @@ class MiscRobot(BlenderObject):
     def __init__(self, name, class_index, robot_info):
         self.mat = {}
         self.sc_plane = None
+        self.robot = None
         self.robot_parts = None
         self.pass_index = class_index
         self.objs = {}
@@ -29,17 +30,29 @@ class MiscRobot(BlenderObject):
     def construct(self, robot_info):
         robot_mesh = None
         robot_obj = {}
-        mesh_path = scene_cfg.new_misc_robot()
 
-        # Load robot object
+        self.robot = scene_cfg.choose_misc_robot()
+
+        mesh_path = self.robot["mesh_path"]
+
+        with open(self.robot["kinematics_path"], "r") as file:
+            self.robot_parts = json.loads(file.read())
+
         bpy.ops.import_scene.fbx(
-            filepath= mesh_path, axis_forward="X", axis_up="Z"
+            filepath=self.robot["mesh_path"], axis_forward="X", axis_up="Z"
         )
 
-        obj = bpy.data.objects["misc_robot"]
-        self.obj = obj
-        obj.name = "{}".format(self.name)
-        self.objs.update({obj.name: obj})
+        for p in self.robot_parts.keys():
+            obj = bpy.data.objects[p]
+
+            if obj.parent == None:
+                self.obj = obj
+
+            obj.name = "{}_{}".format(self.name, p)
+            self.objs.update({obj.name: obj})
+
+            obj.pass_index = self.pass_index
+
         # Configure robot to have correct pass index
         obj.pass_index = self.pass_index
 
@@ -47,6 +60,8 @@ class MiscRobot(BlenderObject):
         # Set material for robot
         # self.mat.update({obj.name: self.set_material(obj, "misc_robot_tex")})
         # obj.data.materials.append(self.mat[obj.name])
+
+        self.initialise_kinematics()
 
     def set_material(self, obj, mat_name):
         l_mat = bpy.data.materials.new(mat_name)
@@ -82,7 +97,42 @@ class MiscRobot(BlenderObject):
         tl.new(n_principled.outputs[0], n_output.inputs[0])
 
         return l_mat
+    
+    def initialise_kinematics(self):
+        # Set all joints to neutral pose
+        for k in self.robot_parts.keys():
+            # Calculate min, max and mode limits
+            lim = self.robot_parts[k]["limits"]
+            # Calculate delta rotation for the relevant axis
+            delta_rot = [0.0, 0.0, 0.0]
+            delta_rot[self.robot_parts[k]["rot_axis"]] = radians(lim[1])
+            # Add to output dictionary
+            bpy.data.objects[
+                "{}_{}".format(self.name, k)
+            ].delta_rotation_euler = delta_rot
+
+    def update_kinematics(self):
+        # Set all joints to neutral pose
+        for k in self.robot_parts.keys():
+            # Calculate min, max and mode limits
+            lim = self.robot_parts[k]["limits"]
+            var = self.robot["kinematics_variance"]
+            # Calculate delta rotation for the relevant axis
+            (v_min, v_max) = (
+                lim[1] - var * (lim[1] - lim[0]),
+                lim[1] - var * (lim[1] - lim[2]),
+            )
+            # Calculate delta rotation for the relevant axis
+            delta_rot = [0.0, 0.0, 0.0]
+            delta_rot[self.robot_parts[k]["rot_axis"]] = radians(
+                triangular(v_min, v_max, lim[1])
+            )
+            # Add to output dictionary
+            bpy.data.objects[
+                "{}_{}".format(self.name, k)
+            ].delta_rotation_euler = delta_rot
 
     def update(self, cfg):
-        bpy.data.objects[self.name].location = cfg["position"]
-        bpy.data.objects[self.name].delta_rotation_euler = cfg["rotation"]
+        self.update_kinematics()
+        bpy.data.objects[self.name + "_torso"].location = cfg["position"]
+        bpy.data.objects[self.name + "_torso"].delta_rotation_euler = cfg["rotation"]

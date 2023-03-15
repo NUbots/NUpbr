@@ -46,9 +46,15 @@ resources = {
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
     },
     "misc_robot": {
-        "robot_list": ["darwin.fbx", "nao.fbx", "wolfgang.fbx"],
+        "robot_list": {
+            "darwin": {
+                "mesh_path": path.abspath(path.join(res_path, "robot", "darwin_fixed.fbx")),
+                "kinematics_path": path.abspath(path.join(res_path, "robot", "darwin_fixed.json")),
+                "kinematics_variance": 0.5
+            }},
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
     },
+
     "ball": {
         "img_types": [".jpg", ".png"],
         "mesh_types": [".fbx", ".obj"],
@@ -81,6 +87,17 @@ resources = {
 
 def new_misc_robot():
     mesh_path = ''.join(path.abspath(path.join(res_path, "robot", random.choice(resources["misc_robot"]["robot_list"]))))
+    return mesh_path
+
+def choose_misc_robot():
+    choice = random.choice(list(resources["misc_robot"]["robot_list"].keys()))
+    #return choice
+    return resources["misc_robot"]["robot_list"][choice]
+
+def get_misc_robot(robot_path):
+    #robot = resources["misc_robot"]["robot_list"][path]["mesh_path"]
+
+    mesh_path = ''.join(path.abspath(path.join(res_path, "robot", resources["misc_robot"]["robot_list"][robot_path]["mesh_path"])))
     return mesh_path
 
 def configure_scene():
