@@ -52,22 +52,18 @@ class Camera(BlenderObject):
         child_constr.use_location_y = False
         child_constr.use_location_z = False
 
-    def set_robot(self, robot, left_eye=True):
+    # There is some behaviour that is not working correctly with the child of constraint, I have to investigate further
+    def set_robot(self, robot):
         # Ensure object is selected to receive added constraints
         bpy.context.view_layer.objects.active = self.obj
 
-        bpy.ops.object.constraint_add(type="CHILD_OF")
-        child_constr = self.obj.constraints["Child Of"]
-        child_constr.name = "robot_child"
+        bpy.ops.object.constraint_add(type="COPY_LOCATION")
+        loc_constr = self.obj.constraints["Copy Location"]
+        loc_constr.name = "robot_L_Eye_Loc"
 
         # Bind to robot's chosen eye position - must make sure that the main robot being used is the NUgus_esh
-        if left_eye:
-            child_constr.target = bpy.data.objects[f"{robot.name[:2]}_L_Eye_Socket"]
-        else:
-            child_constr.target = bpy.data.objects[f"{robot.name[:2]}_R_Eye_Socket"]
-
-        # Invert child of
-        child_constr.inverse_matrix = robot.matrix_world.inverted()
+        loc_constr.target = bpy.data.objects[f"{robot.name[:2]}_L_Eye_Socket"]
+        self.obj.rotation_euler = [np.pi / 2, 0, np.pi / 2]
 
     def update(self, cam_config, targets=None):
         # Fix for blender being stupid
@@ -84,10 +80,5 @@ class Camera(BlenderObject):
                 cam.angle = cam_config["fov"]
 
         if targets is not None:
-            # Generate camera object following the right hand rule orientation (Front of camera points towards +x, +z is up)
-            self.obj.location = [0, 0, 0]
-            self.obj.rotation_euler = [np.pi / 2, 0, -np.pi / 2]
-            left_eye_loc = targets["robot"]["left_eye"].location
-
-            self.obj.location = left_eye_loc
+            self.obj.rotation_euler = [np.pi / 2, 0, np.pi / 2]
             self.set_tracking_target(target=targets["target"])

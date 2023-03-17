@@ -10,10 +10,8 @@ import json
 # Add our current position to path to include package
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 
-# Make sure the python dependencies for this script are installed
-import ensure_dependencies
 
-from math import pi, sqrt, ceil
+from math import pi
 
 from config import output_config as out_cfg
 from config import scene_config
@@ -90,7 +88,6 @@ def main():
 
     # Mount cameras to eye sockets
     cam_l.set_robot(robots[0].obj)
-    cam_r.set_robot(robots[0].obj)
 
     # Create camera anchor target for random field images
     anch = CameraAnchor()
@@ -107,7 +104,6 @@ def main():
         config = scene_config.configure_scene()
 
         cam_l.update(config["camera"])
-        cam_l.obj.keyframe_insert(data_path="location", frame=frame_num)
 
         # Update shapes
         for ii in range(len(shapes)):
@@ -242,8 +238,8 @@ def main():
             valid_tracks.append(anch)
 
         tracking_target = random.choice(valid_tracks).obj
-        # cam_l.set_tracking_target(tracking_target)
         robots[0].update_main_robot(tracking_target)
+
         cam_l.update(
             config["camera"],
             targets={
@@ -254,7 +250,6 @@ def main():
                 "target": tracking_target,
             },
         )
-        # robots[0].set_tracking_target(tracking_target)
 
         print(
             '[INFO] Frame {0}: ball: "{1}", map: "{2}", target: {3}'.format(
@@ -267,9 +262,11 @@ def main():
 
         # Update the camera then insert the rotation keyframe after rotating the camera
         # Updates scene to rectify rotation and location matrices and set the frame number for the current scene
-        cam_l.rotate((0, 0, pi / 2))
+        cam_l.obj.keyframe_insert(data_path="location", frame=frame_num)
         cam_l.obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
+
         bpy.context.scene.frame_set(frame_num)
+
         bpy.context.view_layer.update()
 
         # Set frame number for current scene
@@ -335,6 +332,9 @@ def main():
                     os.path.join(out_cfg.depth_dir, filename) + ".exr0001",
                     os.path.join(out_cfg.depth_dir, filename) + ".exr",
                 )
+
+        # Check that the rotation matrix of the main camera is valid
+        print(cam_l.obj.matrix_world)
 
         # Generate meta file
         with open(
