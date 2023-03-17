@@ -113,7 +113,7 @@ def main():
 
         # Select the ball, environment, and grass to use
         # hdr_data = random.choice(hdrs) REMEMBER TO PUT THIS BACK LOL
-        hdr_data = {'raw_path': 'C:\\Users\\angel\\NUBots\\NUpbr\\resources\\hdr\\hdr_002\\002_raw.hdr', 'mask_path': 'C:\\Users\\angel\\NUBots\\NUpbr\\resources\\hdr\\hdr_002\\002_mask.png', 'info_path': 'C:\\Users\\angel\\NUBots\\NUpbr\\resources\\hdr\\hdr_002\\002.json'}
+        hdr_data = hdr_data = random.choice(hdrs)
         ball_data = random.choice(balls)
         grass_data = random.choice(grasses)
 
