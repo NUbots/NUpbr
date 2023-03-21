@@ -311,28 +311,37 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     n_image_rl = node_list.new("CompositorNodeRLayers")
     n_image_rl.layer = l_image_raw.name
 
+    # If the raw image requires imperfections
     if out_cfg.output_imperfections:
 
-        image_blur = node_list.new("CompositorNodeBlur")
-        blur_val = round(random.uniform(0, blend_cfg.render["imperfections"]["max_blur"]), 2)
-        image_blur.size_x = blur_val
-        image_blur.size_y = blur_val
+        imp_config = blend_cfg.render["imperfections"]
 
-        image_RGB = node_list.new("CompositorNodeCurveRGB")
-        image_curve = image_RGB.mapping.curves[0] #Selects the Red channel of the RGB curve
-        curve_point_x = round(random.uniform(0.5, blend_cfg.render["imperfections"]["max_red"][0]), 2)
-        curve_point_y = round(random.uniform(0.5, blend_cfg.render["imperfections"]["max_red"][1]), 2)
-        image_curve.points.new(curve_point_x, curve_point_y)
+        # Add blur
+        n_img_blur = node_list.new("CompositorNodeBlur")
+        blur_val = round(random.uniform(imp_config["min_blur"], imp_config["max_blur"]), 2)
+        n_img_blur.size_x = blur_val
+        n_img_blur.size_y = blur_val
 
-        image_texture = node_list.new("CompositorNodeTexture")
-        image_multiply = node_list.new("CompositorNodeMixRGB")
-        image_multiply.blend_type = 'MULTIPLY'
-        image_multiply.inputs[0].default_value = round(random.uniform(0, blend_cfg.render["imperfections"]["max_noise_fac"]), 2)
-        image_exposure = node_list.new("CompositorNodeExposure")
-        image_exposure.inputs[1].default_value = round(random.uniform(blend_cfg.render["imperfections"]["min_exposure"], blend_cfg.render["imperfections"]["max_exposure"]), 2)
+        # Add minor red colour to image
+        n_img_RGB = node_list.new("CompositorNodeCurveRGB")
+        img_RGB_curve = n_img_RGB.mapping.curves[0] #Selects the Red channel of the RGB curve
+        curve_x = round(random.uniform(0.5, imp_config["max_red"][0]), 2)
+        curve_y = round(random.uniform(0.5, imp_config["max_red"][1]), 2)
+        img_RGB_curve.points.new(curve_x, curve_y)
 
-        image_noise_texture = bpy.data.textures.new("RawImgNoise", 'NOISE')
-        image_texture.texture = image_noise_texture
+        # Add noise texture
+        n_img_texture = node_list.new("CompositorNodeTexture")
+        img_noise_texture = bpy.data.textures.new("RawImgNoise", 'NOISE')
+        n_img_texture.texture = img_noise_texture
+
+        # Apply noise to image
+        n_img_multiply = node_list.new("CompositorNodeMixRGB")
+        n_img_multiply.blend_type = 'MULTIPLY'
+        n_img_multiply.inputs[0].default_value = round(random.uniform(imp_config["min_noise_fac"], imp_config["max_noise_fac"]), 2)
+
+        # Adjust image exposure
+        n_img_exposure = node_list.new("CompositorNodeExposure")
+        n_img_exposure.inputs[1].default_value = round(random.uniform(imp_config["min_exposure"], imp_config["max_exposure"]), 2)
 
 
     n_depth_out = None
@@ -377,12 +386,18 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     tl = bpy.context.scene.node_tree.links
 
     if out_cfg.output_imperfections:
-        tl.new(n_image_rl.outputs[0], image_blur.inputs[0])
-        tl.new(image_blur.outputs[0], image_RGB.inputs[1])
-        tl.new(image_RGB.outputs[0], image_multiply.inputs[1])
-        tl.new(image_texture.outputs[1], image_multiply.inputs[2])
-        tl.new(image_multiply.outputs[0], image_exposure.inputs[0])
-        tl.new(image_exposure.outputs[0], n_switch.inputs[0])
+        # Link original raw output image to blur
+        tl.new(n_image_rl.outputs[0], n_img_blur.inputs[0])
+        # Link blur to RGB curve
+        tl.new(n_img_blur.outputs[0], n_img_RGB.inputs[1])
+        # Link RGB curve to multiply
+        tl.new(n_img_RGB.outputs[0], n_img_multiply.inputs[1])
+        # Link noise texture to multiply
+        tl.new(n_img_texture.outputs[1], n_img_multiply.inputs[2])
+        # Link multiply to exposure
+        tl.new(n_img_multiply.outputs[0], n_img_exposure.inputs[0])
+        # Link exposure to switch
+        tl.new(n_img_exposure.outputs[0], n_switch.inputs[0])
     else:
         # Link raw image render layer to switch
         tl.new(n_image_rl.outputs[0], n_switch.inputs[0])
