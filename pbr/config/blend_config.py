@@ -22,9 +22,11 @@ render = {
         "threads": {"mode": "FIXED", "num_threads": 8},
     },
     "layers": {"use_hair": False},
-    "raw_imperfections": {
+    "imperfections": {
+        "min_blur": 2,
         "max_blur": 4,
         "max_red": [0.690266, 0.95],
+        "min_noise_fac": 0.2,
         "max_noise_fac": 0.62,
         "min_exposure": -2,
         "max_exposure": 2,

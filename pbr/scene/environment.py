@@ -2,6 +2,7 @@
 
 import os
 import bpy
+import random
 
 from math import radians
 
@@ -313,23 +314,24 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     if out_cfg.output_imperfections:
 
         image_blur = node_list.new("CompositorNodeBlur")
-        image_blur.size_x = 4
-        image_blur.size_y = 4
+        blur_val = round(random.uniform(0, blend_cfg.render["imperfections"]["max_blur"]), 2)
+        image_blur.size_x = blur_val
+        image_blur.size_y = blur_val
 
         image_RGB = node_list.new("CompositorNodeCurveRGB")
-        image_curve = image_RGB.mapping.curves[0]
-        # image_curve.points.new(0.792035, 0.91)
-        image_curve.points.new(0.690266, 0.95)
-
+        image_curve = image_RGB.mapping.curves[0] #Selects the Red channel of the RGB curve
+        curve_point_x = round(random.uniform(0.5, blend_cfg.render["imperfections"]["max_red"][0]), 2)
+        curve_point_y = round(random.uniform(0.5, blend_cfg.render["imperfections"]["max_red"][1]), 2)
+        image_curve.points.new(curve_point_x, curve_point_y)
 
         image_texture = node_list.new("CompositorNodeTexture")
         image_multiply = node_list.new("CompositorNodeMixRGB")
         image_multiply.blend_type = 'MULTIPLY'
-        image_multiply.inputs[0].default_value = 0.62
+        image_multiply.inputs[0].default_value = round(random.uniform(0, blend_cfg.render["imperfections"]["max_noise_fac"]), 2)
         image_exposure = node_list.new("CompositorNodeExposure")
-        image_exposure.inputs[1].default_value = 2
+        image_exposure.inputs[1].default_value = round(random.uniform(blend_cfg.render["imperfections"]["min_exposure"], blend_cfg.render["imperfections"]["max_exposure"]), 2)
 
-        image_noise_texture = bpy.data.textures.new("CompNoise", 'NOISE')
+        image_noise_texture = bpy.data.textures.new("RawImgNoise", 'NOISE')
         image_texture.texture = image_noise_texture
 
 
@@ -373,20 +375,18 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
 
     # Link shaders
     tl = bpy.context.scene.node_tree.links
-    # Link raw image render layer to switch
-    # tl.new(n_image_rl.outputs[0], n_switch.inputs[0])
 
-    #----------------------------------------------
+    if out_cfg.output_imperfections:
+        tl.new(n_image_rl.outputs[0], image_blur.inputs[0])
+        tl.new(image_blur.outputs[0], image_RGB.inputs[1])
+        tl.new(image_RGB.outputs[0], image_multiply.inputs[1])
+        tl.new(image_texture.outputs[1], image_multiply.inputs[2])
+        tl.new(image_multiply.outputs[0], image_exposure.inputs[0])
+        tl.new(image_exposure.outputs[0], n_switch.inputs[0])
+    else:
+        # Link raw image render layer to switch
+        tl.new(n_image_rl.outputs[0], n_switch.inputs[0])
 
-    tl.new(n_image_rl.outputs[0], image_blur.inputs[0])
-    tl.new(image_blur.outputs[0], image_RGB.inputs[1])
-    tl.new(image_RGB.outputs[0], image_multiply.inputs[1])
-    tl.new(image_texture.outputs[1], image_multiply.inputs[2])
-    tl.new(image_multiply.outputs[0], image_exposure.inputs[0])
-    tl.new(image_exposure.outputs[0], n_switch.inputs[0])
-
-
-    #-----------------------------------------------
 
     if out_cfg.output_depth:
         # Link depth from raw image to depth file output
