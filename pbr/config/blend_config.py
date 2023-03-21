@@ -22,6 +22,13 @@ render = {
         "threads": {"mode": "FIXED", "num_threads": 8},
     },
     "layers": {"use_hair": False},
+    "raw_imperfections": {
+        "max_blur": 4,
+        "max_red": [0.690266, 0.95],
+        "max_noise_fac": 0.62,
+        "min_exposure": -2,
+        "max_exposure": 2,
+    },
 }
 
 scene = {"units": {"length_units": "METRIC", "rotation_units": "DEGREES"}}

@@ -5,11 +5,13 @@ import os
 ##############################################
 
 # Number of images to generate
-num_images = 10
+num_images = 2
 
 # Stereo output
 output_stereo = False
 output_depth = False
+
+output_imperfections = True
 
 # Absolute output directory to hold the directories for output images and segmentation masks
 output_base = os.path.join(

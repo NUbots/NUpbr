@@ -310,6 +310,29 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     n_image_rl = node_list.new("CompositorNodeRLayers")
     n_image_rl.layer = l_image_raw.name
 
+    if out_cfg.output_imperfections:
+
+        image_blur = node_list.new("CompositorNodeBlur")
+        image_blur.size_x = 4
+        image_blur.size_y = 4
+
+        image_RGB = node_list.new("CompositorNodeCurveRGB")
+        image_curve = image_RGB.mapping.curves[0]
+        # image_curve.points.new(0.792035, 0.91)
+        image_curve.points.new(0.690266, 0.95)
+
+
+        image_texture = node_list.new("CompositorNodeTexture")
+        image_multiply = node_list.new("CompositorNodeMixRGB")
+        image_multiply.blend_type = 'MULTIPLY'
+        image_multiply.inputs[0].default_value = 0.62
+        image_exposure = node_list.new("CompositorNodeExposure")
+        image_exposure.inputs[1].default_value = 2
+
+        image_noise_texture = bpy.data.textures.new("CompNoise", 'NOISE')
+        image_texture.texture = image_noise_texture
+
+
     n_depth_out = None
     if out_cfg.output_depth:
         # File Output node for mist
@@ -351,7 +374,19 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     # Link shaders
     tl = bpy.context.scene.node_tree.links
     # Link raw image render layer to switch
-    tl.new(n_image_rl.outputs[0], n_switch.inputs[0])
+    # tl.new(n_image_rl.outputs[0], n_switch.inputs[0])
+
+    #----------------------------------------------
+
+    tl.new(n_image_rl.outputs[0], image_blur.inputs[0])
+    tl.new(image_blur.outputs[0], image_RGB.inputs[1])
+    tl.new(image_RGB.outputs[0], image_multiply.inputs[1])
+    tl.new(image_texture.outputs[1], image_multiply.inputs[2])
+    tl.new(image_multiply.outputs[0], image_exposure.inputs[0])
+    tl.new(image_exposure.outputs[0], n_switch.inputs[0])
+
+
+    #-----------------------------------------------
 
     if out_cfg.output_depth:
         # Link depth from raw image to depth file output
