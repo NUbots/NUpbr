@@ -28,13 +28,14 @@ class Camera(BlenderObject):
         constr.track_axis = "TRACK_NEGATIVE_Z"
         constr.influence = 0.9
 
-        # sets the camera so it does not tilt
         if "Limit Rotation" not in self.obj.constraints:
             bpy.ops.object.constraint_add(type="LIMIT_ROTATION")
-            rot_constr = self.obj.constraints["Limit Rotation"]
-            rot_constr.use_limit_y = True
-            rot_constr.min_y = 0
-            rot_constr.max_y = 0
+
+        # sets the camera so it does not tilt
+        rot_constr = self.obj.constraints["Limit Rotation"]
+        rot_constr.use_limit_y = True
+        rot_constr.min_y = 0
+        rot_constr.max_y = 0
 
     # Add parent camera for stereo vision
     def set_stereo_pair(self, cam):
