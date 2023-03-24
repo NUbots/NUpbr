@@ -314,20 +314,11 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
     # If the raw image requires imperfections
     if out_cfg.output_imperfections:
 
-        imp_config = blend_cfg.render["imperfections"]
-
         # Add blur
         n_img_blur = node_list.new("CompositorNodeBlur")
-        blur_val = round(random.uniform(imp_config["min_blur"], imp_config["max_blur"]), 2)
-        n_img_blur.size_x = blur_val
-        n_img_blur.size_y = blur_val
 
         # Add minor red colour to image
         n_img_RGB = node_list.new("CompositorNodeCurveRGB")
-        img_RGB_curve = n_img_RGB.mapping.curves[0] #Selects the Red channel of the RGB curve
-        curve_x = round(random.uniform(0.5, imp_config["max_red"][0]), 2)
-        curve_y = round(random.uniform(0.5, imp_config["max_red"][1]), 2)
-        img_RGB_curve.points.new(curve_x, curve_y)
 
         # Add noise texture
         n_img_texture = node_list.new("CompositorNodeTexture")
@@ -337,11 +328,9 @@ def setup_scene_composite(l_image_raw, l_image_seg, l_field_seg):
         # Apply noise to image
         n_img_multiply = node_list.new("CompositorNodeMixRGB")
         n_img_multiply.blend_type = 'MULTIPLY'
-        n_img_multiply.inputs[0].default_value = round(random.uniform(imp_config["min_noise_fac"], imp_config["max_noise_fac"]), 2)
 
         # Adjust image exposure
         n_img_exposure = node_list.new("CompositorNodeExposure")
-        n_img_exposure.inputs[1].default_value = round(random.uniform(imp_config["min_exposure"], imp_config["max_exposure"]), 2)
 
 
     n_depth_out = None
@@ -450,3 +439,37 @@ def setup_render_layers(num_objects):
 
     # Setup scene render layer composite and return switch to control raw image or mask
     return setup_scene_composite(render_layers["View Layer"], l_image_seg, l_field_seg)
+
+def randomise_imperfections(n_img_blur, n_img_RGB, n_img_multiply, n_img_exposure):
+    imp_config = blend_cfg.render["imperfections"]
+
+    # Randomise blur value
+    blur_val = random.randint(imp_config["min_blur"], imp_config["max_blur"])
+    n_img_blur.size_x = blur_val
+    n_img_blur.size_y = blur_val
+
+    # Randomise red levels in image
+    img_RGB_curve = n_img_RGB.mapping.curves[0] #Selects the Red channel of the RGB curve
+        
+    curve_x = round(random.uniform(0.5, imp_config["max_red"][0]), 2)
+    curve_y = round(random.uniform(0.5, imp_config["max_red"][1]), 2)
+
+    RGB_curve_points = img_RGB_curve.points
+
+    while len(RGB_curve_points) > 2:
+        RGB_curve_points.remove(RGB_curve_points[1])
+
+    # Reset locations
+    RGB_curve_points[0].location = (0,0)
+    RGB_curve_points[1].location = (1,1)
+
+    img_RGB_curve.points.update()
+    img_RGB_curve.points.new(curve_x, curve_y)
+
+    # Randomise noise level
+    n_img_multiply.inputs[0].default_value = round(random.uniform(imp_config["min_noise_fac"], imp_config["max_noise_fac"]), 2)
+
+    # Randomise image exposure
+    n_img_exposure.inputs[1].default_value = round(random.uniform(imp_config["min_exposure"], imp_config["max_exposure"]), 2)
+
+
