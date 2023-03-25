@@ -163,6 +163,7 @@ def update_hdri_env(world, img_path, env_info):
         radians(env_info["rotation"]["yaw"]),
     )
 
+    # Raise the HDR to make it appear bigger for some HDRs
     if "location" in env_info:
         n_map.inputs['Location'].default_value = (
             env_info["location"]["x"],
