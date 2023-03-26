@@ -19,23 +19,15 @@ class Camera(BlenderObject):
     def set_tracking_target(self, target):
         bpy.context.view_layer.objects.active = self.obj
 
-        if "Damped Track" not in self.obj.constraints:
-            bpy.ops.object.constraint_add(type="DAMPED_TRACK")
+        # tracks the ball position while keeping camera upright
+        if "Track To" not in self.obj.constraints:
+            bpy.ops.object.constraint_add(type="TRACK_TO")
 
-        # allow ball to be slightly off centre in camera view
-        constr = self.obj.constraints["Damped Track"]
+        constr = self.obj.constraints["Track To"]
         constr.target = target
         constr.track_axis = "TRACK_NEGATIVE_Z"
+        constr.up_axis = "UP_Y"
         constr.influence = 0.9
-
-        if "Limit Rotation" not in self.obj.constraints:
-            bpy.ops.object.constraint_add(type="LIMIT_ROTATION")
-
-        # sets the camera so it does not tilt
-        rot_constr = self.obj.constraints["Limit Rotation"]
-        rot_constr.use_limit_y = True
-        rot_constr.min_y = 0
-        rot_constr.max_y = 0
 
     # Add parent camera for stereo vision
     def set_stereo_pair(self, cam):
