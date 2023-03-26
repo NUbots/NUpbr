@@ -22,10 +22,20 @@ class Camera(BlenderObject):
         if "Damped Track" not in self.obj.constraints:
             bpy.ops.object.constraint_add(type="DAMPED_TRACK")
 
+        # allow ball to be slightly off centre in camera view
         constr = self.obj.constraints["Damped Track"]
         constr.target = target
         constr.track_axis = "TRACK_NEGATIVE_Z"
-        constr.influence = 0.75
+        constr.influence = 0.9
+
+        if "Limit Rotation" not in self.obj.constraints:
+            bpy.ops.object.constraint_add(type="LIMIT_ROTATION")
+
+        # sets the camera so it does not tilt
+        rot_constr = self.obj.constraints["Limit Rotation"]
+        rot_constr.use_limit_y = True
+        rot_constr.min_y = 0
+        rot_constr.max_y = 0
 
         if "Limit Rotation" not in self.obj.constraints:
             bpy.ops.object.constraint_add(type="LIMIT_ROTATION")
