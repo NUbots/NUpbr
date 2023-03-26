@@ -112,7 +112,7 @@ def main():
             shapes[ii].obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
 
         # Select the ball, environment, and grass to use
-        hdr_data = hdr_data = random.choice(hdrs)
+        hdr_data = random.choice(hdrs)
         ball_data = random.choice(balls)
         grass_data = random.choice(grasses)
 
