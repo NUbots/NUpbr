@@ -51,6 +51,11 @@ resources = {
                 "mesh_path": path.abspath(path.join(res_path, "robot", "darwin_fixed.fbx")),
                 "kinematics_path": path.abspath(path.join(res_path, "robot", "darwin_fixed.json")),
                 "kinematics_variance": 0.5
+            },
+            "wolfgang": {
+                "mesh_path": path.abspath(path.join(res_path, "robot", "wolfgang_fixed.fbx")),
+                "kinematics_path": path.abspath(path.join(res_path, "robot", "wolfgang_fixed.json")),
+                "kinematics_variance": 0.5
             }},
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
     },

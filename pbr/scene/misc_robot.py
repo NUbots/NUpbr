@@ -134,5 +134,6 @@ class MiscRobot(BlenderObject):
 
     def update(self, cfg):
         self.update_kinematics()
-        bpy.data.objects[self.name + "_torso"].location = cfg["position"]
-        bpy.data.objects[self.name + "_torso"].delta_rotation_euler = cfg["rotation"]
+        #Fix this later
+        bpy.data.objects[self.name + "_Torso"].location = cfg["position"]
+        bpy.data.objects[self.name + "_Torso"].delta_rotation_euler = cfg["rotation"]
