@@ -456,10 +456,11 @@ def randomise_imperfections(n_img_blur, n_img_RGB, n_img_multiply, n_img_exposur
 
     RGB_curve_points = img_RGB_curve.points
 
+    #Remove newly added point (node originally contains 2 points)
     while len(RGB_curve_points) > 2:
         RGB_curve_points.remove(RGB_curve_points[1])
 
-    # Reset locations
+    # Reset locations of original 2 points
     RGB_curve_points[0].location = (0,0)
     RGB_curve_points[1].location = (1,1)
 
