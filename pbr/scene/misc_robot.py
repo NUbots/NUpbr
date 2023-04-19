@@ -42,8 +42,14 @@ class MiscRobot(BlenderObject):
             filepath=self.robot["mesh_path"], axis_forward="X", axis_up="Z"
         )
 
+        # Pure black is too dark
+        if (self.colour == 0):
+            self.colour = 0.1
+
         for p in self.robot_parts.keys():
             obj = bpy.data.objects[p]
+
+            obj.data.materials.clear()
 
             if obj.parent == None:
                 self.obj = obj
@@ -53,13 +59,13 @@ class MiscRobot(BlenderObject):
 
             obj.pass_index = self.pass_index
 
-        # Configure robot to have correct pass index
-        obj.pass_index = self.pass_index
+            # Configure robot to have correct pass index
+            obj.pass_index = self.pass_index
 
-        # TODO: Make materials not embedded in FBX files
-        # Set material for robot
-        # self.mat.update({obj.name: self.set_material(obj, "misc_robot_tex")})
-        # obj.data.materials.append(self.mat[obj.name])
+            # TODO: Make materials not embedded in FBX files
+            # Set material for robot
+            self.mat.update({obj.name: self.set_material(obj, self.name + "_tex")})
+            obj.data.materials.append(self.mat[obj.name])
 
         self.initialise_kinematics()
 
@@ -77,17 +83,25 @@ class MiscRobot(BlenderObject):
             node_list.remove(node)
 
         # Construct node tree
+
         # Create principled node
         n_principled = node_list.new("ShaderNodeBsdfPrincipled")
-        n_principled.inputs["Metallic"].default_value = blend_cfg.misc_robot["material"][
+        n_principled.inputs["Metallic"].default_value = blend_cfg.darwin_robot["material"][
             "metallic"
         ]
-        n_principled.inputs["Roughness"].default_value = blend_cfg.misc_robot["material"][
+        n_principled.inputs["Roughness"].default_value = blend_cfg.darwin_robot["material"][
             "roughness"
         ]
-        n_principled.inputs[0].default_value = blend_cfg.misc_robot["material"][
+        n_principled.inputs[0].default_value = blend_cfg.darwin_robot["material"][
             "base_col"
         ]
+
+        n_principled.inputs["Base Color"].default_value = (
+            self.colour,
+            self.colour,
+            self.colour,
+            1.0,
+        )
 
         # Create output node
         n_output = node_list.new("ShaderNodeOutputMaterial")
@@ -95,6 +109,7 @@ class MiscRobot(BlenderObject):
         # Link shaders
         tl = l_mat.node_tree.links
         tl.new(n_principled.outputs[0], n_output.inputs[0])
+        #tl.new(n_mix_col_map.outputs[0], n_principled.inputs[0])
 
         return l_mat
     
