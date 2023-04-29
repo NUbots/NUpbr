@@ -3,7 +3,12 @@
 import os
 import bpy
 import numpy as np
+import mathutils
+from mathutils import Vector
+import math
 from scene.blender_object import BlenderObject
+import pdb
+import util
 
 
 class Camera(BlenderObject):
@@ -17,14 +22,24 @@ class Camera(BlenderObject):
 
     # Sets target for camera to track
     def set_tracking_target(self, target):
-        bpy.context.view_layer.objects.active = self.obj
+        # create a tracking target at the location of the ball
+        bpy.ops.object.add(type='EMPTY', location=(0, 0, 0))
+        tracking_target = bpy.context.active_object
+        tracking_target.name = "Tracking_Target"
+        ball_location = bpy.data.objects["Ball"].location
+        tracking_target.location = ball_location
 
-        # tracks the ball position while keeping camera upright
+        if (not self.ball_in_front(target)):
+            print("found one!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            self.move_tracking_target(tracking_target)
+
+        bpy.context.view_layer.objects.active = self.obj
+        # tracks the empty's position while keeping camera upright
         if "Track To" not in self.obj.constraints:
             bpy.ops.object.constraint_add(type="TRACK_TO")
 
         constr = self.obj.constraints["Track To"]
-        constr.target = target
+        constr.target = tracking_target
         constr.track_axis = "TRACK_NEGATIVE_Z"
         constr.up_axis = "UP_Y"
         constr.influence = 0.9
@@ -84,3 +99,36 @@ class Camera(BlenderObject):
         if targets is not None:
             self.obj.rotation_euler = [np.pi / 2, 0, np.pi / 2]
             self.set_tracking_target(target=targets["target"])
+
+    def ball_in_front(self, target):
+        # Using head of robot to avoid strange camera vectors
+        robot = bpy.context.scene.objects["r0_Head"]
+
+        forward = util.find_forward_vector(robot)
+
+        object_vector = target.location - (robot.location + (forward * 0.4))
+        object_vector.z = 0  # Set the Z component of the object vector to 0 to consider only X and Y components
+        object_vector.normalize()  # Normalize the object vector after setting Z to 0
+
+        angle = math.degrees(forward.angle(object_vector))
+
+        return (angle < 90)
+
+    # Make sure the tracking target is in front of the robot
+    def move_tracking_target(self, target):
+        # Using head of robot to avoid strange camera vectors
+        robot = bpy.context.scene.objects["r0_Head"]
+        forward = util.find_forward_vector(robot)
+
+        z_axis = Vector((0, 0, 1))
+        # Add a small offset to prevent robot looking straight down
+        base_location = robot.location.copy() + (forward * 0.4)
+
+        # Vector perpendicular to the robot
+        perp_vector = forward.cross(z_axis).normalized()
+        robot_to_ball_vector = target.location - base_location
+
+        # Move the ball to the correct position along the perp_vector
+        projection = robot_to_ball_vector.project(perp_vector)
+        new_ball_position = base_location + projection
+        bpy.data.objects["Tracking_Target"].location = new_ball_position
