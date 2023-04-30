@@ -23,14 +23,15 @@ class Camera(BlenderObject):
     # Sets target for camera to track
     def set_tracking_target(self, target):
         # create a tracking target at the location of the ball
-        bpy.ops.object.add(type='EMPTY', location=(0, 0, 0))
-        tracking_target = bpy.context.active_object
-        tracking_target.name = "Tracking_Target"
-        ball_location = bpy.data.objects["Ball"].location
-        tracking_target.location = ball_location
+        if ("Tracking_Target" not in bpy.data.objects):
+            bpy.ops.object.add(type='EMPTY', location=(0, 0, 0))
+            bpy.context.active_object.name='Tracking_Target'
+
+        tracking_target = bpy.data.objects["Tracking_Target"]
+        tracking_target.location = bpy.data.objects["Ball"].location
 
         if (not self.ball_in_front(target)):
-            print("found one!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+             print("found one!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             self.move_tracking_target(tracking_target)
 
         bpy.context.view_layer.objects.active = self.obj
