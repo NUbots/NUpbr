@@ -119,6 +119,11 @@ def main():
         cam_l.update(config["camera"])
         cam_l.obj.keyframe_insert(data_path="location", frame=frame_num)
 
+        
+        if out_cfg.output_imperfections:
+            composition_nodes = bpy.context.scene.node_tree.nodes
+            env.randomise_imperfections(composition_nodes["Blur"], composition_nodes["RGB Curves"], composition_nodes["Mix"], composition_nodes["Exposure"])
+
         # Update shapes
         for ii in range(len(shapes)):
             shapes[ii].update(config["shape"][ii])

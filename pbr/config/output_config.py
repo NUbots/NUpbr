@@ -11,6 +11,8 @@ num_images = 10
 output_stereo = False
 output_depth = False
 
+output_imperfections = True
+
 # Absolute output directory to hold the directories for output images and segmentation masks
 output_base = os.path.join(
     os.path.abspath(
