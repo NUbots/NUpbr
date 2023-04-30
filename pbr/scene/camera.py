@@ -28,7 +28,7 @@ class Camera(BlenderObject):
             bpy.context.active_object.name='Tracking_Target'
 
         tracking_target = bpy.data.objects["Tracking_Target"]
-        tracking_target.location = bpy.data.objects["Ball"].location
+        tracking_target.location = target.location
 
         if (not self.ball_in_front(target)):
             print("found one!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
@@ -98,7 +98,7 @@ class Camera(BlenderObject):
                 cam.angle = cam_config["fov"]
 
         if targets is not None:
-            self.obj.rotation_euler = [np.pi / 2, 0, np.pi / 2]
+            # self.obj.rotation_euler = [np.pi / 2, 0, np.pi / 2]
             self.set_tracking_target(target=targets["target"])
 
     def ball_in_front(self, target):
