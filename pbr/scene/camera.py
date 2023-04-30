@@ -31,7 +31,7 @@ class Camera(BlenderObject):
         tracking_target.location = bpy.data.objects["Ball"].location
 
         if (not self.ball_in_front(target)):
-             print("found one!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            print("found one!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
             self.move_tracking_target(tracking_target)
 
         bpy.context.view_layer.objects.active = self.obj
