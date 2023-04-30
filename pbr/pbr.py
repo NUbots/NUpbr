@@ -184,7 +184,7 @@ def main():
             config["misc_robot"][ii]["position"] = (
                 world_points[ii + num_robots][0],
                 world_points[ii + num_robots][1],
-                config["misc_robot"][ii]["position"][2]
+                misc_robots[ii].get_height()
             )
             misc_robots[ii].update(config["misc_robot"][ii])
             misc_robots[ii].obj.keyframe_insert(data_path="location", frame=frame_num)

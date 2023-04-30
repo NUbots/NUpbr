@@ -24,7 +24,8 @@ class MiscRobot(BlenderObject):
         self.obj = None
         self.name = name
         self.colour = randint(0, 1)  # 1. white or 0. black
-        self.construct(robot_info)
+        self.height = 0
+        self.construct(robot_info)   
 
     # Setup robot object
     def construct(self, robot_info):
@@ -34,6 +35,8 @@ class MiscRobot(BlenderObject):
         self.robot = scene_cfg.choose_misc_robot()
 
         mesh_path = self.robot["mesh_path"]
+
+        self.height = self.robot["height"]
 
         with open(self.robot["kinematics_path"], "r") as file:
             self.robot_parts = json.loads(file.read())
@@ -112,6 +115,10 @@ class MiscRobot(BlenderObject):
         #tl.new(n_mix_col_map.outputs[0], n_principled.inputs[0])
 
         return l_mat
+    
+
+    def get_height(self):
+            return self.height    
     
     def initialise_kinematics(self):
         # Set all joints to neutral pose
