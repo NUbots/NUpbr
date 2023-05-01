@@ -105,7 +105,7 @@ def main():
 
         cam_l.update(config["camera"])
 
-        
+
         if out_cfg.output_imperfections:
             composition_nodes = bpy.context.scene.node_tree.nodes
             env.randomise_imperfections(composition_nodes["Blur"], composition_nodes["RGB Curves"], composition_nodes["Mix"], composition_nodes["Exposure"])
@@ -271,7 +271,10 @@ def main():
 
         bpy.context.scene.frame_set(frame_num)
 
+        cam_l.set_tracking_target(tracking_target)
+
         bpy.context.view_layer.update()
+
 
         ##############################################
         ##                RENDERING                 ##

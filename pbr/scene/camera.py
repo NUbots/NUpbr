@@ -30,10 +30,6 @@ class Camera(BlenderObject):
         tracking_target = bpy.data.objects["Tracking_Target"]
         tracking_target.location = target.location
 
-        if (not self.ball_in_front(target)):
-            print("found one!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            self.move_tracking_target(tracking_target)
-
         bpy.context.view_layer.objects.active = self.obj
         # tracks the empty's position while keeping camera upright
         if "Track To" not in self.obj.constraints:
@@ -44,6 +40,9 @@ class Camera(BlenderObject):
         constr.track_axis = "TRACK_NEGATIVE_Z"
         constr.up_axis = "UP_Y"
         constr.influence = 0.9
+
+        if (not self.ball_in_front(target)):
+            self.move_tracking_target(tracking_target)
 
     # Add parent camera for stereo vision
     def set_stereo_pair(self, cam):
@@ -70,7 +69,6 @@ class Camera(BlenderObject):
         child_constr.use_location_y = False
         child_constr.use_location_z = False
 
-    # There is some behaviour that is not working correctly with the child of constraint, I have to investigate further
     def set_robot(self, robot):
         # Ensure object is selected to receive added constraints
         bpy.context.view_layer.objects.active = self.obj
@@ -97,25 +95,18 @@ class Camera(BlenderObject):
                 cam.lens_unit = "FOV"
                 cam.angle = cam_config["fov"]
 
-        if targets is not None:
-            # self.obj.rotation_euler = [np.pi / 2, 0, np.pi / 2]
-            self.set_tracking_target(target=targets["target"])
-
     def ball_in_front(self, target):
-        # Using head of robot to avoid strange camera vectors
         robot = bpy.context.scene.objects["r0_Head"]
-
         forward = util.find_forward_vector(robot)
-
         object_vector = target.location - (robot.location + (forward * 0.4))
         object_vector.z = 0  # Set the Z component of the object vector to 0 to consider only X and Y components
-        object_vector.normalize()  # Normalize the object vector after setting Z to 0
+        object_vector.normalize()
 
         angle = math.degrees(forward.angle(object_vector))
 
         return (angle < 90)
 
-    # Make sure the tracking target is in front of the robot
+    # Make sure the robot looks slightly ahead
     def move_tracking_target(self, target):
         # Using head of robot to avoid strange camera vectors
         robot = bpy.context.scene.objects["r0_Head"]
