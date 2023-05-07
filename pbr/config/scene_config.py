@@ -51,31 +51,31 @@ resources = {
                 "mesh_path": path.abspath(path.join(res_path, "robot", "darwin_fixed.fbx")),
                 "kinematics_path": path.abspath(path.join(res_path, "robot", "darwin_fixed.json")),
                 "kinematics_variance": 0.5,
-                "height" : 0.3
+                "height" : 0.45
             },
             "wolfgang": {
                 "mesh_path": path.abspath(path.join(res_path, "robot", "wolfgang_fixed.fbx")),
                 "kinematics_path": path.abspath(path.join(res_path, "robot", "wolfgang_fixed.json")),
                 "kinematics_variance": 0.5,
-                "height" : 0.53
+                "height" : 0.68
             },
             "nao": {
                 "mesh_path": path.abspath(path.join(res_path, "robot", "nao_fixed.fbx")),
                 "kinematics_path": path.abspath(path.join(res_path, "robot", "nao_fixed.json")),
                 "kinematics_variance": 0.5,
-                "height" : 0.4
+                "height" : 0.55
             },
             "MRLHSRobot": {
                 "mesh_path": path.abspath(path.join(res_path, "robot", "MRLHSRobot_fixed.fbx")),
                 "kinematics_path": path.abspath(path.join(res_path, "robot", "MRLHSRobot_fixed.json")),
                 "kinematics_variance": 0.5,
-                "height" : 0.62
+                "height" : 0.77
             },
             "GankenKun": {
                 "mesh_path": path.abspath(path.join(res_path, "robot", "GankenKun_hack.fbx")),
                 "kinematics_path": path.abspath(path.join(res_path, "robot", "GankenKun_hack.json")),
                 "kinematics_variance": 0.5,
-                "height" : 0.44
+                "height" : 0.59
             }
             },
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
@@ -274,7 +274,7 @@ def configure_scene():
                         random.uniform(
                             -cfg["field"]["width"] * 0.5, cfg["field"]["width"] * 0.5
                         ),
-                        random.uniform(0.5, 0.5),
+                        random.uniform(0.35, 0.35),
                     ),
                 }
                 for ii in range(num_robots + 1)
@@ -282,7 +282,7 @@ def configure_scene():
         }
     )
 
-    # Add robot information
+    # Add misc robot information
     cfg.update(
         {
             "misc_robot": [
