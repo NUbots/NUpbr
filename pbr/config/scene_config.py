@@ -76,8 +76,26 @@ resources = {
                 "kinematics_path": path.abspath(path.join(res_path, "robot", "GankenKun_hack.json")),
                 "kinematics_variance": 0.5,
                 "height" : 0.59
-            }
             },
+            "Bez": {
+                "mesh_path": path.abspath(path.join(res_path, "robot", "BezRobocup_fixed.fbx")),
+                "kinematics_path": path.abspath(path.join(res_path, "robot", "BezRobocup_fixed.json")),
+                "kinematics_variance": 0.5,
+                "height" : 0.59
+            },
+            "Chape": {
+                "mesh_path": path.abspath(path.join(res_path, "robot", "Chape_fixed.fbx")),
+                "kinematics_path": path.abspath(path.join(res_path, "robot", "Chape_fixed.json")),
+                "kinematics_variance": 0.5,
+                "height" : 0.59
+            },
+            "SAHRV74": {
+                "mesh_path": path.abspath(path.join(res_path, "robot", "SAHRV74Robocup_fixed.fbx")),
+                "kinematics_path": path.abspath(path.join(res_path, "robot", "SAHRV74Robocup_fixed.json")),
+                "kinematics_variance": 0.5,
+                "height" : 0.59
+            }
+        },
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
     },
 
