@@ -81,19 +81,19 @@ resources = {
                 "mesh_path": path.abspath(path.join(res_path, "robot", "BezRobocup_fixed.fbx")),
                 "kinematics_path": path.abspath(path.join(res_path, "robot", "BezRobocup_fixed.json")),
                 "kinematics_variance": 0.5,
-                "height" : 0.59
+                "height" : 0.45
             },
             "Chape": {
                 "mesh_path": path.abspath(path.join(res_path, "robot", "Chape_fixed.fbx")),
                 "kinematics_path": path.abspath(path.join(res_path, "robot", "Chape_fixed.json")),
                 "kinematics_variance": 0.5,
-                "height" : 0.59
+                "height" : 0.45
             },
             "SAHRV74": {
                 "mesh_path": path.abspath(path.join(res_path, "robot", "SAHRV74Robocup_fixed.fbx")),
                 "kinematics_path": path.abspath(path.join(res_path, "robot", "SAHRV74Robocup_fixed.json")),
                 "kinematics_variance": 0.5,
-                "height" : 0.59
+                "height" : 0.45
             }
         },
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
