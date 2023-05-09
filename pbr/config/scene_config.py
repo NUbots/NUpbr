@@ -95,7 +95,7 @@ resources = {
                 "kinematics_variance": 0.5,
                 "height" : 0.36
             }
-            },
+        },
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
     },
 
