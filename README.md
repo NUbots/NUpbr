@@ -94,6 +94,7 @@ The HDR JSON metadata file may have the following fields:
 | `position`                | Used to place the camera and the robot in the scene. Specifically uses `position["z"]` for the camera height and the robot position along the z axis. |
 | `to_draw`                 | Specifies which objects (ball, goal, field) to draw. Objects set to `true` are drawn, and those set to `false` are not.                               |
 | `ball_limits["position"]` | Specifies a region in which the ball can be randomly placed.                                                                                          |
+| `location` | Optional value. Specifies the location of the environment. Adjusting the 'z' variable can be used to move the environment map up and down, to make the background in proportion to the rest of the scene. |
 
 <details>
 <summary>View example HDR metadata file</summary>

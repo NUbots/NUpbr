@@ -164,6 +164,14 @@ def update_hdri_env(world, img_path, env_info):
         radians(env_info["rotation"]["yaw"]),
     )
 
+    # Raise the HDR to make it appear bigger for some HDRs
+    if "location" in env_info:
+        n_map.inputs['Location'].default_value = (
+            env_info["location"]["x"],
+            env_info["location"]["y"],
+            env_info["location"]["z"],
+        )
+
     # Attempt to find link to remove if necessary
     link = None
     for l in tl:
@@ -450,7 +458,7 @@ def randomise_imperfections(n_img_blur, n_img_RGB, n_img_multiply, n_img_exposur
 
     # Randomise red levels in image
     img_RGB_curve = n_img_RGB.mapping.curves[0] #Selects the Red channel of the RGB curve
-        
+
     curve_x = round(random.uniform(0.5, imp_config["max_red"][0]), 2)
     curve_y = round(random.uniform(0.5, imp_config["max_red"][1]), 2)
 
