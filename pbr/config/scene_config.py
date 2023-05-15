@@ -129,20 +129,10 @@ resources = {
     "goal": {"mask": {"index": 2, "colour": (1, 1, 0, 1)}},
 }
 
-def new_misc_robot():
-    mesh_path = ''.join(path.abspath(path.join(res_path, "robot", random.choice(resources["misc_robot"]["robot_list"]))))
-    return mesh_path
-
 def choose_misc_robot():
     choice = random.choice(list(resources["misc_robot"]["robot_list"].keys()))
     #return choice
     return resources["misc_robot"]["robot_list"][choice]
-
-def get_misc_robot(robot_path):
-    #robot = resources["misc_robot"]["robot_list"][path]["mesh_path"]
-
-    mesh_path = ''.join(path.abspath(path.join(res_path, "robot", resources["misc_robot"]["robot_list"][robot_path]["mesh_path"])))
-    return mesh_path
 
 def configure_scene():
 

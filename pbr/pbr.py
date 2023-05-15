@@ -76,7 +76,7 @@ def main():
         MiscRobot(
             "r{}".format(len(robots) + ii),
             scene_config.resources["misc_robot"]["mask"]["index"],
-            random.choice(list(scene_config.resources["misc_robot"]["robot_list"].keys())),
+            scene_config.choose_misc_robot()
         )
         for ii in range(scene_config.num_misc_robots)
     ]

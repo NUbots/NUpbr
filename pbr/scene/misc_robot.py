@@ -32,7 +32,7 @@ class MiscRobot(BlenderObject):
         robot_mesh = None
         robot_obj = {}
 
-        self.robot = scene_cfg.choose_misc_robot()
+        self.robot = robot_info
 
         mesh_path = self.robot["mesh_path"]
 
