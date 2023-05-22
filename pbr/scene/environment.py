@@ -36,16 +36,13 @@ def setup_render():
     # Disable file extension (so frame number is not appended)
     context.scene.render.use_file_extension = False
 
-    # Set render submenu settings
+    # Enable rendering devices
+    cycles = context.preferences.addons["cycles"]
+    cycles.preferences.compute_device_type = "CUDA"
     scene.cycles.device = rend_cfg["render"]["cycles_device"]
-
-    # Select which GPU to use
-    devices = bpy.context.preferences.addons["cycles"].preferences.get_devices()[0]
-    if "CUDA_DEVICE_NO" in os.environ:
-        for d in devices:
-            d.use = False
-        for no in os.environ["CUDA_DEVICE_NO"].split(","):
-            devices[int(no)].use = True
+    
+    for d in cycles.preferences.devices:
+        d["use"] = 1
 
     # Set denoising settings
     context.scene.view_layers[0].cycles.use_denoising = blend_cfg.layers["denoising"][
