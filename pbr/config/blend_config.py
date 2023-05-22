@@ -80,3 +80,4 @@ goal = {
 }
 
 robot = {"material": {"specular": 0.742, "metallic": 0.0, "roughness": 0.9}}
+darwin_robot = {"material": {"base_col": (0.5, 0.5, 0.5, 1), "specular": 0.742, "metallic": 0.6, "roughness": 0.5}}
