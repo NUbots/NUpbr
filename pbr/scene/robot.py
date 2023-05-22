@@ -27,7 +27,7 @@ class Robot(BlenderObject):
         self.colour = randint(0, 1)  # 1. white or 0. black
         self.construct(robot_info)
 
-    # Setup ball object
+    # Setup robot object
     def construct(self, robot_info):
         robot_mesh = None
         robot_obj = {}

@@ -25,6 +25,7 @@ from scene.shape import Shape
 from scene.camera_anchor import CameraAnchor
 from scene.shadowcatcher import ShadowCatcher
 from scene.robot import Robot
+from scene.misc_robot import MiscRobot
 
 # TODO: Reimplement field uv generation with Scikit-Image
 
@@ -67,6 +68,15 @@ def main():
             scene_config.resources["robot"],
         )
         for ii in range(scene_config.num_robots + 1)
+    ]
+
+    misc_robots = [
+        MiscRobot(
+            "r{}".format(len(robots) + ii),
+            scene_config.resources["misc_robot"]["mask"]["index"],
+            scene_config.choose_misc_robot()
+        )
+        for ii in range(scene_config.num_misc_robots)
     ]
 
     # Construct our shadowcatcher
@@ -168,6 +178,18 @@ def main():
             robots[ii].update(config["robot"][ii])
             robots[ii].obj.keyframe_insert(data_path="location", frame=frame_num)
             robots[ii].obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
+
+        num_robots = len(robots) - 1
+
+        for ii in range(len(misc_robots)):
+            config["misc_robot"][ii]["position"] = (
+                world_points[ii + num_robots][0],
+                world_points[ii + num_robots][1],
+                misc_robots[ii].get_height()
+            )
+            misc_robots[ii].update(config["misc_robot"][ii])
+            misc_robots[ii].obj.keyframe_insert(data_path="location", frame=frame_num)
+            misc_robots[ii].obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
 
         # Update ball
         # If we are autoplacing update the configuration
