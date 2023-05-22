@@ -65,7 +65,6 @@ class MiscRobot(BlenderObject):
             # Configure robot to have correct pass index
             obj.pass_index = self.pass_index
 
-            # TODO: Make materials not embedded in FBX files
             # Set material for robot
             self.mat.update({obj.name: self.set_material(obj, self.name + "_tex")})
             obj.data.materials.append(self.mat[obj.name])
@@ -112,7 +111,6 @@ class MiscRobot(BlenderObject):
         # Link shaders
         tl = l_mat.node_tree.links
         tl.new(n_principled.outputs[0], n_output.inputs[0])
-        #tl.new(n_mix_col_map.outputs[0], n_principled.inputs[0])
 
         return l_mat
     

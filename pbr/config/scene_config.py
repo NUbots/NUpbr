@@ -131,7 +131,6 @@ resources = {
 
 def choose_misc_robot():
     choice = random.choice(list(resources["misc_robot"]["robot_list"].keys()))
-    #return choice
     return resources["misc_robot"]["robot_list"][choice]
 
 def configure_scene():
