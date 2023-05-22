@@ -36,16 +36,13 @@ def setup_render():
     # Disable file extension (so frame number is not appended)
     context.scene.render.use_file_extension = False
 
-    # Set render submenu settings
+    # Enable rendering devices
+    cycles = context.preferences.addons["cycles"]
+    cycles.preferences.compute_device_type = "CUDA"
     scene.cycles.device = rend_cfg["render"]["cycles_device"]
-
-    # Select which GPU to use
-    devices = bpy.context.preferences.addons["cycles"].preferences.get_devices()[0]
-    if "CUDA_DEVICE_NO" in os.environ:
-        for d in devices:
-            d.use = False
-        for no in os.environ["CUDA_DEVICE_NO"].split(","):
-            devices[int(no)].use = True
+    
+    for d in cycles.preferences.devices:
+        d["use"] = 1
 
     # Set denoising settings
     context.scene.view_layers[0].cycles.use_denoising = blend_cfg.layers["denoising"][
@@ -163,6 +160,14 @@ def update_hdri_env(world, img_path, env_info):
         radians(env_info["rotation"]["pitch"]),
         radians(env_info["rotation"]["yaw"]),
     )
+
+    # Raise the HDR to make it appear bigger for some HDRs
+    if "location" in env_info:
+        n_map.inputs['Location'].default_value = (
+            env_info["location"]["x"],
+            env_info["location"]["y"],
+            env_info["location"]["z"],
+        )
 
     # Attempt to find link to remove if necessary
     link = None
@@ -450,7 +455,7 @@ def randomise_imperfections(n_img_blur, n_img_RGB, n_img_multiply, n_img_exposur
 
     # Randomise red levels in image
     img_RGB_curve = n_img_RGB.mapping.curves[0] #Selects the Red channel of the RGB curve
-        
+
     curve_x = round(random.uniform(0.5, imp_config["max_red"][0]), 2)
     curve_y = round(random.uniform(0.5, imp_config["max_red"][1]), 2)
 
