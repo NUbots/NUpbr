@@ -105,10 +105,14 @@ def main():
 
         cam_l.update(config["camera"])
 
-
         if out_cfg.output_imperfections:
             composition_nodes = bpy.context.scene.node_tree.nodes
-            env.randomise_imperfections(composition_nodes["Blur"], composition_nodes["RGB Curves"], composition_nodes["Mix"], composition_nodes["Exposure"])
+            env.randomise_imperfections(
+                composition_nodes["Blur"],
+                composition_nodes["RGB Curves"],
+                composition_nodes["Mix"],
+                composition_nodes["Exposure"],
+            )
 
         # Update shapes
         for ii in range(len(shapes)):
@@ -145,7 +149,7 @@ def main():
         points_on_field = util.point_on_field(
             camera_loc, hdr_data["mask_path"], env_info, len(robots) + 1
         )
-        print(points_on_field)
+        print("Points on field: \n", points_on_field)
         # Generate new world points for the robots and use this to update their location
         world_points = util.generate_moves(scene_config.field_dims)
         for ii in range(robot_start, len(robots)):
@@ -275,7 +279,6 @@ def main():
 
         bpy.context.view_layer.update()
 
-
         ##############################################
         ##                RENDERING                 ##
         ##############################################
@@ -338,7 +341,7 @@ def main():
                 )
 
         # Check that the rotation matrix of the main camera is valid
-        print(cam_l.obj.matrix_world)
+        print(f"Rotation matrix of {cam_l.obj.name}: \n", cam_l.obj.matrix_world)
 
         # Generate meta file
         with open(
