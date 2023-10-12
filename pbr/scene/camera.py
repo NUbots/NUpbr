@@ -3,7 +3,12 @@
 import os
 import bpy
 import numpy as np
+import mathutils
+from mathutils import Vector
+import math
 from scene.blender_object import BlenderObject
+import pdb
+import util
 
 
 class Camera(BlenderObject):
@@ -17,15 +22,27 @@ class Camera(BlenderObject):
 
     # Sets target for camera to track
     def set_tracking_target(self, target):
+        # create a tracking target at the location of the ball
+        if ("Tracking_Target" not in bpy.data.objects):
+            bpy.ops.object.add(type='EMPTY', location=(0, 0, 0))
+            bpy.context.active_object.name='Tracking_Target'
+
+        tracking_target = bpy.data.objects["Tracking_Target"]
+        tracking_target.location = target.location
+
         bpy.context.view_layer.objects.active = self.obj
+        # tracks the empty's position while keeping camera upright
+        if "Track To" not in self.obj.constraints:
+            bpy.ops.object.constraint_add(type="TRACK_TO")
 
-        if "Damped Track" not in self.obj.constraints:
-            bpy.ops.object.constraint_add(type="DAMPED_TRACK")
-
-        constr = self.obj.constraints["Damped Track"]
-        constr.target = target
+        constr = self.obj.constraints["Track To"]
+        constr.target = tracking_target
         constr.track_axis = "TRACK_NEGATIVE_Z"
-        constr.influence = 0.75
+        constr.up_axis = "UP_Y"
+        constr.influence = 0.9
+
+        if (not self.ball_in_front(target)):
+            self.move_tracking_target(tracking_target)
 
     # Add parent camera for stereo vision
     def set_stereo_pair(self, cam):
@@ -52,22 +69,17 @@ class Camera(BlenderObject):
         child_constr.use_location_y = False
         child_constr.use_location_z = False
 
-    def set_robot(self, robot, left_eye=True):
+    def set_robot(self, robot):
         # Ensure object is selected to receive added constraints
         bpy.context.view_layer.objects.active = self.obj
 
-        bpy.ops.object.constraint_add(type="CHILD_OF")
-        child_constr = self.obj.constraints["Child Of"]
-        child_constr.name = "robot_child"
+        bpy.ops.object.constraint_add(type="COPY_LOCATION")
+        loc_constr = self.obj.constraints["Copy Location"]
+        loc_constr.name = "robot_L_Eye_Loc"
 
         # Bind to robot's chosen eye position - must make sure that the main robot being used is the NUgus_esh
-        if left_eye:
-            child_constr.target = bpy.data.objects[f"{robot.name[:2]}_L_Eye_Socket"]
-        else:
-            child_constr.target = bpy.data.objects[f"{robot.name[:2]}_R_Eye_Socket"]
-
-        # Invert child of
-        child_constr.inverse_matrix = robot.matrix_world.inverted()
+        loc_constr.target = bpy.data.objects[f"{robot.name[:2]}_L_Eye_Socket"]
+        self.obj.rotation_euler = [np.pi / 2, 0, np.pi / 2]
 
     def update(self, cam_config, targets=None):
         # Fix for blender being stupid
@@ -83,11 +95,32 @@ class Camera(BlenderObject):
                 cam.lens_unit = "FOV"
                 cam.angle = cam_config["fov"]
 
-        if targets is not None:
-            # Generate camera object following the right hand rule orientation (Front of camera points towards +x, +z is up)
-            self.obj.location = [0, 0, 0]
-            self.obj.rotation_euler = [np.pi / 2, 0, -np.pi / 2]
-            left_eye_loc = targets["robot"]["left_eye"].location
+    def ball_in_front(self, target):
+        robot = bpy.context.scene.objects["r0_Head"]
+        forward = util.find_forward_vector(robot)
+        object_vector = target.location - (robot.location + (forward * 0.4))
+        object_vector.z = 0  # Set the Z component of the object vector to 0 to consider only X and Y components
+        object_vector.normalize()
 
-            self.obj.location = left_eye_loc
-            self.set_tracking_target(target=targets["target"])
+        angle = math.degrees(forward.angle(object_vector))
+
+        return (angle < 90)
+
+    # Make sure the robot looks slightly ahead
+    def move_tracking_target(self, target):
+        # Using head of robot to avoid strange camera vectors
+        robot = bpy.context.scene.objects["r0_Head"]
+        forward = util.find_forward_vector(robot)
+
+        z_axis = Vector((0, 0, 1))
+        # Add a small offset to prevent robot looking straight down
+        base_location = robot.location.copy() + (forward * 0.4)
+
+        # Vector perpendicular to the robot
+        perp_vector = forward.cross(z_axis).normalized()
+        robot_to_ball_vector = target.location - base_location
+
+        # Move the ball to the correct position along the perp_vector
+        projection = robot_to_ball_vector.project(perp_vector)
+        new_ball_position = base_location + projection
+        bpy.data.objects["Tracking_Target"].location = new_ball_position
