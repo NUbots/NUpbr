@@ -330,7 +330,7 @@ def generate_moves(field_meta, z_coord=0.3):
 
     world_points = []
 
-    while len(world_points) < scene_config.num_robots:
+    while len(world_points) < scene_config.num_robots + scene_config.num_misc_robots:
         # Get random field point
         point = np.random.uniform(
             low=(-abs_x / 2, -abs_y / 2), high=(abs_x / 2, abs_y / 2)
