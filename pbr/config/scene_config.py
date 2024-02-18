@@ -104,6 +104,8 @@ resources = {
         "mesh_types": [".fbx", ".obj"],
         "path": path.abspath(path.join(res_path, "balls")),
         "mask": {"index": 1, "colour": (1, 0, 0, 1)},
+        "radius": 0.045,
+        "standard_deviation": 0.005,  # for randomising ball position, large value means more random, zero means no random
     },
     "environment": {
         "path": path.abspath(path.join(res_path, "hdr")),
@@ -135,7 +137,7 @@ def choose_misc_robot():
 
 def configure_scene():
 
-    ball_radius = 0.5969 / (2 * pi)
+    ball_radius = resources["ball"]["radius"]
 
     cfg = {}
 
@@ -163,6 +165,7 @@ def configure_scene():
         {
             "ball": {
                 "radius": ball_radius,
+                "standard_deviation": 0.01,
                 "auto_position": True,
                 "position": (
                     random.uniform(
@@ -306,7 +309,9 @@ def configure_scene():
                         random.uniform(0.45, 0.5),
                     ),
                     "rotation": (
-                        0, 0, random.uniform(0, 359),
+                        0,
+                        0,
+                        random.uniform(0, 359),
                     ),
                 }
                 for ii in range(num_misc_robots)
