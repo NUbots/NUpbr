@@ -49,56 +49,79 @@ resources = {
         "robot_list": {
             "darwin": {
                 "mesh_path": path.abspath(path.join(res_path, "robot", "darwin.fbx")),
-                "kinematics_path": path.abspath(path.join(res_path, "robot", "darwin.json")),
+                "kinematics_path": path.abspath(
+                    path.join(res_path, "robot", "darwin.json")
+                ),
                 "kinematics_variance": 0.5,
-                "height" : 0.29
+                "height": 0.29,
             },
             "wolfgang": {
                 "mesh_path": path.abspath(path.join(res_path, "robot", "wolfgang.fbx")),
-                "kinematics_path": path.abspath(path.join(res_path, "robot", "wolfgang.json")),
+                "kinematics_path": path.abspath(
+                    path.join(res_path, "robot", "wolfgang.json")
+                ),
                 "kinematics_variance": 0.5,
-                "height" : 0.53
+                "height": 0.53,
             },
             "nao": {
                 "mesh_path": path.abspath(path.join(res_path, "robot", "nao.fbx")),
-                "kinematics_path": path.abspath(path.join(res_path, "robot", "nao.json")),
+                "kinematics_path": path.abspath(
+                    path.join(res_path, "robot", "nao.json")
+                ),
                 "kinematics_variance": 0.5,
-                "height" : 0.41
+                "height": 0.41,
             },
             "MRLHSRobot": {
-                "mesh_path": path.abspath(path.join(res_path, "robot", "MRLHSRobot.fbx")),
-                "kinematics_path": path.abspath(path.join(res_path, "robot", "MRLHSRobot.json")),
+                "mesh_path": path.abspath(
+                    path.join(res_path, "robot", "MRLHSRobot.fbx")
+                ),
+                "kinematics_path": path.abspath(
+                    path.join(res_path, "robot", "MRLHSRobot.json")
+                ),
                 "kinematics_variance": 0.5,
-                "height" : 0.62
+                "height": 0.62,
             },
             "GankenKun": {
-                "mesh_path": path.abspath(path.join(res_path, "robot", "GankenKun.fbx")),
-                "kinematics_path": path.abspath(path.join(res_path, "robot", "GankenKun.json")),
+                "mesh_path": path.abspath(
+                    path.join(res_path, "robot", "GankenKun.fbx")
+                ),
+                "kinematics_path": path.abspath(
+                    path.join(res_path, "robot", "GankenKun.json")
+                ),
                 "kinematics_variance": 0.5,
-                "height" : 0.44
+                "height": 0.44,
             },
             "Chape": {
-               "mesh_path": path.abspath(path.join(res_path, "robot", "Chape.fbx")),
-               "kinematics_path": path.abspath(path.join(res_path, "robot", "Chape.json")),
+                "mesh_path": path.abspath(path.join(res_path, "robot", "Chape.fbx")),
+                "kinematics_path": path.abspath(
+                    path.join(res_path, "robot", "Chape.json")
+                ),
                 "kinematics_variance": 0.5,
-                "height" : 0.39
+                "height": 0.39,
             },
             "SAHRV74Robocup": {
-                "mesh_path": path.abspath(path.join(res_path, "robot", "SAHRV74Robocup.fbx")),
-                "kinematics_path": path.abspath(path.join(res_path, "robot", "SAHRV74Robocup.json")),
+                "mesh_path": path.abspath(
+                    path.join(res_path, "robot", "SAHRV74Robocup.fbx")
+                ),
+                "kinematics_path": path.abspath(
+                    path.join(res_path, "robot", "SAHRV74Robocup.json")
+                ),
                 "kinematics_variance": 0.5,
-                "height" : 0.51
+                "height": 0.51,
             },
             "BezRobocup": {
-                "mesh_path": path.abspath(path.join(res_path, "robot", "BezRobocup.fbx")),
-                "kinematics_path": path.abspath(path.join(res_path, "robot", "BezRobocup.json")),
+                "mesh_path": path.abspath(
+                    path.join(res_path, "robot", "BezRobocup.fbx")
+                ),
+                "kinematics_path": path.abspath(
+                    path.join(res_path, "robot", "BezRobocup.json")
+                ),
                 "kinematics_variance": 0.5,
-                "height" : 0.36
-            }
+                "height": 0.36,
+            },
         },
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
     },
-
     "ball": {
         "img_types": [".jpg", ".png"],
         "mesh_types": [".fbx", ".obj"],
@@ -131,9 +154,11 @@ resources = {
     "goal": {"mask": {"index": 2, "colour": (1, 1, 0, 1)}},
 }
 
+
 def choose_misc_robot():
     choice = random.choice(list(resources["misc_robot"]["robot_list"].keys()))
     return resources["misc_robot"]["robot_list"][choice]
+
 
 def configure_scene():
 

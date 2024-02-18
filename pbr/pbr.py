@@ -74,7 +74,7 @@ def main():
         MiscRobot(
             "r{}".format(len(robots) + ii),
             scene_config.resources["misc_robot"]["mask"]["index"],
-            scene_config.choose_misc_robot()
+            scene_config.choose_misc_robot(),
         )
         for ii in range(scene_config.num_misc_robots)
     ]
@@ -174,9 +174,11 @@ def main():
                 config["robot"][ii]["position"] = (
                     world_points[ii - 1][0],
                     world_points[ii - 1][1],
-                    world_points[ii - 1][2]
-                    if ii == 0
-                    else config["robot"][ii]["position"][2],
+                    (
+                        world_points[ii - 1][2]
+                        if ii == 0
+                        else config["robot"][ii]["position"][2]
+                    ),
                 )
             # Update robot (and camera)
             robots[ii].update(config["robot"][ii])
@@ -189,11 +191,13 @@ def main():
             config["misc_robot"][ii]["position"] = (
                 world_points[ii + num_robots][0],
                 world_points[ii + num_robots][1],
-                misc_robots[ii].get_height()
+                misc_robots[ii].get_height(),
             )
             misc_robots[ii].update(config["misc_robot"][ii])
             misc_robots[ii].obj.keyframe_insert(data_path="location", frame=frame_num)
-            misc_robots[ii].obj.keyframe_insert(data_path="rotation_euler", frame=frame_num)
+            misc_robots[ii].obj.keyframe_insert(
+                data_path="rotation_euler", frame=frame_num
+            )
 
         # Update ball
         # If we are autoplacing update the configuration
