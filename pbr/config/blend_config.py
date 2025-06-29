@@ -23,11 +23,11 @@ render = {
     },
     "layers": {"use_hair": False},
     "imperfections": {
-        "min_blur": 2,
-        "max_blur": 4,
-        "max_red": [0.690266, 0.95],
-        "min_noise_fac": 0.2,
-        "max_noise_fac": 0.62,
+        "min_blur": 1,
+        "max_blur": 3,
+        "max_red": [0.8, 1.0],
+        "min_noise_fac": 0.05,
+        "max_noise_fac": 0.60,
         "min_exposure": -2,
         "max_exposure": 2,
     },
@@ -80,4 +80,11 @@ goal = {
 }
 
 robot = {"material": {"specular": 0.742, "metallic": 0.0, "roughness": 0.9}}
-darwin_robot = {"material": {"base_col": (0.5, 0.5, 0.5, 1), "specular": 0.742, "metallic": 0.6, "roughness": 0.5}}
+darwin_robot = {
+    "material": {
+        "base_col": (0.5, 0.5, 0.5, 1),
+        "specular": 0.742,
+        "metallic": 0.6,
+        "roughness": 0.5,
+    }
+}

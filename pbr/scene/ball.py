@@ -3,6 +3,7 @@
 import os
 import bpy
 import copy
+import numpy as np
 
 from config import blend_config as blend_cfg
 
@@ -22,7 +23,7 @@ class Ball(BlenderObject):
         self.roughness = 1.0
 
     # Setup ball object
-    def construct(self, ball_info, radius):
+    def construct(self, ball_info, radius, standard_deviation):
         ball_mesh = None
         ball = None
 
@@ -56,7 +57,10 @@ class Ball(BlenderObject):
             ball = bpy.data.objects["Sphere"]
 
         # Make ball correct size
-        ball.dimensions = (radius * 2.0, radius * 2.0, radius * 2.0)
+        # Randomise slightly for variance
+        ball.dimensions = (radius * 2.0, radius * 2.0, radius * 2.0) + np.random.normal(
+            0, standard_deviation, 3
+        )
 
         # Make ball active object
         bpy.context.view_layer.objects.active = ball
@@ -165,7 +169,7 @@ class Ball(BlenderObject):
     def update(self, ball_data, ball_cfg):
 
         # Update the ball mesh/textures
-        self.construct(ball_data, ball_cfg["radius"])
+        self.construct(ball_data, ball_cfg["radius"], ball_cfg["standard_deviation"])
 
         self.move(ball_cfg["position"])
         self.rotate(ball_cfg["rotation"])
