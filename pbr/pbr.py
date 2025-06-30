@@ -377,21 +377,26 @@ def main():
         annotations += [ann for ann in ball_annotations if ann is not None]
         
         # Goal annotations  
-        goal_annotations = [util.write_annotations(goal.obj, 1) for goal in goals]
-        annotations += [ann for ann in goal_annotations if ann is not None]
+        # goal_annotations = [util.write_annotations(goal.obj, 1) for goal in goals]
+        # annotations += [ann for ann in goal_annotations if ann is not None]
         
-        # Robot annotations
-        robot_annotations = [util.write_annotations(robot.obj, 2) for robot in robots]
+        # Goal post annotations (calculated from field geometry)
+        field_config = {**config["field"], **config["goal"]}  # Combine field and goal config
+        goalpost_annotations = util.write_goal_post_annotations(field_config)
+        annotations += goalpost_annotations
+        
+        # Robot annotations (exclude the camera robot r0)
+        robot_annotations = [util.write_annotations(robot.obj, 2) for robot in robots[1:]]  # Skip robots[0] which is the camera robot
         annotations += [ann for ann in robot_annotations if ann is not None]
         
         # Misc robot annotations
         misc_annotations = [util.write_annotations(misc_robot.obj, 2) for misc_robot in misc_robots]
         annotations += [ann for ann in misc_annotations if ann is not None]
         
-        # Intersection annotations from environment data
-        if env_info:
-            intersection_annotations = util.write_intersection_annotations(env_info)
-            annotations += intersection_annotations
+        # Intersection annotations (based on standard field geometry)
+        field_config_for_intersections = config["field"]  # Use field config for intersections
+        intersection_annotations = util.write_intersection_annotations(field_config_for_intersections)
+        annotations += intersection_annotations
         
         # Write YOLO format annotations
         if annotations:

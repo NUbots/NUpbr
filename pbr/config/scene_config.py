@@ -256,8 +256,8 @@ def configure_scene():
             "camera": {
                 **random.choice(
                     [
-                        {"type": "EQUISOLID", "focal_length": 10.5, "fov": pi},
-                        {"type": "RECTILINEAR", "fov": 0.857},
+                        # {"type": "EQUISOLID", "focal_length": 10.5, "fov": pi},
+                        {"type": "RECTILINEAR", "fov": 1.6},
                     ]
                 ),
                 "stereo_camera_distance": 0.1,
