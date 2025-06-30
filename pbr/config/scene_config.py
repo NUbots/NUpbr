@@ -154,9 +154,6 @@ resources = {
     "goal": {"mask": {"index": 2, "colour": (1, 1, 0, 1)}},
 }
 
-def choose_misc_robot():
-    choice = random.choice(list(resources["misc_robot"]["robot_list"].keys()))
-    return resources["misc_robot"]["robot_list"][choice]
 
 def choose_misc_robot():
     choice = random.choice(list(resources["misc_robot"]["robot_list"].keys()))

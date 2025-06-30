@@ -352,6 +352,7 @@ def generate_moves(field_meta, z_coord=0.3):
 
     return world_points
 
+# Find the forward vector of an object that you pass in
 def find_forward_vector(obj):
     local_matrix = obj.matrix_local
     global_matrix = obj.matrix_world @ local_matrix
