@@ -367,27 +367,119 @@ def get_bounding_box(obj):
     cam = bpy.context.scene.camera
     scene = bpy.context.scene
 
+    # Special handling for ball objects (spheres)
+    if obj.name == "Ball":
+        return get_sphere_bounding_box(obj, cam, scene)
+    
+    # Default bounding box calculation for other objects
     bbox_corners = [bpy_extras.object_utils.world_to_camera_view(scene, cam, obj.matrix_world @ Vector(corner)) for corner in obj.bound_box]
 
-    min_x = min(corner.x for corner in bbox_corners)
-    max_x = max(corner.x for corner in bbox_corners)
-    min_y = min(corner.y for corner in bbox_corners)
-    max_y = max(corner.y for corner in bbox_corners)
+    # Check if any corners are behind the camera
+    valid_corners = [corner for corner in bbox_corners if corner.z > 0]
+    if not valid_corners:
+        print(f"All corners of {obj.name} are behind camera")
+        return None
+
+    min_x = min(corner.x for corner in valid_corners)
+    max_x = max(corner.x for corner in valid_corners)
+    min_y = min(corner.y for corner in valid_corners)
+    max_y = max(corner.y for corner in valid_corners)
 
     min_x *= scene.render.resolution_x
     max_x *= scene.render.resolution_x
     min_y *= scene.render.resolution_y
     max_y *= scene.render.resolution_y
 
-    print((obj.name, min_x, min_y, max_x, max_y))
+    print(f"{obj.name} bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+    return (min_x, min_y, max_x, max_y)
+
+def get_sphere_bounding_box(obj, cam, scene):
+    """Calculates accurate 2D bounding box for spherical objects"""
+    import bpy_extras
+    
+    # Get the sphere center in world coordinates
+    world_center = obj.matrix_world.translation
+    
+    # Get the sphere radius (assuming uniform scaling)
+    # For a ball, dimensions should be (diameter, diameter, diameter)
+    radius = max(obj.dimensions) / 2.0
+    
+    # Project sphere center to camera view
+    center_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, world_center)
+    
+    # Check if sphere center is behind camera
+    if center_2d.z <= 0:
+        print(f"Ball behind camera, z={center_2d.z}")
+        return None
+    
+    # Convert center to pixel coordinates
+    # Blender's coordinate system: Y=0 at bottom, Y=1 at top
+    # Image coordinate system: Y=0 at top, Y=resolution_y at bottom
+    # So we need to flip: image_y = resolution_y * (1 - blender_y)
+    center_x_pixels = center_2d.x * scene.render.resolution_x
+    center_y_pixels = scene.render.resolution_y * (1.0 - center_2d.y)
+    
+    # Calculate screen-space radius by projecting points offset by the radius
+    # Project a point that's offset by the radius in world coordinates
+    offset_point = world_center + Vector((radius, 0, 0))
+    offset_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, offset_point)
+    
+    # Calculate the radius in pixels from the difference
+    radius_x_pixels = abs((offset_2d.x - center_2d.x) * scene.render.resolution_x)
+    
+    # Do the same for Y direction to handle aspect ratio
+    offset_point_y = world_center + Vector((0, radius, 0))
+    offset_2d_y = bpy_extras.object_utils.world_to_camera_view(scene, cam, offset_point_y)
+    radius_y_pixels = abs((offset_2d_y.y - center_2d.y) * scene.render.resolution_y)
+    
+    # Use the larger radius to ensure we capture the full sphere
+    radius_pixels = max(radius_x_pixels, radius_y_pixels)
+    
+    # Calculate bounding box in image coordinates
+    min_x = center_x_pixels - radius_pixels
+    max_x = center_x_pixels + radius_pixels
+    min_y = center_y_pixels - radius_pixels
+    max_y = center_y_pixels + radius_pixels
+    
+    print(f"Ball bbox: center=({center_2d.x:.3f}, {center_2d.y:.3f}), world_radius={radius:.3f}")
+    print(f"Ball bbox: center_pixels=({center_x_pixels:.1f}, {center_y_pixels:.1f}), radius_pixels={radius_pixels:.1f}")
+    print(f"Ball bbox pixels: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+    
     return (min_x, min_y, max_x, max_y)
 
 def write_annotations(obj, class_id=0):
     """Writes YOLO annotations for the object"""
     scene = bpy.context.scene
-    min_x, min_y, max_x, max_y = get_bounding_box(obj)
+    bbox_result = get_bounding_box(obj)
+    
+    # Check if bounding box calculation failed
+    if bbox_result is None:
+        print(f"Failed to calculate bounding box for {obj.name}")
+        return None
+        
+    min_x, min_y, max_x, max_y = bbox_result
+    
+    # Clamp bounding box to image bounds
+    min_x = max(0, min_x)
+    min_y = max(0, min_y)
+    max_x = min(scene.render.resolution_x, max_x)
+    max_y = min(scene.render.resolution_y, max_y)
+    
+    # Check if there's any visible area after clamping
+    if min_x >= max_x or min_y >= max_y:
+        print(f"No visible area for {obj.name} after clamping")
+        return None
+    
+    # Calculate center and dimensions
     x_center = (min_x + max_x) / 2
-    y_center = scene.render.resolution_y - (min_y + max_y) / 2
+    
+    # For balls, we already converted to image coordinates in get_sphere_bounding_box
+    # For other objects, we need to flip Y coordinate
+    if obj.name == "Ball":
+        y_center = (min_y + max_y) / 2
+    else:
+        y_center = scene.render.resolution_y - (min_y + max_y) / 2
+    
     width = max_x - min_x
     height = max_y - min_y
 
@@ -397,11 +489,19 @@ def write_annotations(obj, class_id=0):
     width /= scene.render.resolution_x
     height /= scene.render.resolution_y
 
+    # Final bounds check on normalized coordinates
     if x_center < 0 or x_center > 1 or y_center < 0 or y_center > 1:
-        # Out of bounds
+        print(f"Center out of bounds for {obj.name}: ({x_center:.3f}, {y_center:.3f})")
+        return None
+        
+    # Check minimum size requirements
+    min_size_pixels = scene_config.resources["bounding_boxes"]["min_bbox_size"]
+    if (width * scene.render.resolution_x < min_size_pixels or 
+        height * scene.render.resolution_y < min_size_pixels):
+        print(f"Bounding box too small for {obj.name}: {width * scene.render.resolution_x:.1f} x {height * scene.render.resolution_y:.1f}")
         return None
 
-    print(f"{obj.name} {class_id} {x_center} {y_center} {width} {height}")
+    print(f"{obj.name} {class_id} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}")
     return class_id, x_center, y_center, width, height
 
 def write_intersection_annotations(environment_data):
