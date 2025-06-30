@@ -127,7 +127,7 @@ resources = {
         "mesh_types": [".fbx", ".obj"],
         "path": path.abspath(path.join(res_path, "balls")),
         "mask": {"index": 1, "colour": (1, 0, 0, 1)},
-        "radius": 0.045,
+        "radius": 0.09,
         "standard_deviation": 0.005,  # for randomising ball position, large value means more random, zero means no random
     },
     "environment": {
