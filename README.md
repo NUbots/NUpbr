@@ -127,3 +127,14 @@ The HDR JSON metadata file may have the following fields:
 ```
 
 </details>
+
+
+## BOUNDING BOX STUFF
+
+The current bounding box implementation in this branch does not integrate well with the segmentation side. The HDR must have blobs on the intersections in the following colours:
+
+- L: magenta [255, 0, 255]
+- T: cyan [0, 255, 255]
+- X: darker orange [255, 100, 0]
+
+The goal posts must be solid yellow [255, 255, 0] with just the posts and not the top bar or any other part of the goals.
