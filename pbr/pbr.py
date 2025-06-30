@@ -374,6 +374,32 @@ def main():
             meta["camera"]["lens"]["sensor_height"] = cam_l.cam.sensor_height
             meta["camera"]["lens"]["sensor_width"] = cam_l.cam.sensor_width
 
+            annotations = []
+
+            ball_annotations = (util.write_annotations(_obj.obj) for _obj in [ball])
+            if (ball_annotations != None): annotations += list(ball_annotations)
+            goal_annotations = (util.write_annotations(_obj.obj, 1) for _obj in goals)
+            if (goal_annotations != None): annotations += list(goal_annotations)        
+            robot_annotaions = list((util.write_annotations(_obj.obj, 2) for _obj in robots))
+            if (robot_annotaions != None): annotations += list(robot_annotaions)
+            misc_annotations = list((util.write_annotations(_obj.obj, 2) for _obj in misc_robots))
+            if (misc_annotations != None): annotations += list(misc_annotations)
+            shape_annotations = list((util.write_annotations(_obj.obj, 3) for _obj in shapes))
+            if (shape_annotations != None): annotations += list(shape_annotations)
+
+            annotations = list(filter(lambda x: x != None, annotations))
+            print(annotations)
+
+
+            meta.update({
+                "bounding boxes": [
+                    {
+                        "bounding_box": (annotation)
+                    }
+                    for annotation in annotations
+                ]
+            })
+
             # Add the final camera matrices
             if not out_cfg.output_stereo:
                 meta["camera"]["matrix"] = util.matrix_to_list(cam_l.obj.matrix_world)

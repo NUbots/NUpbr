@@ -1,9 +1,11 @@
 import os
 import re
 import bpy
+import bpy_extras
 import random as rand
 import numpy as np
 import math
+from mathutils import Vector
 import cv2
 
 from config import scene_config
@@ -348,3 +350,46 @@ def generate_moves(field_meta, z_coord=0.3):
         world_points.append((*point, z_coord))
 
     return world_points
+
+
+def get_bounding_box(obj):
+    """Calculates 2D bounding box for YOLO format"""
+    cam = bpy.context.scene.camera
+    scene = bpy.context.scene
+
+    bbox_corners = [bpy_extras.object_utils.world_to_camera_view(scene, cam, obj.matrix_world @ Vector(corner)) for corner in obj.bound_box]
+    
+    min_x = min(corner.x for corner in bbox_corners)
+    max_x = max(corner.x for corner in bbox_corners)
+    min_y = min(corner.y for corner in bbox_corners)
+    max_y = max(corner.y for corner in bbox_corners)
+
+    min_x *= scene.render.resolution_x
+    max_x *= scene.render.resolution_x
+    min_y *= scene.render.resolution_y
+    max_y *= scene.render.resolution_y
+    
+    print((obj.name, min_x, min_y, max_x, max_y))
+    return (min_x, min_y, max_x, max_y)
+
+def write_annotations(obj, class_id=0):
+    """Writes YOLO and BOP annotations for the object"""
+    scene = bpy.context.scene
+    min_x, min_y, max_x, max_y = get_bounding_box(obj)
+    x_center = (min_x + max_x) / 2
+    y_center = scene.render.resolution_y - (min_y + max_y) / 2
+    width = max_x - min_x
+    height = max_y - min_y
+
+    # Normalize coordinates
+    x_center /= scene.render.resolution_x
+    y_center /= scene.render.resolution_y
+    width /= scene.render.resolution_x
+    height /= scene.render.resolution_y
+
+    if x_center < 0 or x_center > 1 or y_center < 0 or y_center > 1:
+        #Out of bounds
+        return
+
+    print(f"{obj.name} {class_id} {x_center} {y_center} {width} {height}")
+    return class_id, x_center, y_center, width, height
