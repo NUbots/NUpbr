@@ -10,6 +10,7 @@ import cv2
 
 from config import scene_config
 from scene import environment as env
+from mathutils import Vector
 
 # Import assets from path as defined by asset_list
 # Where asset list ('assets') is a list of two-tuples, each containing
@@ -351,6 +352,15 @@ def generate_moves(field_meta, z_coord=0.3):
 
     return world_points
 
+def find_forward_vector(obj):
+    local_matrix = obj.matrix_local
+    global_matrix = obj.matrix_world @ local_matrix
+    rotation_matrix = global_matrix.to_3x3()
+    forward = rotation_matrix @ Vector((1, 0, 0))
+    forward.z = 0  # Set the Z component of the forward vector to 0 to make it parallel to the ground
+    forward.normalize()  # Normalize the forward vector after setting Z to 0
+
+    return forward
 
 def get_bounding_box(obj):
     """Calculates 2D bounding box for YOLO format"""
