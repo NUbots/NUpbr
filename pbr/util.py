@@ -360,3 +360,114 @@ def find_forward_vector(obj):
     forward.normalize()  # Normalize the forward vector after setting Z to 0
 
     return forward
+
+def get_bounding_box(obj):
+    """Calculates 2D bounding box for YOLO format"""
+    import bpy_extras
+    cam = bpy.context.scene.camera
+    scene = bpy.context.scene
+
+    bbox_corners = [bpy_extras.object_utils.world_to_camera_view(scene, cam, obj.matrix_world @ Vector(corner)) for corner in obj.bound_box]
+
+    min_x = min(corner.x for corner in bbox_corners)
+    max_x = max(corner.x for corner in bbox_corners)
+    min_y = min(corner.y for corner in bbox_corners)
+    max_y = max(corner.y for corner in bbox_corners)
+
+    min_x *= scene.render.resolution_x
+    max_x *= scene.render.resolution_x
+    min_y *= scene.render.resolution_y
+    max_y *= scene.render.resolution_y
+
+    print((obj.name, min_x, min_y, max_x, max_y))
+    return (min_x, min_y, max_x, max_y)
+
+def write_annotations(obj, class_id=0):
+    """Writes YOLO annotations for the object"""
+    scene = bpy.context.scene
+    min_x, min_y, max_x, max_y = get_bounding_box(obj)
+    x_center = (min_x + max_x) / 2
+    y_center = scene.render.resolution_y - (min_y + max_y) / 2
+    width = max_x - min_x
+    height = max_y - min_y
+
+    # Normalize coordinates
+    x_center /= scene.render.resolution_x
+    y_center /= scene.render.resolution_y
+    width /= scene.render.resolution_x
+    height /= scene.render.resolution_y
+
+    if x_center < 0 or x_center > 1 or y_center < 0 or y_center > 1:
+        # Out of bounds
+        return None
+
+    print(f"{obj.name} {class_id} {x_center} {y_center} {width} {height}")
+    return class_id, x_center, y_center, width, height
+
+def write_intersection_annotations(environment_data):
+    """Generate intersection annotations from environment data"""
+    import bpy_extras
+    
+    if not environment_data or "intersections" not in environment_data:
+        return []
+    
+    cam = bpy.context.scene.camera
+    scene = bpy.context.scene
+    annotations = []
+    
+    # Class mapping for intersections
+    intersection_classes = {
+        "L": 3,  # L_intersection
+        "T": 4,  # T_intersection  
+        "X": 5   # X_intersection
+    }
+    
+    # Base sizes for intersection bounding boxes (in meters)
+    base_sizes = {
+        "L": 0.15,
+        "T": 0.20,
+        "X": 0.25
+    }
+    
+    for intersection_type, class_id in intersection_classes.items():
+        if intersection_type not in environment_data["intersections"]:
+            continue
+            
+        for intersection in environment_data["intersections"][intersection_type]:
+            world_pos = Vector(intersection["position"])
+            
+            # Project to camera view
+            screen_pos = bpy_extras.object_utils.world_to_camera_view(scene, cam, world_pos)
+            
+            # Check if in view
+            if screen_pos.x < 0 or screen_pos.x > 1 or screen_pos.y < 0 or screen_pos.y > 1:
+                continue
+                
+            # Calculate distance for size estimation
+            camera_pos = cam.location
+            distance = (camera_pos - world_pos).length
+            
+            # Calculate apparent size based on distance
+            base_size = base_sizes.get(intersection_type, 0.2)
+            focal_length_pixels = 1000  # Approximate focal length in pixels
+            apparent_size_pixels = (base_size * focal_length_pixels) / max(distance, 0.1)
+            
+            # Convert to normalized size
+            apparent_size_x = apparent_size_pixels / scene.render.resolution_x
+            apparent_size_y = apparent_size_pixels / scene.render.resolution_y
+            
+            # Ensure minimum size
+            min_size = 8.0 / min(scene.render.resolution_x, scene.render.resolution_y)
+            apparent_size_x = max(min_size, apparent_size_x)
+            apparent_size_y = max(min_size, apparent_size_y)
+            
+            # Create YOLO format annotation (center_x, center_y, width, height)
+            x_center = screen_pos.x
+            y_center = 1.0 - screen_pos.y  # Flip Y coordinate
+            width = apparent_size_x
+            height = apparent_size_y
+            
+            print(f"Intersection {intersection_type} at {intersection['position']} -> {class_id} {x_center} {y_center} {width} {height}")
+            annotations.append((class_id, x_center, y_center, width, height))
+    
+    return annotations

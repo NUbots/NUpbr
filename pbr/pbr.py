@@ -366,8 +366,43 @@ def main():
                     os.path.join(out_cfg.depth_dir, filename) + ".exr",
                 )
 
-        # Check that the rotation matrix of the main camera is valid
-        print(f"Rotation matrix of {cam_l.obj.name}: \n", cam_l.obj.matrix_world)
+        ##############################################
+        ##          BOUNDING BOX GENERATION         ##
+        ##############################################
+
+        annotations = []
+        
+        # Ball annotations
+        ball_annotations = [util.write_annotations(ball.obj)]
+        annotations += [ann for ann in ball_annotations if ann is not None]
+        
+        # Goal annotations  
+        goal_annotations = [util.write_annotations(goal.obj, 1) for goal in goals]
+        annotations += [ann for ann in goal_annotations if ann is not None]
+        
+        # Robot annotations
+        robot_annotations = [util.write_annotations(robot.obj, 2) for robot in robots]
+        annotations += [ann for ann in robot_annotations if ann is not None]
+        
+        # Misc robot annotations
+        misc_annotations = [util.write_annotations(misc_robot.obj, 2) for misc_robot in misc_robots]
+        annotations += [ann for ann in misc_annotations if ann is not None]
+        
+        # Intersection annotations from environment data
+        if env_info:
+            intersection_annotations = util.write_intersection_annotations(env_info)
+            annotations += intersection_annotations
+        
+        # Write YOLO format annotations
+        if annotations:
+            os.makedirs(out_cfg.output_dir + "/annotations", exist_ok=True)
+            annotation_file = os.path.join(out_cfg.output_dir + "/annotations", f"{filename}.txt")
+            with open(annotation_file, 'w') as f:
+                for ann in annotations:
+                    f.write(f"{ann[0]} {ann[1]:.6f} {ann[2]:.6f} {ann[3]:.6f} {ann[4]:.6f}\n")
+            print(f"[INFO] Wrote {len(annotations)} annotations to {annotation_file}")
+        else:
+            print(f"[INFO] No annotations generated for frame {filename}")
 
         # Generate meta file
         with open(
