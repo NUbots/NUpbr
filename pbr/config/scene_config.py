@@ -152,6 +152,32 @@ resources = {
         "mask": {"index": 4, "colour": (0, 1, 0, 1), "line_colour": (1, 1, 1, 1)},
     },
     "goal": {"mask": {"index": 2, "colour": (1, 1, 0, 1)}},
+    "bounding_boxes": {
+        "enabled": True,
+        "output_format": "yolo",
+        "mask": {"index": 6, "colour": (0.5, 0.5, 0.5, 1)},  # Dummy mask config for compatibility
+        "classes": {
+            "ball": 0,
+            "goal_post": 1,
+            "robot": 2,
+            "L_intersection": 3,
+            "T_intersection": 4,
+            "X_intersection": 5
+        },
+        "min_bbox_size": 8,  # minimum bounding box size in pixels
+        "max_bbox_size": 800,  # maximum bounding box size in pixels
+        "intersection_base_sizes": {
+            "L": 0.15,  # meters - base size for L intersection
+            "T": 0.20,  # meters - base size for T intersection  
+            "X": 0.25   # meters - base size for X intersection
+        },
+        "goal_post_detection": {
+            "enabled": True,
+            "width": 0.12,  # meters - actual goal post width
+            "min_height_ratio": 0.3,  # minimum visible height ratio
+            "use_segmentation": True  # extract from goal segmentation mask
+        }
+    },
 }
 
 
