@@ -380,9 +380,11 @@ def main():
         # goal_annotations = [util.write_annotations(goal.obj, 1) for goal in goals]
         # annotations += [ann for ann in goal_annotations if ann is not None]
         
-        # Goal post annotations (calculated from field geometry)
-        field_config = {**config["field"], **config["goal"]}  # Combine field and goal config
-        goalpost_annotations = util.write_goal_post_annotations(field_config)
+        # Goal post annotations (from rendered segmentation mask)
+        rendered_mask_path = os.path.join(out_cfg.mask_dir, "{}.png".format(filename))
+        goalpost_annotations = util.write_goal_post_annotations_from_mask(
+            rendered_mask_path, bpy.context.scene
+        )
         annotations += goalpost_annotations
         
         # Robot annotations (exclude the camera robot r0)
@@ -393,9 +395,10 @@ def main():
         misc_annotations = [util.write_annotations(misc_robot.obj, 2) for misc_robot in misc_robots]
         annotations += [ann for ann in misc_annotations if ann is not None]
         
-        # Intersection annotations (based on standard field geometry)
-        field_config_for_intersections = config["field"]  # Use field config for intersections
-        intersection_annotations = util.write_intersection_annotations(field_config_for_intersections)
+        # Intersection annotations (from rendered segmentation mask)
+        intersection_annotations = util.write_intersection_annotations_from_mask(
+            rendered_mask_path, bpy.context.scene
+        )
         annotations += intersection_annotations
         
         # Write YOLO format annotations

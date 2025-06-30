@@ -552,230 +552,134 @@ def write_annotations(obj, class_id=0):
     print(f"{obj.name} {class_id} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}")
     return class_id, x_center, y_center, width, height
 
-def write_goal_post_annotations(field_config):
-    """Generate goal post annotations based on field geometry"""
-    import bpy_extras
+def write_goal_post_annotations_from_mask(mask_path, scene):
+    """Generate goal post annotations from segmentation mask"""
+    import cv2
+    import numpy as np
     
-    cam = bpy.context.scene.camera
-    scene = bpy.context.scene
+    try:
+        mask_img = cv2.imread(mask_path)
+    except:
+        print(f"Cannot load mask image {mask_path}")
+        return []
+    
+    if mask_img is None:
+        print(f"Failed to read mask image {mask_path}")
+        return []
+    
     annotations = []
     
-    # Field dimensions from the field config
-    field_length = field_config.get("length", 9.0)  # 9m field length
+    # Goal posts should be yellow in the segmentation mask
+    # Convert BGR to RGB and look for yellow pixels
+    mask_rgb = cv2.cvtColor(mask_img, cv2.COLOR_BGR2RGB)
     
-    # Goal dimensions from the goal config (these override field params in the combined config)
-    goal_width = field_config.get("width", 3.0)     # Goal width (between posts) - should be 2.6m
-    goalpost_width = field_config.get("post_width", 0.15)  # Post diameter - should be 0.12m
-    goalpost_width = goalpost_width + 0.2
-    goalpost_height = field_config.get("height", 2.5)      # Goal height - should be 1.8m
-    print(f"Goal config: length={field_length}, goal_width={goal_width}, post_width={goalpost_width}, post_height={goalpost_height}")
+    # Define yellow color range (goal posts)
+    # Yellow in RGB is approximately (255, 255, 0)
+    yellow_lower = np.array([250, 250, 0])
+    yellow_upper = np.array([255, 255, 10])
     
-    # Calculate goal post positions
-    # Goals are at each end of the field (±field_length/2 from center)
-    # Posts are at ±goal_width/2 from center line
+    # Create mask for yellow pixels (goal posts)
+    yellow_mask = cv2.inRange(mask_rgb, yellow_lower, yellow_upper)
     
-    goal_positions = [
-        # Goal 1 (one end of field)
-        [
-            [-field_length/2 -0.7, -goal_width/2 - 0.35, 0],  # Left post
-            [-field_length/2 - 0.7, +goal_width/2 - 0.35, 0],  # Right post
-        ],
-        # Goal 2 (other end of field)  
-        [
-            [+field_length/2 + 0.7, -goal_width/2 + 0.35, 0],  # Left post
-            [+field_length/2 + 0.7, +goal_width/2 + 0.35, 0],  # Right post
-        ]
-    ]
+    # Find contours in the yellow mask
+    contours, _ = cv2.findContours(yellow_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
-    goalpost_class_id = 1  # Goal posts have class 1 (not 2)
+    goalpost_class_id = 1  # Goal posts have class 1
     
-    for goal_idx, goal in enumerate(goal_positions):
-        for post_idx, post_pos in enumerate(goal):
-            world_pos = Vector(post_pos)
-            
-            # Project goal post center to camera view
-            screen_pos = bpy_extras.object_utils.world_to_camera_view(scene, cam, world_pos)
-            
-            # Check if in view and in front of camera
-            if screen_pos.z <= 0:
-                print(f"Goal post {goal_idx+1}-{post_idx+1} behind camera (z={screen_pos.z:.3f})")
-                continue
-                
-            if screen_pos.x < 0 or screen_pos.x > 1 or screen_pos.y < 0 or screen_pos.y > 1:
-                print(f"Goal post {goal_idx+1}-{post_idx+1} outside view: ({screen_pos.x:.3f}, {screen_pos.y:.3f})")
-                continue
-            
-            # Calculate distance for size estimation
-            camera_pos = cam.matrix_world.translation
-            distance = (camera_pos - world_pos).length
-            
-            print(f"Goal post {goal_idx+1}-{post_idx+1} at world {post_pos}, distance={distance:.2f}m")
-            
-            # Project the top of the post to get height in pixels
-            top_pos = Vector([post_pos[0], post_pos[1], goalpost_height])
-            top_screen = bpy_extras.object_utils.world_to_camera_view(scene, cam, top_pos)
-            
-            # Calculate apparent width using perspective projection (similar to ball calculation)
-            focal_length = cam.data.lens  # in mm
-            sensor_width = cam.data.sensor_width  # in mm
-            
-            # Calculate apparent width in pixels
-            apparent_width_pixels = (goalpost_width / distance) * focal_length * (scene.render.resolution_x / sensor_width)
-            
-            # Calculate height in pixels from screen space difference
-            if top_screen.z > 0:  # Top is also in front of camera
-                height_pixels = abs((screen_pos.y - top_screen.y) * scene.render.resolution_y)
-                print(f"  Height from projection: {height_pixels:.1f}px")
-            else:
-                # Estimate height if top is behind camera (post is very close)
-                height_pixels = apparent_width_pixels * (goalpost_height / goalpost_width)
-                print(f"  Height estimated (top behind camera): {height_pixels:.1f}px")
-            
-            print(f"  Apparent width: {apparent_width_pixels:.1f}px, height: {height_pixels:.1f}px")
-            
-            # Convert to normalized coordinates for YOLO format
-            center_x = screen_pos.x
-            center_y = 1.0 - screen_pos.y  # Flip Y coordinate for YOLO
-            width_norm = apparent_width_pixels / scene.render.resolution_x
-            height_norm = height_pixels / scene.render.resolution_y
-            
-            print(f"  Before clamping: center=({center_x:.3f}, {center_y:.3f}), size=({width_norm:.3f}, {height_norm:.3f})")
-            
-            # Ensure minimum size (8 pixels minimum)
-            min_size_x = 8.0 / scene.render.resolution_x
-            min_size_y = 8.0 / scene.render.resolution_y
-            width_norm = max(min_size_x, width_norm)
-            height_norm = max(min_size_y, height_norm)
-            
-            # Clamp maximum size to something reasonable (goal posts shouldn't be huge)
-            max_size = 0.15  # Maximum 15% of image dimension 
-            width_norm = min(max_size, width_norm)
-            height_norm = min(max_size, height_norm)
-            
-            print(f"  Final: center=({center_x:.6f}, {center_y:.6f}), size=({width_norm:.6f}, {height_norm:.6f})")
-            
+    for contour in contours:
+        # Calculate bounding box for each goal post contour
+        x, y, w, h = cv2.boundingRect(contour)
+        
+        # Check minimum size requirements
+        min_size_pixels = scene_config.resources["bounding_boxes"]["min_bbox_size"]
+        if w < min_size_pixels or h < min_size_pixels:
+            print(f"Goal post contour too small: {w}x{h}")
+            continue
+        
+        # Convert to YOLO format (normalized center coordinates and dimensions)
+        img_height, img_width = mask_img.shape[:2]
+        
+        center_x = (x + w/2) / img_width
+        center_y = (y + h/2) / img_height
+        width_norm = w / img_width
+        height_norm = h / img_height
+        
+        # Ensure coordinates are within bounds
+        if 0 <= center_x <= 1 and 0 <= center_y <= 1:
+            print(f"Goal post from mask: {goalpost_class_id} {center_x:.6f} {center_y:.6f} {width_norm:.6f} {height_norm:.6f}")
             annotations.append((goalpost_class_id, center_x, center_y, width_norm, height_norm))
     
-    print(f"Generated {len(annotations)} goal post annotations")
+    print(f"Generated {len(annotations)} goal post annotations from mask")
     return annotations
 
-def write_intersection_annotations(field_config):
-    """Generate intersection annotations based on standard field geometry"""
-    import bpy_extras
+def write_intersection_annotations_from_mask(mask_path, scene):
+    """Generate intersection annotations from segmentation mask"""
+    import cv2
+    import numpy as np
     
-    cam = bpy.context.scene.camera
-    scene = bpy.context.scene
+    try:
+        mask_img = cv2.imread(mask_path)
+    except:
+        print(f"Cannot load mask image {mask_path}")
+        return []
+    
+    if mask_img is None:
+        print(f"Failed to read mask image {mask_path}")
+        return []
+    
     annotations = []
     
-    # Field dimensions from the field config
-    field_length = field_config.get("length", 9.0)  # 9m field length
-    field_width = field_config.get("width", 6.0)    # 6m field width
-    goal_area_length = field_config.get("goal_area", {}).get("length", 1.0)  # 1m goal area depth
-    goal_area_width = field_config.get("goal_area", {}).get("width", 5.0)    # 5m goal area width
-    penalty_mark_dist = field_config.get("penalty_mark_dist", 2.1)           # 2.1m penalty mark distance
-    centre_circle_radius = field_config.get("centre_circle_radius", 0.75)    # 0.75m centre circle radius
+    # Convert BGR to RGB for color detection
+    mask_rgb = cv2.cvtColor(mask_img, cv2.COLOR_BGR2RGB)
     
-    print(f"Field intersection config: length={field_length}, width={field_width}")
-    
-    # Class mapping for intersections
-    intersection_classes = {
-        "L": 3,  # L_intersection
-        "T": 4,  # T_intersection  
-        "X": 5   # X_intersection
+    # Define color ranges and class IDs for different intersection types
+    intersection_types = {
+        "L": {
+            "class_id": 3,
+            "color_lower": np.array([250, 0, 250]),    # Magenta lower bound
+            "color_upper": np.array([255, 10, 255])   # Magenta upper bound
+        },
+        "T": {
+            "class_id": 4,
+            "color_lower": np.array([0, 250, 250]),    # Cyan lower bound
+            "color_upper": np.array([10, 255, 255])   # Cyan upper bound
+        },
+        "X": {
+            "class_id": 5,
+            "color_lower": np.array([250, 90, 0]),    # Orange lower bound
+            "color_upper": np.array([255, 110, 0])    # Orange upper bound
+        }
     }
     
-    # Base sizes for intersection bounding boxes (in meters)
-    base_sizes = {
-        "L": 0.15,
-        "T": 0.20,
-        "X": 0.25
-    }
-    
-    # Define standard field intersection positions based on RoboCup field layout
-    intersections = {
-        "L": [
-            # Corner intersections (field boundary + goal line/side line)
-            [-field_length/2, -field_width/2, 0],  # Bottom-left corner
-            [-field_length/2, +field_width/2, 0],  # Top-left corner
-            [+field_length/2, -field_width/2, 0],  # Bottom-right corner
-            [+field_length/2, +field_width/2, 0],  # Top-right corner
-            # Goal area corners
-            [-field_length/2 + goal_area_length, -goal_area_width/2, 0],  # Left goal area bottom
-            [-field_length/2 + goal_area_length, +goal_area_width/2, 0],  # Left goal area top
-            [+field_length/2 - goal_area_length, -goal_area_width/2, 0],  # Right goal area bottom
-            [+field_length/2 - goal_area_length, +goal_area_width/2, 0],  # Right goal area top
-        ],
-        "T": [
-            # Goal area T-junctions (goal line meets goal area line)
-            [-field_length/2, -goal_area_width/2, 0],  # Left goal, bottom T
-            [-field_length/2, +goal_area_width/2, 0],  # Left goal, top T
-            [+field_length/2, -goal_area_width/2, 0],  # Right goal, bottom T
-            [+field_length/2, +goal_area_width/2, 0],  # Right goal, top T
-            # Centre line T-junctions (centre line meets side line)
-            [0, -field_width/2, 0],  # Centre line, bottom T
-            [0, +field_width/2, 0],  # Centre line, top T
-        ],
-        "X": [
-            # Centre circle intersections with centre line (if visible)
-            [0, 0, 0],  # Centre circle (could be X if multiple lines cross)
-        ]
-    }
-    
-    for intersection_type, class_id in intersection_classes.items():
-        if intersection_type not in intersections:
-            continue
+    for intersection_type, config in intersection_types.items():
+        # Create mask for this intersection type's color
+        color_mask = cv2.inRange(mask_rgb, config["color_lower"], config["color_upper"])
+        
+        # Find contours in the color mask
+        contours, _ = cv2.findContours(color_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        for contour in contours:
+            # Calculate bounding box for each intersection contour
+            x, y, w, h = cv2.boundingRect(contour)
             
-        for intersection_pos in intersections[intersection_type]:
-            world_pos = Vector(intersection_pos)
-            
-            # Project to camera view
-            screen_pos = bpy_extras.object_utils.world_to_camera_view(scene, cam, world_pos)
-            
-            # Check if in view and in front of camera
-            if screen_pos.z <= 0:
-                print(f"Intersection {intersection_type} behind camera (z={screen_pos.z:.3f})")
+            # Check minimum size requirements
+            min_size_pixels = scene_config.resources["bounding_boxes"]["min_bbox_size"]
+            if w < min_size_pixels or h < min_size_pixels:
+                print(f"{intersection_type}-intersection contour too small: {w}x{h}")
                 continue
-                
-            if screen_pos.x < 0 or screen_pos.x > 1 or screen_pos.y < 0 or screen_pos.y > 1:
-                print(f"Intersection {intersection_type} outside view: ({screen_pos.x:.3f}, {screen_pos.y:.3f})")
-                continue
-                
-            # Calculate distance for size estimation (use same method as other objects)
-            camera_pos = cam.matrix_world.translation
-            distance = (camera_pos - world_pos).length
             
-            # Calculate apparent size based on distance (use same method as goal posts)
-            base_size = base_sizes.get(intersection_type, 0.2)
-            focal_length = cam.data.lens  # in mm
-            sensor_width = cam.data.sensor_width  # in mm
+            # Convert to YOLO format (normalized center coordinates and dimensions)
+            img_height, img_width = mask_img.shape[:2]
             
-            # Calculate apparent size in pixels using perspective projection
-            apparent_size_pixels = (base_size / distance) * focal_length * (scene.render.resolution_x / sensor_width)
+            center_x = (x + w/2) / img_width
+            center_y = (y + h/2) / img_height
+            width_norm = w / img_width
+            height_norm = h / img_height
             
-            # Convert to normalized size
-            apparent_size_x = apparent_size_pixels / scene.render.resolution_x
-            apparent_size_y = apparent_size_pixels / scene.render.resolution_y
-            
-            print(f"Intersection {intersection_type} at {intersection_pos}, distance={distance:.2f}m, size={apparent_size_pixels:.1f}px")
-            
-            # Ensure minimum size (8 pixels minimum)
-            min_size_x = 8.0 / scene.render.resolution_x
-            min_size_y = 8.0 / scene.render.resolution_y
-            apparent_size_x = max(min_size_x, apparent_size_x)
-            apparent_size_y = max(min_size_y, apparent_size_y)
-            
-            # Clamp maximum size to something reasonable
-            max_size = 0.10  # Maximum 10% of image dimension for intersections
-            apparent_size_x = min(max_size, apparent_size_x)
-            apparent_size_y = min(max_size, apparent_size_y)
-            
-            # Create YOLO format annotation (center_x, center_y, width, height)
-            x_center = screen_pos.x
-            y_center = 1.0 - screen_pos.y  # Flip Y coordinate
-            width = apparent_size_x
-            height = apparent_size_y
-            
-            print(f"Intersection {intersection_type} at {intersection['position']} -> {class_id} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}")
-            annotations.append((class_id, x_center, y_center, width, height))
+            # Ensure coordinates are within bounds
+            if 0 <= center_x <= 1 and 0 <= center_y <= 1:
+                print(f"{intersection_type}-intersection from mask: {config['class_id']} {center_x:.6f} {center_y:.6f} {width_norm:.6f} {height_norm:.6f}")
+                annotations.append((config["class_id"], center_x, center_y, width_norm, height_norm))
     
+    print(f"Generated {len(annotations)} intersection annotations from mask")
     return annotations
