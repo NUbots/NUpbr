@@ -256,7 +256,7 @@ def configure_scene():
             "camera": {
                 **random.choice(
                     [
-                        # {"type": "EQUISOLID", "focal_length": 10.5, "fov": pi},
+                        {"type": "EQUISOLID", "focal_length": 10.5, "fov": pi},
                         {"type": "RECTILINEAR", "fov": 1.6},
                     ]
                 ),

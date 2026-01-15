@@ -407,6 +407,62 @@ def get_robot_bounding_box(robot_obj, cam, scene):
     print(f"Robot {robot_prefix} combined bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
     return (min_x, min_y, max_x, max_y)
 
+def get_robot_bounding_box_panoramic(obj, h, w, lens, cam, scene):
+   
+    # Extract robot number from the object name (e.g., "r6_Torso" -> "r6")
+    robot_prefix = obj.name.split('_')[0]  # e.g., "r6"
+    
+    # Find all objects that belong to this robot
+    robot_parts = []
+    for obj in bpy.data.objects:
+        if obj.name.startswith(robot_prefix + '_'):
+            robot_parts.append(obj)
+        
+    bbox_corners = []
+    screen_positions = []
+    
+    for part in robot_parts:
+
+        part_center = (cam.matrix_world.inverted() @ part.matrix_world @ Vector(part.location))
+        part_center.normalize()
+        if part_center.z > 0:
+            continue  
+
+        for corner in part.bound_box:
+            
+            bbox_corner = (cam.matrix_world.inverted() @ part.matrix_world @ Vector(corner))
+            bbox_corner.normalize()
+            
+            phi = math.atan2(bbox_corner.y, bbox_corner.x)
+            l = (bbox_corner.x**2 + bbox_corner.y**2)**(1/2)
+            l = np.clip(l, -0.999, 0.999)
+            theta = math.asin(l)
+
+            # Equisolid projection
+            r = 2.0 * lens * math.sin(theta / 2)
+
+            u = r * math.cos(phi) / w + 0.5
+            v = r * math.sin(phi) / h + 0.5
+
+            x = u * scene.render.resolution_x
+            y = v * scene.render.resolution_y
+            
+            bbox_corners.append(bbox_corner)
+            screen_positions.append(Vector((x, y))) 
+
+    if not bbox_corners:
+        print("no valid corners for robot " + obj.name) 
+        return None
+
+    min_x = min(screen_pos.x for screen_pos in screen_positions)
+    max_x = max(screen_pos.x for screen_pos in screen_positions)
+    min_y = min(screen_pos.y for screen_pos in screen_positions)
+    max_y = max(screen_pos.y for screen_pos in screen_positions)
+    
+    print(f"{obj.name} bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+    return (min_x, min_y, max_x, max_y)
+    
+
 def get_bounding_box(obj):
     """Calculates 2D bounding box for YOLO format"""
     import bpy_extras
@@ -441,6 +497,70 @@ def get_bounding_box(obj):
     max_x *= scene.render.resolution_x
     min_y *= scene.render.resolution_y
     max_y *= scene.render.resolution_y
+    
+    print(f"{obj.name} bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+    return (min_x, min_y, max_x, max_y)
+
+def get_bounding_box_panoramic(obj):
+    import bpy_extras
+
+    cam = bpy.context.scene.camera
+    scene = bpy.context.scene
+
+    lens = cam.data.cycles.fisheye_lens
+
+    aspect_ratio = bpy.context.scene.render.resolution_x / bpy.context.scene.render.resolution_y
+    if cam.data.sensor_fit == 'VERTICAL':
+        h = cam.data.sensor_height
+        w = aspect_ratio * h
+    else:
+        w = cam.data.sensor_width
+        h = w / aspect_ratio
+    
+    # Special handling for ball objects (spheres)
+    if obj.name == "Ball":
+        return get_sphere_bounding_box_panoramic(obj, h, w, lens, cam, scene)
+    
+    # Special handling for robot objects - check if this looks like a robot part
+    # Robot parts follow pattern "r<number>_<part>" (e.g., "r6_Torso")
+    if '_' in obj.name and obj.name.split('_')[0].startswith('r') and obj.name.split('_')[0][1:].isdigit():
+        return get_robot_bounding_box_panoramic(obj, h, w, lens, cam, scene)
+    
+    bbox_corners = []
+    screen_positions = []
+    
+    for corner in obj.bound_box:
+        
+        bbox_corner = (cam.matrix_world.inverted() @ corner.matrix_world @ Vector(corner))
+        bbox_corner.normalize()
+        
+        if bbox_corner.z > 0:
+            continue
+        
+        phi = math.atan2(bbox_corner.y, bbox_corner.x)
+        l = (bbox_corner.x**2 + bbox_corner.y**2)**(1/2)
+        theta = math.asin(l)
+
+        # Equisolid projection
+        r = 2.0 * lens * math.sin(theta / 2)
+
+        u = r * math.cos(phi) / w + 0.5
+        v = r * math.sin(phi) / h + 0.5
+
+        x = u * scene.render.resolution_x
+        y = v * scene.render.resolution_y
+        
+        bbox_corners.append(bbox_corner)
+        screen_positions.append(Vector((x, y)))
+
+    if not bbox_corners:
+        print("no valid corners for " + obj.name) 
+        return None
+
+    min_x = min(screen_pos.x for screen_pos in screen_positions)
+    max_x = max(screen_pos.x for screen_pos in screen_positions)
+    min_y = min(screen_pos.y for screen_pos in screen_positions)
+    max_y = max(screen_pos.y for screen_pos in screen_positions)
     
     print(f"{obj.name} bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
     return (min_x, min_y, max_x, max_y)
@@ -500,11 +620,57 @@ def get_sphere_bounding_box(obj, cam, scene):
     
     return (min_x, min_y, max_x, max_y)
 
+def get_sphere_bounding_box_panoramic(obj, h, w, lens, cam, scene):
+
+    radius = max(obj.dimensions) / 2.0
+        
+    center = (cam.matrix_world.inverted() @ Vector(obj.location))
+    center.normalize()
+    
+    print(center.z)
+    if center.z > 0:
+        print("Ball " + obj.name + " behind camera") 
+        return None
+    
+    phi = math.atan2(center.y, center.x)
+    l = (center.x**2 + center.y**2)**(1/2)
+    theta = math.asin(l)
+    
+    world_center = obj.matrix_world.translation
+    camera_pos = cam.matrix_world.translation
+    distance = (world_center - camera_pos).length
+    
+    apparent_diameter = (radius * 2.0 / distance) * lens * (scene.render.resolution_x / w)
+    radius_pixels = apparent_diameter / 2.0
+
+    # Equisolid projection
+    r = 2.0 * lens * math.sin(theta / 2)
+
+    u = r * math.cos(phi) / w + 0.5
+    v = r * math.sin(phi) / h + 0.5
+
+    x = u * scene.render.resolution_x
+    y = v * scene.render.resolution_y
+
+    min_x = x - (radius_pixels)
+    max_x = x + (radius_pixels)
+    min_y = y - (radius_pixels)
+    max_y = y + (radius_pixels)
+    
+    print(f"{obj.name} bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+    return (min_x, min_y, max_x, max_y)
+
 def write_annotations(obj, class_id=0):
     """Writes YOLO annotations for the object"""
     scene = bpy.context.scene
-    bbox_result = get_bounding_box(obj)
-    
+
+    cam = bpy.context.scene.camera
+    print(cam.data.type)
+    if cam.data.type == "PERSP":
+        bbox_result = get_bounding_box(obj)
+    else:
+        bbox_result = get_bounding_box_panoramic(obj)
+
     # Check if bounding box calculation failed
     if bbox_result is None:
         print(f"Failed to calculate bounding box for {obj.name}")
