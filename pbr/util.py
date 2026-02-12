@@ -596,6 +596,13 @@ def get_sphere_bounding_box(obj, cam, scene):
     # Calculate distance from camera to ball
     camera_pos = cam.matrix_world.translation
     distance = (world_center - camera_pos).length
+
+    # Check if ball is occluded
+    cam_to_ball = world_center - camera_pos
+    ray_hit = scene.ray_cast(bpy.context.evaluated_depsgraph_get(), cam.matrix_world.translation + cam_to_ball * 0.20, cam_to_ball, distance=10)
+
+    if ray_hit[4] != obj:
+        return None
     
     # Simple perspective projection for radius
     # Use camera focal length to calculate apparent size
@@ -639,6 +646,13 @@ def get_sphere_bounding_box_panoramic(obj, h, w, lens, cam, scene):
     world_center = obj.matrix_world.translation
     camera_pos = cam.matrix_world.translation
     distance = (world_center - camera_pos).length
+
+    # Check if ball is occluded
+    cam_to_ball = world_center - camera_pos
+    ray_hit = scene.ray_cast(bpy.context.evaluated_depsgraph_get(), cam.matrix_world.translation + cam_to_ball * 0.20, cam_to_ball, distance=10)
+
+    if ray_hit[4] != obj:
+        return None
     
     apparent_diameter = (radius * 2.0 / distance) * lens * (scene.render.resolution_x / w)
     radius_pixels = apparent_diameter / 2.0
