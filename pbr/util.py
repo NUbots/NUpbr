@@ -360,3 +360,506 @@ def find_forward_vector(obj):
     forward.normalize()  # Normalize the forward vector after setting Z to 0
 
     return forward
+
+def get_robot_bounding_box(robot_obj, cam, scene):
+    """Calculates 2D bounding box for robot objects with all their parts"""
+    import bpy_extras
+    
+    # Extract robot number from the object name (e.g., "r6_Torso" -> "r6")
+    robot_prefix = robot_obj.name.split('_')[0]  # e.g., "r6"
+    
+    # Find all objects that belong to this robot
+    robot_parts = []
+    for obj in bpy.data.objects:
+        if obj.name.startswith(robot_prefix + '_'):
+            robot_parts.append(obj)
+    
+    print(f"Found {len(robot_parts)} parts for robot {robot_prefix}")
+    
+    # Collect all bounding box corners from all robot parts
+    all_corners = []
+    
+    for part in robot_parts:
+        # Get the 8 corners of each part's bounding box in world coordinates
+        for corner in part.bound_box:
+            world_corner = part.matrix_world @ Vector(corner)
+            # Project to camera view
+            camera_corner = bpy_extras.object_utils.world_to_camera_view(scene, cam, world_corner)
+            if camera_corner.z > 0:  # Only use points in front of camera
+                all_corners.append(camera_corner)
+    
+    if not all_corners:
+        print(f"No valid corners found for robot {robot_prefix}")
+        return None
+    
+    # Find the overall min/max bounds
+    min_x = min(corner.x for corner in all_corners)
+    max_x = max(corner.x for corner in all_corners)
+    min_y = min(corner.y for corner in all_corners)
+    max_y = max(corner.y for corner in all_corners)
+    
+    # Convert to pixels
+    min_x *= scene.render.resolution_x
+    max_x *= scene.render.resolution_x
+    min_y *= scene.render.resolution_y
+    max_y *= scene.render.resolution_y
+    
+    print(f"Robot {robot_prefix} combined bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+    return (min_x, min_y, max_x, max_y)
+
+def get_robot_bounding_box_panoramic(obj, h, w, lens, cam, scene):
+   
+    # Extract robot number from the object name (e.g., "r6_Torso" -> "r6")
+    robot_prefix = obj.name.split('_')[0]  # e.g., "r6"
+    
+    # Find all objects that belong to this robot
+    robot_parts = []
+    for obj in bpy.data.objects:
+        if obj.name.startswith(robot_prefix + '_'):
+            robot_parts.append(obj)
+        
+    bbox_corners = []
+    screen_positions = []
+    
+    for part in robot_parts:
+
+        part_center = (cam.matrix_world.inverted() @ part.matrix_world @ Vector(part.location))
+        part_center.normalize()
+        if part_center.z > 0:
+            continue  
+
+        for corner in part.bound_box:
+            
+            bbox_corner = (cam.matrix_world.inverted() @ part.matrix_world @ Vector(corner))
+            bbox_corner.normalize()
+            
+            phi = math.atan2(bbox_corner.y, bbox_corner.x)
+            l = (bbox_corner.x**2 + bbox_corner.y**2)**(1/2)
+            l = np.clip(l, -0.999, 0.999)
+            theta = math.asin(l)
+
+            # Equisolid projection
+            r = 2.0 * lens * math.sin(theta / 2)
+
+            u = r * math.cos(phi) / w + 0.5
+            v = r * math.sin(phi) / h + 0.5
+
+            x = u * scene.render.resolution_x
+            y = v * scene.render.resolution_y
+            
+            bbox_corners.append(bbox_corner)
+            screen_positions.append(Vector((x, y))) 
+
+    if not bbox_corners:
+        print("no valid corners for robot " + obj.name) 
+        return None
+
+    min_x = min(screen_pos.x for screen_pos in screen_positions)
+    max_x = max(screen_pos.x for screen_pos in screen_positions)
+    min_y = min(screen_pos.y for screen_pos in screen_positions)
+    max_y = max(screen_pos.y for screen_pos in screen_positions)
+    
+    print(f"{obj.name} bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+    return (min_x, min_y, max_x, max_y)
+    
+
+def get_bounding_box(obj):
+    """Calculates 2D bounding box for YOLO format"""
+    import bpy_extras
+    cam = bpy.context.scene.camera
+    scene = bpy.context.scene
+
+    # Special handling for ball objects (spheres)
+    if obj.name == "Ball":
+        return get_sphere_bounding_box(obj, cam, scene)
+    
+    # Special handling for robot objects - check if this looks like a robot part
+    # Robot parts follow pattern "r<number>_<part>" (e.g., "r6_Torso")
+    if '_' in obj.name and obj.name.split('_')[0].startswith('r') and obj.name.split('_')[0][1:].isdigit():
+        return get_robot_bounding_box(obj, cam, scene)
+    
+    # Default bounding box calculation for other objects
+    bbox_corners = [bpy_extras.object_utils.world_to_camera_view(scene, cam, obj.matrix_world @ Vector(corner)) for corner in obj.bound_box]
+
+    # Check if any corners are behind the camera
+    valid_corners = [corner for corner in bbox_corners if corner.z > 0]
+    if not valid_corners:
+        print(f"All corners of {obj.name} are behind camera")
+        return None
+
+    min_x = min(corner.x for corner in valid_corners)
+    max_x = max(corner.x for corner in valid_corners)
+    min_y = min(corner.y for corner in valid_corners)
+    max_y = max(corner.y for corner in valid_corners)
+
+    # Convert to pixels
+    min_x *= scene.render.resolution_x
+    max_x *= scene.render.resolution_x
+    min_y *= scene.render.resolution_y
+    max_y *= scene.render.resolution_y
+    
+    print(f"{obj.name} bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+    return (min_x, min_y, max_x, max_y)
+
+def get_bounding_box_panoramic(obj):
+    import bpy_extras
+
+    cam = bpy.context.scene.camera
+    scene = bpy.context.scene
+
+    lens = cam.data.cycles.fisheye_lens
+
+    aspect_ratio = bpy.context.scene.render.resolution_x / bpy.context.scene.render.resolution_y
+    if cam.data.sensor_fit == 'VERTICAL':
+        h = cam.data.sensor_height
+        w = aspect_ratio * h
+    else:
+        w = cam.data.sensor_width
+        h = w / aspect_ratio
+    
+    # Special handling for ball objects (spheres)
+    if obj.name == "Ball":
+        return get_sphere_bounding_box_panoramic(obj, h, w, lens, cam, scene)
+    
+    # Special handling for robot objects - check if this looks like a robot part
+    # Robot parts follow pattern "r<number>_<part>" (e.g., "r6_Torso")
+    if '_' in obj.name and obj.name.split('_')[0].startswith('r') and obj.name.split('_')[0][1:].isdigit():
+        return get_robot_bounding_box_panoramic(obj, h, w, lens, cam, scene)
+    
+    bbox_corners = []
+    screen_positions = []
+    
+    for corner in obj.bound_box:
+        
+        bbox_corner = (cam.matrix_world.inverted() @ corner.matrix_world @ Vector(corner))
+        bbox_corner.normalize()
+        
+        if bbox_corner.z > 0:
+            continue
+        
+        phi = math.atan2(bbox_corner.y, bbox_corner.x)
+        l = (bbox_corner.x**2 + bbox_corner.y**2)**(1/2)
+        theta = math.asin(l)
+
+        # Equisolid projection
+        r = 2.0 * lens * math.sin(theta / 2)
+
+        u = r * math.cos(phi) / w + 0.5
+        v = r * math.sin(phi) / h + 0.5
+
+        x = u * scene.render.resolution_x
+        y = v * scene.render.resolution_y
+        
+        bbox_corners.append(bbox_corner)
+        screen_positions.append(Vector((x, y)))
+
+    if not bbox_corners:
+        print("no valid corners for " + obj.name) 
+        return None
+
+    min_x = min(screen_pos.x for screen_pos in screen_positions)
+    max_x = max(screen_pos.x for screen_pos in screen_positions)
+    min_y = min(screen_pos.y for screen_pos in screen_positions)
+    max_y = max(screen_pos.y for screen_pos in screen_positions)
+    
+    print(f"{obj.name} bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+    return (min_x, min_y, max_x, max_y)
+
+def get_sphere_bounding_box(obj, cam, scene):
+    """Calculates accurate 2D bounding box for spherical objects"""
+    import bpy_extras
+    
+    # Check camera type - equisolid cameras need different handling
+    camera_type = getattr(cam.data, 'type', 'PERSP')
+    
+    # Get the sphere center in world coordinates
+    world_center = obj.matrix_world.translation
+    radius = max(obj.dimensions) / 2.0
+    
+    # For now, disable equisolid handling and use perspective projection for all cameras
+    # This ensures consistent, reliable bounding boxes
+    # TODO: Re-enable equisolid handling once perspective projection is perfected
+    
+    # Regular perspective camera handling for all camera types
+    # Project sphere center to camera view
+    center_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, world_center)
+    
+    # Check if sphere center is behind camera
+    if center_2d.z <= 0:
+        print(f"Ball behind camera, z={center_2d.z}")
+        return None
+    
+    # Convert to pixel coordinates (same system as regular bbox function)
+    center_x_pixels = center_2d.x * scene.render.resolution_x
+    center_y_pixels = center_2d.y * scene.render.resolution_y
+    
+    # Calculate distance from camera to ball
+    camera_pos = cam.matrix_world.translation
+    distance = (world_center - camera_pos).length
+
+    # Check if ball is occluded
+    cam_to_ball = world_center - camera_pos
+    ray_hit = scene.ray_cast(bpy.context.evaluated_depsgraph_get(), cam.matrix_world.translation + cam_to_ball * 0.20, cam_to_ball, distance=10)
+
+    if ray_hit[4] != obj:
+        return None
+    
+    # Simple perspective projection for radius
+    # Use camera focal length to calculate apparent size
+    focal_length = cam.data.lens  # in mm
+    sensor_width = cam.data.sensor_width  # in mm
+    
+    # Calculate apparent size in pixels
+    # apparent_size = (object_size / distance) * focal_length * (image_width / sensor_width)
+    apparent_diameter = (radius * 2.0 / distance) * focal_length * (scene.render.resolution_x / sensor_width)
+    radius_pixels = apparent_diameter / 2.0
+    
+    # Calculate bounding box
+    min_x = center_x_pixels - radius_pixels
+    max_x = center_x_pixels + radius_pixels
+    min_y = center_y_pixels - radius_pixels
+    max_y = center_y_pixels + radius_pixels
+    
+    print(f"Ball bbox: center=({center_2d.x:.3f}, {center_2d.y:.3f}), radius={radius:.3f}")
+    print(f"Ball bbox: distance={distance:.1f}m, apparent_diameter={apparent_diameter:.1f}px")
+    print(f"Ball bbox: center_pixels=({center_x_pixels:.1f}, {center_y_pixels:.1f}), radius_pixels={radius_pixels:.1f}")
+    print(f"Ball bbox pixels: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+    
+    return (min_x, min_y, max_x, max_y)
+
+def get_sphere_bounding_box_panoramic(obj, h, w, lens, cam, scene):
+
+    radius = max(obj.dimensions) / 2.0
+        
+    center = (cam.matrix_world.inverted() @ Vector(obj.location))
+    center.normalize()
+    
+    print(center.z)
+    if center.z > 0:
+        print("Ball " + obj.name + " behind camera") 
+        return None
+    
+    phi = math.atan2(center.y, center.x)
+    l = (center.x**2 + center.y**2)**(1/2)
+    theta = math.asin(l)
+    
+    world_center = obj.matrix_world.translation
+    camera_pos = cam.matrix_world.translation
+    distance = (world_center - camera_pos).length
+
+    # Check if ball is occluded
+    cam_to_ball = world_center - camera_pos
+    ray_hit = scene.ray_cast(bpy.context.evaluated_depsgraph_get(), cam.matrix_world.translation + cam_to_ball * 0.20, cam_to_ball, distance=10)
+
+    if ray_hit[4] != obj:
+        return None
+    
+    apparent_diameter = (radius * 2.0 / distance) * lens * (scene.render.resolution_x / w)
+    radius_pixels = apparent_diameter / 2.0
+
+    # Equisolid projection
+    r = 2.0 * lens * math.sin(theta / 2)
+
+    u = r * math.cos(phi) / w + 0.5
+    v = r * math.sin(phi) / h + 0.5
+
+    x = u * scene.render.resolution_x
+    y = v * scene.render.resolution_y
+
+    min_x = x - (radius_pixels)
+    max_x = x + (radius_pixels)
+    min_y = y - (radius_pixels)
+    max_y = y + (radius_pixels)
+    
+    print(f"{obj.name} bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+    return (min_x, min_y, max_x, max_y)
+
+def write_annotations(obj, class_id=0):
+    """Writes YOLO annotations for the object"""
+    scene = bpy.context.scene
+
+    cam = bpy.context.scene.camera
+    print(cam.data.type)
+    if cam.data.type == "PERSP":
+        bbox_result = get_bounding_box(obj)
+    else:
+        bbox_result = get_bounding_box_panoramic(obj)
+
+    # Check if bounding box calculation failed
+    if bbox_result is None:
+        print(f"Failed to calculate bounding box for {obj.name}")
+        return None
+        
+    min_x, min_y, max_x, max_y = bbox_result
+    
+    # Clamp bounding box to image bounds
+    min_x = max(0, min_x)
+    min_y = max(0, min_y)
+    max_x = min(scene.render.resolution_x, max_x)
+    max_y = min(scene.render.resolution_y, max_y)
+    
+    # Check if there's any visible area after clamping
+    if min_x >= max_x or min_y >= max_y:
+        print(f"No visible area for {obj.name} after clamping")
+        return None
+    
+    # Calculate center and dimensions
+    x_center = (min_x + max_x) / 2
+    # Use consistent Y-flip for all objects
+    y_center = scene.render.resolution_y - (min_y + max_y) / 2
+    
+    width = max_x - min_x
+    height = max_y - min_y
+
+    # Normalize coordinates
+    x_center /= scene.render.resolution_x
+    y_center /= scene.render.resolution_y
+    width /= scene.render.resolution_x
+    height /= scene.render.resolution_y
+
+    # Final bounds check on normalized coordinates
+    if x_center < 0 or x_center > 1 or y_center < 0 or y_center > 1:
+        print(f"Center out of bounds for {obj.name}: ({x_center:.3f}, {y_center:.3f})")
+        return None
+        
+    # Check minimum size requirements
+    min_size_pixels = scene_config.resources["bounding_boxes"]["min_bbox_size"]
+    if (width * scene.render.resolution_x < min_size_pixels or 
+        height * scene.render.resolution_y < min_size_pixels):
+        print(f"Bounding box too small for {obj.name}: {width * scene.render.resolution_x:.1f} x {height * scene.render.resolution_y:.1f}")
+        return None
+
+    print(f"{obj.name} {class_id} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}")
+    return class_id, x_center, y_center, width, height
+
+def write_goal_post_annotations_from_mask(mask_path, scene):
+    """Generate goal post annotations from segmentation mask"""
+    import cv2
+    import numpy as np
+    
+    try:
+        mask_img = cv2.imread(mask_path)
+    except:
+        print(f"Cannot load mask image {mask_path}")
+        return []
+    
+    if mask_img is None:
+        print(f"Failed to read mask image {mask_path}")
+        return []
+    
+    annotations = []
+    
+    # Goal posts should be yellow in the segmentation mask
+    # Convert BGR to RGB and look for yellow pixels
+    mask_rgb = cv2.cvtColor(mask_img, cv2.COLOR_BGR2RGB)
+    
+    # Define yellow color range (goal posts)
+    # Yellow in RGB is approximately (255, 255, 0)
+    yellow_lower = np.array([250, 250, 0])
+    yellow_upper = np.array([255, 255, 10])
+    
+    # Create mask for yellow pixels (goal posts)
+    yellow_mask = cv2.inRange(mask_rgb, yellow_lower, yellow_upper)
+    
+    # Find contours in the yellow mask
+    contours, _ = cv2.findContours(yellow_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    goalpost_class_id = 1  # Goal posts have class 1
+    
+    for contour in contours:
+        # Calculate bounding box for each goal post contour
+        x, y, w, h = cv2.boundingRect(contour)
+        
+        # Check minimum size requirements
+        min_size_pixels = scene_config.resources["bounding_boxes"]["min_bbox_size"]
+        if w < min_size_pixels or h < min_size_pixels:
+            print(f"Goal post contour too small: {w}x{h}")
+            continue
+        
+        # Convert to YOLO format (normalized center coordinates and dimensions)
+        img_height, img_width = mask_img.shape[:2]
+        
+        center_x = (x + w/2) / img_width
+        center_y = (y + h/2) / img_height
+        width_norm = w / img_width
+        height_norm = h / img_height
+        
+        # Ensure coordinates are within bounds
+        if 0 <= center_x <= 1 and 0 <= center_y <= 1:
+            print(f"Goal post from mask: {goalpost_class_id} {center_x:.6f} {center_y:.6f} {width_norm:.6f} {height_norm:.6f}")
+            annotations.append((goalpost_class_id, center_x, center_y, width_norm, height_norm))
+    
+    print(f"Generated {len(annotations)} goal post annotations from mask")
+    return annotations
+
+def write_intersection_annotations_from_mask(mask_path, scene):
+    """Generate intersection annotations from segmentation mask"""
+    import cv2
+    import numpy as np
+    
+    try:
+        mask_img = cv2.imread(mask_path)
+    except:
+        print(f"Cannot load mask image {mask_path}")
+        return []
+    
+    if mask_img is None:
+        print(f"Failed to read mask image {mask_path}")
+        return []
+    
+    annotations = []
+    
+    # Convert BGR to RGB for color detection
+    mask_rgb = cv2.cvtColor(mask_img, cv2.COLOR_BGR2RGB)
+    
+    # Define color ranges and class IDs for different intersection types
+    intersection_types = {
+        "L": {
+            "class_id": 3,
+            "color_lower": np.array([250, 0, 250]),    # Magenta lower bound
+            "color_upper": np.array([255, 10, 255])   # Magenta upper bound
+        },
+        "T": {
+            "class_id": 4,
+            "color_lower": np.array([0, 250, 250]),    # Cyan lower bound
+            "color_upper": np.array([10, 255, 255])   # Cyan upper bound
+        },
+        "X": {
+            "class_id": 5,
+            "color_lower": np.array([250, 90, 0]),    # Orange lower bound
+            "color_upper": np.array([255, 110, 0])    # Orange upper bound
+        }
+    }
+    
+    for intersection_type, config in intersection_types.items():
+        # Create mask for this intersection type's color
+        color_mask = cv2.inRange(mask_rgb, config["color_lower"], config["color_upper"])
+        
+        # Find contours in the color mask
+        contours, _ = cv2.findContours(color_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        for contour in contours:
+            # Calculate bounding box for each intersection contour
+            x, y, w, h = cv2.boundingRect(contour)
+            
+            # Check minimum size requirements
+            min_size_pixels = scene_config.resources["bounding_boxes"]["min_bbox_size"]
+            if w < min_size_pixels or h < min_size_pixels:
+                print(f"{intersection_type}-intersection contour too small: {w}x{h}")
+                continue
+            
+            # Convert to YOLO format (normalized center coordinates and dimensions)
+            img_height, img_width = mask_img.shape[:2]
+            
+            center_x = (x + w/2) / img_width
+            center_y = (y + h/2) / img_height
+            width_norm = w / img_width
+            height_norm = h / img_height
+            
+            # Ensure coordinates are within bounds
+            if 0 <= center_x <= 1 and 0 <= center_y <= 1:
+                print(f"{intersection_type}-intersection from mask: {config['class_id']} {center_x:.6f} {center_y:.6f} {width_norm:.6f} {height_norm:.6f}")
+                annotations.append((config["class_id"], center_x, center_y, width_norm, height_norm))
+    
+    print(f"Generated {len(annotations)} intersection annotations from mask")
+    return annotations
