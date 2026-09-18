@@ -23,8 +23,8 @@ Before starting, download and install [Blender 2.93 LTS](https://www.blender.org
 
 To generate a scene with default field UV map, do the following:
 
-- Run `pbr.py` using Blender's Python API: `blender --python pbr/pbr.py`
-- To run the script without the Blender UI, use: `blender -b --python pbr/pbr.py`
+- Run `pbr.py` using Blender's Python API: `./blender --python <full_path>/pbr/pbr.py` (example: /home/student1/<Nubots_directory>/<NUpbr_directory>/pbr/pbr.py)
+- To run the script without the Blender UI, use: `./blender -b --python <full_path>/pbr/pbr.py`
 
 This will create a scene, rendering a ball, goals and a field depending on the HDR metadata. The output files will be placed in `output/run_#` where `#` is the auto-generated run number.
 
