@@ -23,12 +23,14 @@ Before starting, download and install [Blender 2.93 LTS](https://www.blender.org
 
 To generate a scene with default field UV map, do the following:
 
-- Run `pbr.py` using Blender's Python API: `blender --python pbr/pbr.py`
+- Run `pbr.py` using Blender's Python API: `blender --python <path_to_nupbr_root>/pbr/pbr.py`
 - To run the script without the Blender UI, use: `blender -b --python pbr/pbr.py`
 
 This will create a scene, rendering a ball, goals and a field depending on the HDR metadata. The output files will be placed in `output/run_#` where `#` is the auto-generated run number.
 
 The ball UV map, grass texture, and HDRI environment image are randomly selected from the directories configured in [`scene_config.py`](./pbr/config/scene_config.py).
+
+Notes: depending on how you install blender, you can either use 'blender ' or './blender' commands to run script. If installed using package manager, you can use 'blender' as it would be setup in your terminal's PATH ([see here](https://docs.blender.org/manual/en/latest/advanced/command_line/launch/index.html)).
 
 ## Specifying Custom Resources
 
