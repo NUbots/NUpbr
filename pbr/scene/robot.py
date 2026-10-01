@@ -4,6 +4,7 @@ import os
 import bpy
 import json
 import re
+import random
 from math import radians
 from random import triangular, randint
 
@@ -66,13 +67,20 @@ class Robot(BlenderObject):
                 if re.search(nor_re, file, re.I) is not None:
                     nor_path = os.path.join(tex_path, file)
 
-            # Set material for limb
-            self.mat.update({obj.name: self.set_material(obj, p, col_path, nor_path)})
+            # !!! Only override colour for the Torso part; everything else keeps default !!!
+            if p == "Torso":
+                chosen_colour = random.choice(scene_cfg.resources["robot"]["torso_colours"])
+                part_colour = (chosen_colour[0], chosen_colour[1], chosen_colour[2], 1.0)
+            else:
+                part_colour = (self.colour, self.colour, self.colour, 1.0)
+
+                # Set material for limb
+            self.mat.update({obj.name: self.set_material(obj, p, col_path, nor_path, part_colour)})
             obj.data.materials.append(self.mat[obj.name])
 
         self.initialise_kinematics()
 
-    def set_material(self, obj, mat_name, colour_path, normal_path):
+    def set_material(self, obj, mat_name, colour_path, normal_path, mix_colour):
         l_mat = bpy.data.materials.new(mat_name)
 
         # Enable use of material nodes
@@ -98,12 +106,10 @@ class Robot(BlenderObject):
 
         # Create RGB mixer to change base colour of colour map
         n_mix_col_map = node_list.new("ShaderNodeMixRGB")
-        n_mix_col_map.inputs[2].default_value = (
-            self.colour,
-            self.colour,
-            self.colour,
-            1.0,
-        )
+        # Explicitly naming node so .nodes["Mix"] finds it safely
+        n_mix_col_map.name = "Mix"
+        n_mix_col_map.inputs[0].default_value = 1.0  # Set Factor to maximum override
+        n_mix_col_map.inputs[2].default_value = mix_colour
 
         # Create normal map node for texture
         if normal_path is not None:
@@ -116,6 +122,8 @@ class Robot(BlenderObject):
                 raise NameError("Cannot load image {0}".format(normal_path))
             n_norm_map.image = norm_map
             n_norm_map.image.colorspace_settings.is_data = True
+
+
         n_norm_map_conv = node_list.new("ShaderNodeNormalMap")
         n_norm_map_conv.name = "Norm_Map_Conv"
 
@@ -198,13 +206,21 @@ class Robot(BlenderObject):
         self.obj.location = cfg["position"]
         # Randomly reassign robot colour
         col = randint(0, 1)
+
+        torso_key = "{}_Torso".format(self.name)
+
         for k in self.objs.keys():
-            self.mat[k].node_tree.nodes["Mix"].inputs[2].default_value = (
-                col,
-                col,
-                col,
-                1,
-            )
+            if k == torso_key:
+                chosen_colour = random.choice(scene_cfg.resources["robot"]["torso_colours"])
+                part_colour = (chosen_colour[0], chosen_colour[1], chosen_colour[2], 1.0)
+                self.mat[k].node_tree.nodes["Mix"].inputs[2].default_value = part_colour
+            else:
+                self.mat[k].node_tree.nodes["Mix"].inputs[2].default_value = (
+                    col,
+                    col,
+                    col,
+                    1,
+                )
 
     # This function specifically updates the main robot's yaw to properly track the target
     def update_main_robot(self, target):
