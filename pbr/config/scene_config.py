@@ -44,6 +44,11 @@ resources = {
         "kinematics_path": path.abspath(path.join(res_path, "robot", "NUgus_esh.json")),
         "kinematics_variance": 0.5,  ## Determines how much variance the random poses will have
         "mask": {"index": 3, "colour": (0, 0, 1, 1)},
+        "torso_colours": [          ## Set of colours (RGB) for the robot torso
+            (0.9, 0.0, 0.0),    # red
+            (0.0, 0.5, 0.5),    # green-blue combination
+            (0.0, 0.0, 0.9)     # blue
+        ],
     },
     "misc_robot": {
         "robot_list": {
