@@ -129,12 +129,8 @@ class Robot(BlenderObject):
 
         # Create principled node
         n_principled = node_list.new("ShaderNodeBsdfPrincipled")
-        n_principled.inputs["Metallic"].default_value = blend_cfg.robot["material"][
-            "metallic"
-        ]
-        n_principled.inputs["Roughness"].default_value = blend_cfg.robot["material"][
-            "roughness"
-        ]
+        n_principled.inputs["Metallic"].default_value = blend_cfg.robot["material"]["metallic"]
+        n_principled.inputs["Roughness"].default_value = blend_cfg.robot["material"]["roughness"]
 
         # Create output node
         n_output = node_list.new("ShaderNodeOutputMaterial")
