@@ -14,6 +14,11 @@ from scene.blender_object import BlenderObject
 
 import numpy as np
 
+import util
+
+# Blend factor for how strongly the jersey colour tints the torso texture
+JERSEY_BLEND_FACTOR = 0.6
+
 
 class Robot(BlenderObject):
     def __init__(self, name, class_index, robot_info):
@@ -25,6 +30,7 @@ class Robot(BlenderObject):
         self.obj = None
         self.name = name
         self.colour = randint(0, 1)  # 1. white or 0. black
+        self.jersey_rgb, self.jersey_colour = util.random_jersey_colour()
         self.construct(robot_info)
 
     # Setup robot object
@@ -66,13 +72,15 @@ class Robot(BlenderObject):
                 if re.search(nor_re, file, re.I) is not None:
                     nor_path = os.path.join(tex_path, file)
 
-            # Set material for limb
-            self.mat.update({obj.name: self.set_material(obj, p, col_path, nor_path)})
+            # Set material for limb (torso gets a tinted jersey colour)
+            self.mat.update(
+                {obj.name: self.set_material(obj, p, col_path, nor_path, jersey=(p == "Torso"))}
+            )
             obj.data.materials.append(self.mat[obj.name])
 
         self.initialise_kinematics()
 
-    def set_material(self, obj, mat_name, colour_path, normal_path):
+    def set_material(self, obj, mat_name, colour_path, normal_path, jersey=False):
         l_mat = bpy.data.materials.new(mat_name)
 
         # Enable use of material nodes
@@ -119,6 +127,13 @@ class Robot(BlenderObject):
         n_norm_map_conv = node_list.new("ShaderNodeNormalMap")
         n_norm_map_conv.name = "Norm_Map_Conv"
 
+        # For the torso, mix in a random jersey colour on top of the black/white body colour
+        if jersey:
+            n_jersey_mix = node_list.new("ShaderNodeMixRGB")
+            n_jersey_mix.name = "Jersey_Mix"
+            n_jersey_mix.inputs[0].default_value = JERSEY_BLEND_FACTOR
+            n_jersey_mix.inputs[2].default_value = (*self.jersey_rgb, 1.0)
+
         # Create principled node
         n_principled = node_list.new("ShaderNodeBsdfPrincipled")
         n_principled.inputs["Metallic"].default_value = blend_cfg.robot["material"][
@@ -136,7 +151,11 @@ class Robot(BlenderObject):
 
         # Link texture image and normal map
         tl.new(n_uv_map.outputs[0], n_mix_col_map.inputs[1])
-        tl.new(n_mix_col_map.outputs[0], n_principled.inputs[0])
+        if jersey:
+            tl.new(n_mix_col_map.outputs[0], n_jersey_mix.inputs[1])
+            tl.new(n_jersey_mix.outputs[0], n_principled.inputs[0])
+        else:
+            tl.new(n_mix_col_map.outputs[0], n_principled.inputs[0])
         if normal_path is not None:
             tl.new(n_norm_map.outputs["Color"], n_norm_map_conv.inputs["Color"])
             tl.new(n_norm_map_conv.outputs["Normal"], n_principled.inputs["Normal"])
@@ -193,6 +212,15 @@ class Robot(BlenderObject):
                 "{}_{}".format(self.name, k)
             ].delta_rotation_euler = delta_rot
 
+    def set_jersey_colour(self, rgb, hex_colour):
+        self.jersey_rgb, self.jersey_colour = rgb, hex_colour
+        torso_key = "{}_Torso".format(self.name)
+        if torso_key in self.mat:
+            self.mat[torso_key].node_tree.nodes["Jersey_Mix"].inputs[2].default_value = (
+                *self.jersey_rgb,
+                1.0,
+            )
+
     def update(self, cfg):
         self.update_kinematics()
         self.obj.location = cfg["position"]
@@ -205,6 +233,9 @@ class Robot(BlenderObject):
                 col,
                 1,
             )
+
+        # Randomly reassign the jersey colour (call set_jersey_colour afterwards to override)
+        self.set_jersey_colour(*util.random_jersey_colour())
 
     # This function specifically updates the main robot's yaw to properly track the target
     def update_main_robot(self, target):

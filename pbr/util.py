@@ -1,10 +1,12 @@
 import os
 import re
 import bpy
+import bpy_extras
 import random as rand
 import numpy as np
 import math
 import cv2
+import colorsys
 
 from config import scene_config
 from scene import environment as env
@@ -361,82 +363,130 @@ def find_forward_vector(obj):
 
     return forward
 
+def random_jersey_colour():
+    """Generates a random, vividly-coloured jersey colour.
+
+    Returns a tuple of ((r, g, b) floats in [0, 1], "#rrggbb" hex string).
+    """
+    r, g, b = colorsys.hsv_to_rgb(rand.random(), rand.uniform(0.6, 1.0), rand.uniform(0.6, 1.0))
+    hex_colour = "#{:02x}{:02x}{:02x}".format(round(r * 255), round(g * 255), round(b * 255))
+    return (r, g, b), hex_colour
+
+
+def _is_robot_part(name):
+    """Returns True if an object name matches the "r<number>_<part>" robot naming scheme"""
+    prefix = name.split("_")[0]
+    return prefix.startswith("r") and prefix[1:].isdigit()
+
+
+def _is_occluded(scene, cam, world_point, exclude_prefix=None, exclude_obj=None):
+    """Returns True if the line of sight from the camera to world_point is blocked by
+    something other than the target itself (or, for robots, one of its own parts, since
+    self-occlusion by a robot's own limb is not real occlusion for annotation purposes)."""
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    cam_pos = cam.matrix_world.translation
+    to_point = world_point - cam_pos
+    distance = to_point.length
+
+    if distance < 1e-6:
+        return False
+
+    # Start the ray a bit along the path so it doesn't immediately self-hit the camera-mounting
+    # robot's own head, then only travel as far as the target (plus a small margin). A fixed
+    # travel distance would wrongly mark distant-but-unobstructed objects as occluded.
+    origin = cam_pos + to_point * 0.2
+    remaining_distance = distance * 0.85
+
+    hit, _loc, _normal, _idx, hit_obj, _matrix = scene.ray_cast(
+        depsgraph, origin, to_point.normalized(), distance=remaining_distance
+    )
+
+    if not hit:
+        return False
+    if exclude_obj is not None and hit_obj == exclude_obj:
+        return False
+    if exclude_prefix is not None and hit_obj is not None and hit_obj.name.startswith(exclude_prefix):
+        return False
+
+    return True
+
+
 def get_robot_bounding_box(robot_obj, cam, scene):
-    """Calculates 2D bounding box for robot objects with all their parts"""
-    import bpy_extras
-    
-    # Extract robot number from the object name (e.g., "r6_Torso" -> "r6")
-    robot_prefix = robot_obj.name.split('_')[0]  # e.g., "r6"
-    
-    # Find all objects that belong to this robot
-    robot_parts = []
-    for obj in bpy.data.objects:
-        if obj.name.startswith(robot_prefix + '_'):
-            robot_parts.append(obj)
-    
-    print(f"Found {len(robot_parts)} parts for robot {robot_prefix}")
-    
-    # Collect all bounding box corners from all robot parts
-    all_corners = []
-    
-    for part in robot_parts:
-        # Get the 8 corners of each part's bounding box in world coordinates
-        for corner in part.bound_box:
-            world_corner = part.matrix_world @ Vector(corner)
-            # Project to camera view
-            camera_corner = bpy_extras.object_utils.world_to_camera_view(scene, cam, world_corner)
-            if camera_corner.z > 0:  # Only use points in front of camera
-                all_corners.append(camera_corner)
-    
-    if not all_corners:
-        print(f"No valid corners found for robot {robot_prefix}")
+    """Calculates a 2D bounding box for a robot from all of its parts (rectilinear camera)"""
+    robot_prefix = robot_obj.name.split("_")[0]
+    robot_parts = [o for o in bpy.data.objects if o.name.startswith(robot_prefix + "_")]
+
+    # Gate on the robot's root part first: if it isn't cleanly in view (in front of the
+    # camera, inside the frame, not blocked by something else) don't annotate the robot at
+    # all. Without this, a single limb poking into frame at a weird angle can otherwise
+    # produce a "bounding box" spanning almost the entire image.
+    root_world = robot_obj.matrix_world.translation
+    root_view = bpy_extras.object_utils.world_to_camera_view(scene, cam, root_world)
+    if root_view.z <= 0 or not (0.0 <= root_view.x <= 1.0 and 0.0 <= root_view.y <= 1.0):
         return None
-    
-    # Find the overall min/max bounds
-    min_x = min(corner.x for corner in all_corners)
-    max_x = max(corner.x for corner in all_corners)
-    min_y = min(corner.y for corner in all_corners)
-    max_y = max(corner.y for corner in all_corners)
-    
-    # Convert to pixels
-    min_x *= scene.render.resolution_x
-    max_x *= scene.render.resolution_x
-    min_y *= scene.render.resolution_y
-    max_y *= scene.render.resolution_y
-    
-    print(f"Robot {robot_prefix} combined bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+
+    if _is_occluded(scene, cam, root_world, exclude_prefix=robot_prefix):
+        return None
+
+    screen_positions = []
+    for part in robot_parts:
+        for corner in part.bound_box:
+            cam_view = bpy_extras.object_utils.world_to_camera_view(
+                scene, cam, part.matrix_world @ Vector(corner)
+            )
+            if cam_view.z > 0:  # Only use points in front of the camera
+                screen_positions.append(cam_view)
+
+    if not screen_positions:
+        return None
+
+    min_x = min(p.x for p in screen_positions) * scene.render.resolution_x
+    max_x = max(p.x for p in screen_positions) * scene.render.resolution_x
+    min_y = min(p.y for p in screen_positions) * scene.render.resolution_y
+    max_y = max(p.y for p in screen_positions) * scene.render.resolution_y
+
     return (min_x, min_y, max_x, max_y)
 
-def get_robot_bounding_box_panoramic(obj, h, w, lens, cam, scene):
-   
-    # Extract robot number from the object name (e.g., "r6_Torso" -> "r6")
-    robot_prefix = obj.name.split('_')[0]  # e.g., "r6"
-    
-    # Find all objects that belong to this robot
-    robot_parts = []
-    for obj in bpy.data.objects:
-        if obj.name.startswith(robot_prefix + '_'):
-            robot_parts.append(obj)
-        
-    bbox_corners = []
+
+def get_robot_bounding_box_panoramic(obj, h, w, lens, fov, cam, scene):
+    """Calculates a 2D bounding box for a robot from all of its parts (equisolid fisheye camera)"""
+    robot_prefix = obj.name.split("_")[0]
+    robot_parts = [o for o in bpy.data.objects if o.name.startswith(robot_prefix + "_")]
+
+    cam_inv = cam.matrix_world.inverted()
+    root_world = obj.matrix_world.translation
+    root_cam = cam_inv @ root_world
+
+    # In camera-local space, forward is -Z, so z < 0 means "in front of the camera". For a
+    # unit vector this also guarantees theta (angle from the optical axis) <= 90 degrees.
+    if root_cam.z >= 0:
+        return None
+
+    root_l = min(math.sqrt(root_cam.x**2 + root_cam.y**2), 0.999)
+    if math.asin(root_l) > fov / 2.0:
+        return None
+
+    if _is_occluded(scene, cam, root_world, exclude_prefix=robot_prefix):
+        return None
+
     screen_positions = []
-    
     for part in robot_parts:
-
-        part_center = (cam.matrix_world.inverted() @ part.matrix_world @ Vector(part.location))
-        part_center.normalize()
-        if part_center.z > 0:
-            continue  
-
         for corner in part.bound_box:
-            
-            bbox_corner = (cam.matrix_world.inverted() @ part.matrix_world @ Vector(corner))
-            bbox_corner.normalize()
-            
-            phi = math.atan2(bbox_corner.y, bbox_corner.x)
-            l = (bbox_corner.x**2 + bbox_corner.y**2)**(1/2)
-            l = np.clip(l, -0.999, 0.999)
+            bbox_corner = cam_inv @ (part.matrix_world @ Vector(corner))
+
+            # Skip corners behind the camera (or outside the fisheye FOV): folding them into
+            # the front hemisphere via asin/atan2 would place them at a bogus screen location,
+            # which is what causes a single out-of-view limb to blow the bbox out to the edges
+            # of the image.
+            if bbox_corner.z >= 0:
+                continue
+
+            l = min(math.sqrt(bbox_corner.x**2 + bbox_corner.y**2), 0.999)
             theta = math.asin(l)
+            if theta > fov / 2.0:
+                continue
+
+            phi = math.atan2(bbox_corner.y, bbox_corner.x)
 
             # Equisolid projection
             r = 2.0 * lens * math.sin(theta / 2)
@@ -444,102 +494,95 @@ def get_robot_bounding_box_panoramic(obj, h, w, lens, cam, scene):
             u = r * math.cos(phi) / w + 0.5
             v = r * math.sin(phi) / h + 0.5
 
-            x = u * scene.render.resolution_x
-            y = v * scene.render.resolution_y
-            
-            bbox_corners.append(bbox_corner)
-            screen_positions.append(Vector((x, y))) 
+            screen_positions.append(
+                Vector((u * scene.render.resolution_x, v * scene.render.resolution_y))
+            )
 
-    if not bbox_corners:
-        print("no valid corners for robot " + obj.name) 
+    if not screen_positions:
         return None
 
-    min_x = min(screen_pos.x for screen_pos in screen_positions)
-    max_x = max(screen_pos.x for screen_pos in screen_positions)
-    min_y = min(screen_pos.y for screen_pos in screen_positions)
-    max_y = max(screen_pos.y for screen_pos in screen_positions)
-    
-    print(f"{obj.name} bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+    min_x = min(p.x for p in screen_positions)
+    max_x = max(p.x for p in screen_positions)
+    min_y = min(p.y for p in screen_positions)
+    max_y = max(p.y for p in screen_positions)
+
     return (min_x, min_y, max_x, max_y)
-    
+
 
 def get_bounding_box(obj):
-    """Calculates 2D bounding box for YOLO format"""
-    import bpy_extras
+    """Calculates 2D bounding box for YOLO format (rectilinear camera)"""
     cam = bpy.context.scene.camera
     scene = bpy.context.scene
 
     # Special handling for ball objects (spheres)
     if obj.name == "Ball":
         return get_sphere_bounding_box(obj, cam, scene)
-    
-    # Special handling for robot objects - check if this looks like a robot part
-    # Robot parts follow pattern "r<number>_<part>" (e.g., "r6_Torso")
-    if '_' in obj.name and obj.name.split('_')[0].startswith('r') and obj.name.split('_')[0][1:].isdigit():
+
+    # Special handling for robot objects - robot parts follow the pattern
+    # "r<number>_<part>" (e.g., "r6_Torso")
+    if _is_robot_part(obj.name):
         return get_robot_bounding_box(obj, cam, scene)
-    
+
     # Default bounding box calculation for other objects
-    bbox_corners = [bpy_extras.object_utils.world_to_camera_view(scene, cam, obj.matrix_world @ Vector(corner)) for corner in obj.bound_box]
+    bbox_corners = [
+        bpy_extras.object_utils.world_to_camera_view(scene, cam, obj.matrix_world @ Vector(corner))
+        for corner in obj.bound_box
+    ]
 
     # Check if any corners are behind the camera
     valid_corners = [corner for corner in bbox_corners if corner.z > 0]
     if not valid_corners:
-        print(f"All corners of {obj.name} are behind camera")
         return None
 
-    min_x = min(corner.x for corner in valid_corners)
-    max_x = max(corner.x for corner in valid_corners)
-    min_y = min(corner.y for corner in valid_corners)
-    max_y = max(corner.y for corner in valid_corners)
+    min_x = min(corner.x for corner in valid_corners) * scene.render.resolution_x
+    max_x = max(corner.x for corner in valid_corners) * scene.render.resolution_x
+    min_y = min(corner.y for corner in valid_corners) * scene.render.resolution_y
+    max_y = max(corner.y for corner in valid_corners) * scene.render.resolution_y
 
-    # Convert to pixels
-    min_x *= scene.render.resolution_x
-    max_x *= scene.render.resolution_x
-    min_y *= scene.render.resolution_y
-    max_y *= scene.render.resolution_y
-    
-    print(f"{obj.name} bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
     return (min_x, min_y, max_x, max_y)
 
-def get_bounding_box_panoramic(obj):
-    import bpy_extras
 
+def get_bounding_box_panoramic(obj):
+    """Calculates 2D bounding box for YOLO format (equisolid fisheye camera)"""
     cam = bpy.context.scene.camera
     scene = bpy.context.scene
 
     lens = cam.data.cycles.fisheye_lens
+    fov = cam.data.cycles.fisheye_fov
 
-    aspect_ratio = bpy.context.scene.render.resolution_x / bpy.context.scene.render.resolution_y
-    if cam.data.sensor_fit == 'VERTICAL':
+    aspect_ratio = scene.render.resolution_x / scene.render.resolution_y
+    if cam.data.sensor_fit == "VERTICAL":
         h = cam.data.sensor_height
         w = aspect_ratio * h
     else:
         w = cam.data.sensor_width
         h = w / aspect_ratio
-    
+
     # Special handling for ball objects (spheres)
     if obj.name == "Ball":
-        return get_sphere_bounding_box_panoramic(obj, h, w, lens, cam, scene)
-    
-    # Special handling for robot objects - check if this looks like a robot part
-    # Robot parts follow pattern "r<number>_<part>" (e.g., "r6_Torso")
-    if '_' in obj.name and obj.name.split('_')[0].startswith('r') and obj.name.split('_')[0][1:].isdigit():
-        return get_robot_bounding_box_panoramic(obj, h, w, lens, cam, scene)
-    
-    bbox_corners = []
+        return get_sphere_bounding_box_panoramic(obj, h, w, lens, fov, cam, scene)
+
+    # Special handling for robot objects - robot parts follow the pattern
+    # "r<number>_<part>" (e.g., "r6_Torso")
+    if _is_robot_part(obj.name):
+        return get_robot_bounding_box_panoramic(obj, h, w, lens, fov, cam, scene)
+
+    # Generic fallback for any other object type (e.g. goals, shapes)
+    cam_inv = cam.matrix_world.inverted()
     screen_positions = []
-    
+
     for corner in obj.bound_box:
-        
-        bbox_corner = (cam.matrix_world.inverted() @ corner.matrix_world @ Vector(corner))
-        bbox_corner.normalize()
-        
-        if bbox_corner.z > 0:
+        bbox_corner = cam_inv @ (obj.matrix_world @ Vector(corner))
+
+        if bbox_corner.z >= 0:
             continue
-        
-        phi = math.atan2(bbox_corner.y, bbox_corner.x)
-        l = (bbox_corner.x**2 + bbox_corner.y**2)**(1/2)
+
+        l = min(math.sqrt(bbox_corner.x**2 + bbox_corner.y**2), 0.999)
         theta = math.asin(l)
+        if theta > fov / 2.0:
+            continue
+
+        phi = math.atan2(bbox_corner.y, bbox_corner.x)
 
         # Equisolid projection
         r = 2.0 * lens * math.sin(theta / 2)
@@ -547,115 +590,78 @@ def get_bounding_box_panoramic(obj):
         u = r * math.cos(phi) / w + 0.5
         v = r * math.sin(phi) / h + 0.5
 
-        x = u * scene.render.resolution_x
-        y = v * scene.render.resolution_y
-        
-        bbox_corners.append(bbox_corner)
-        screen_positions.append(Vector((x, y)))
+        screen_positions.append(Vector((u * scene.render.resolution_x, v * scene.render.resolution_y)))
 
-    if not bbox_corners:
-        print("no valid corners for " + obj.name) 
+    if not screen_positions:
         return None
 
-    min_x = min(screen_pos.x for screen_pos in screen_positions)
-    max_x = max(screen_pos.x for screen_pos in screen_positions)
-    min_y = min(screen_pos.y for screen_pos in screen_positions)
-    max_y = max(screen_pos.y for screen_pos in screen_positions)
-    
-    print(f"{obj.name} bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
+    min_x = min(p.x for p in screen_positions)
+    max_x = max(p.x for p in screen_positions)
+    min_y = min(p.y for p in screen_positions)
+    max_y = max(p.y for p in screen_positions)
+
     return (min_x, min_y, max_x, max_y)
 
+
 def get_sphere_bounding_box(obj, cam, scene):
-    """Calculates accurate 2D bounding box for spherical objects"""
-    import bpy_extras
-    
-    # Check camera type - equisolid cameras need different handling
-    camera_type = getattr(cam.data, 'type', 'PERSP')
-    
-    # Get the sphere center in world coordinates
+    """Calculates a 2D bounding box for the (roughly spherical) ball, using a rectilinear camera"""
     world_center = obj.matrix_world.translation
-    radius = max(obj.dimensions) / 2.0
-    
-    # For now, disable equisolid handling and use perspective projection for all cameras
-    # This ensures consistent, reliable bounding boxes
-    # TODO: Re-enable equisolid handling once perspective projection is perfected
-    
-    # Regular perspective camera handling for all camera types
-    # Project sphere center to camera view
     center_2d = bpy_extras.object_utils.world_to_camera_view(scene, cam, world_center)
-    
-    # Check if sphere center is behind camera
-    if center_2d.z <= 0:
-        print(f"Ball behind camera, z={center_2d.z}")
+
+    # Reject if the ball's centre isn't cleanly in front of and inside the camera frame
+    if center_2d.z <= 0 or not (0.0 <= center_2d.x <= 1.0 and 0.0 <= center_2d.y <= 1.0):
         return None
-    
-    # Convert to pixel coordinates (same system as regular bbox function)
-    center_x_pixels = center_2d.x * scene.render.resolution_x
-    center_y_pixels = center_2d.y * scene.render.resolution_y
-    
-    # Calculate distance from camera to ball
+
+    if _is_occluded(scene, cam, world_center, exclude_obj=obj):
+        return None
+
+    radius = max(obj.dimensions) / 2.0
+
     camera_pos = cam.matrix_world.translation
     distance = (world_center - camera_pos).length
 
-    # Check if ball is occluded
-    cam_to_ball = world_center - camera_pos
-    ray_hit = scene.ray_cast(bpy.context.evaluated_depsgraph_get(), cam.matrix_world.translation + cam_to_ball * 0.20, cam_to_ball, distance=10)
+    center_x_pixels = center_2d.x * scene.render.resolution_x
+    center_y_pixels = center_2d.y * scene.render.resolution_y
 
-    if ray_hit[4] != obj:
-        return None
-    
-    # Simple perspective projection for radius
-    # Use camera focal length to calculate apparent size
+    # Apparent size in pixels from the camera focal length
     focal_length = cam.data.lens  # in mm
     sensor_width = cam.data.sensor_width  # in mm
-    
-    # Calculate apparent size in pixels
-    # apparent_size = (object_size / distance) * focal_length * (image_width / sensor_width)
     apparent_diameter = (radius * 2.0 / distance) * focal_length * (scene.render.resolution_x / sensor_width)
     radius_pixels = apparent_diameter / 2.0
-    
-    # Calculate bounding box
+
     min_x = center_x_pixels - radius_pixels
     max_x = center_x_pixels + radius_pixels
     min_y = center_y_pixels - radius_pixels
     max_y = center_y_pixels + radius_pixels
-    
-    print(f"Ball bbox: center=({center_2d.x:.3f}, {center_2d.y:.3f}), radius={radius:.3f}")
-    print(f"Ball bbox: distance={distance:.1f}m, apparent_diameter={apparent_diameter:.1f}px")
-    print(f"Ball bbox: center_pixels=({center_x_pixels:.1f}, {center_y_pixels:.1f}), radius_pixels={radius_pixels:.1f}")
-    print(f"Ball bbox pixels: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
-    
+
     return (min_x, min_y, max_x, max_y)
 
-def get_sphere_bounding_box_panoramic(obj, h, w, lens, cam, scene):
+
+def get_sphere_bounding_box_panoramic(obj, h, w, lens, fov, cam, scene):
+    """Calculates a 2D bounding box for the ball using an equisolid fisheye camera"""
+    world_center = obj.matrix_world.translation
+    cam_inv = cam.matrix_world.inverted()
+    center = cam_inv @ world_center
+
+    if center.z >= 0:  # Behind the camera
+        return None
+
+    l = min(math.sqrt(center.x**2 + center.y**2), 0.999)
+    theta = math.asin(l)
+    if theta > fov / 2.0:  # Outside the fisheye field of view
+        return None
+
+    if _is_occluded(scene, cam, world_center, exclude_obj=obj):
+        return None
 
     radius = max(obj.dimensions) / 2.0
-        
-    center = (cam.matrix_world.inverted() @ Vector(obj.location))
-    center.normalize()
-    
-    print(center.z)
-    if center.z > 0:
-        print("Ball " + obj.name + " behind camera") 
-        return None
-    
-    phi = math.atan2(center.y, center.x)
-    l = (center.x**2 + center.y**2)**(1/2)
-    theta = math.asin(l)
-    
-    world_center = obj.matrix_world.translation
     camera_pos = cam.matrix_world.translation
     distance = (world_center - camera_pos).length
 
-    # Check if ball is occluded
-    cam_to_ball = world_center - camera_pos
-    ray_hit = scene.ray_cast(bpy.context.evaluated_depsgraph_get(), cam.matrix_world.translation + cam_to_ball * 0.20, cam_to_ball, distance=10)
-
-    if ray_hit[4] != obj:
-        return None
-    
     apparent_diameter = (radius * 2.0 / distance) * lens * (scene.render.resolution_x / w)
     radius_pixels = apparent_diameter / 2.0
+
+    phi = math.atan2(center.y, center.x)
 
     # Equisolid projection
     r = 2.0 * lens * math.sin(theta / 2)
@@ -666,71 +672,134 @@ def get_sphere_bounding_box_panoramic(obj, h, w, lens, cam, scene):
     x = u * scene.render.resolution_x
     y = v * scene.render.resolution_y
 
-    min_x = x - (radius_pixels)
-    max_x = x + (radius_pixels)
-    min_y = y - (radius_pixels)
-    max_y = y + (radius_pixels)
-    
-    print(f"{obj.name} bbox: ({min_x:.1f}, {min_y:.1f}, {max_x:.1f}, {max_y:.1f})")
-    return (min_x, min_y, max_x, max_y)
+    return (x - radius_pixels, y - radius_pixels, x + radius_pixels, y + radius_pixels)
 
-def write_annotations(obj, class_id=0):
-    """Writes YOLO annotations for the object"""
+
+def write_annotations(obj):
+    """Returns the bounding box for obj as integer pixel coordinates
+    (x_min, y_min, x_max, y_max), using the standard image convention (origin top-left,
+    y increasing downward) - or None if the object isn't visible / doesn't pass the
+    annotation gate."""
     scene = bpy.context.scene
-
     cam = bpy.context.scene.camera
-    print(cam.data.type)
+
+    # Never annotate objects that aren't actually being rendered this frame
+    if obj.hide_render:
+        return None
+
     if cam.data.type == "PERSP":
         bbox_result = get_bounding_box(obj)
     else:
         bbox_result = get_bounding_box_panoramic(obj)
 
-    # Check if bounding box calculation failed
     if bbox_result is None:
-        print(f"Failed to calculate bounding box for {obj.name}")
         return None
-        
+
     min_x, min_y, max_x, max_y = bbox_result
-    
-    # Clamp bounding box to image bounds
+
+    # Clamp bounding box to image bounds (still in the bottom-left-origin coordinate system
+    # used internally by the projection helpers above)
     min_x = max(0, min_x)
     min_y = max(0, min_y)
     max_x = min(scene.render.resolution_x, max_x)
     max_y = min(scene.render.resolution_y, max_y)
-    
-    # Check if there's any visible area after clamping
+
     if min_x >= max_x or min_y >= max_y:
-        print(f"No visible area for {obj.name} after clamping")
         return None
-    
-    # Calculate center and dimensions
-    x_center = (min_x + max_x) / 2
-    # Use consistent Y-flip for all objects
-    y_center = scene.render.resolution_y - (min_y + max_y) / 2
-    
-    width = max_x - min_x
-    height = max_y - min_y
 
-    # Normalize coordinates
-    x_center /= scene.render.resolution_x
-    y_center /= scene.render.resolution_y
-    width /= scene.render.resolution_x
-    height /= scene.render.resolution_y
+    width_px = max_x - min_x
+    height_px = max_y - min_y
 
-    # Final bounds check on normalized coordinates
-    if x_center < 0 or x_center > 1 or y_center < 0 or y_center > 1:
-        print(f"Center out of bounds for {obj.name}: ({x_center:.3f}, {y_center:.3f})")
-        return None
-        
-    # Check minimum size requirements
     min_size_pixels = scene_config.resources["bounding_boxes"]["min_bbox_size"]
-    if (width * scene.render.resolution_x < min_size_pixels or 
-        height * scene.render.resolution_y < min_size_pixels):
-        print(f"Bounding box too small for {obj.name}: {width * scene.render.resolution_x:.1f} x {height * scene.render.resolution_y:.1f}")
+    max_size_pixels = scene_config.resources["bounding_boxes"]["max_bbox_size"]
+
+    if width_px < min_size_pixels or height_px < min_size_pixels:
         return None
 
-    print(f"{obj.name} {class_id} {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f}")
-    return class_id, x_center, y_center, width, height
+    # A bbox this large is not a real detection - it's almost always the leftover artefact of
+    # a barely-in-frame object (e.g. one limb of a robot standing just behind the camera)
+    if width_px > max_size_pixels or height_px > max_size_pixels:
+        print(
+            f"[WARN] Discarding implausibly large bounding box for {obj.name}: "
+            f"{width_px:.0f}x{height_px:.0f}px"
+        )
+        return None
+
+    # Flip Y to the standard top-left-origin image coordinate convention
+    y_min_img = scene.render.resolution_y - max_y
+    y_max_img = scene.render.resolution_y - min_y
+
+    return (round(min_x), round(y_min_img), round(max_x), round(y_max_img))
+
+
+def _robot_partially_visible(obj):
+    """Cheap, conservative check for whether any part of a robot projects into the visible
+    frame, in front of the camera (ignoring occlusion and exact framing). Used to catch
+    robots that would show up on screen but get rejected by write_annotations' stricter
+    gate, so the caller can re-roll the scene rather than render an unlabelled robot."""
+    cam = bpy.context.scene.camera
+    scene = bpy.context.scene
+    robot_prefix = obj.name.split("_")[0]
+    robot_parts = [o for o in bpy.data.objects if o.name.startswith(robot_prefix + "_")]
+
+    if cam.data.type == "PERSP":
+        for part in robot_parts:
+            view = bpy_extras.object_utils.world_to_camera_view(
+                scene, cam, part.matrix_world.translation
+            )
+            if view.z > 0 and 0.0 <= view.x <= 1.0 and 0.0 <= view.y <= 1.0:
+                return True
+        return False
+
+    lens = cam.data.cycles.fisheye_lens
+    fov = cam.data.cycles.fisheye_fov
+    cam_inv = cam.matrix_world.inverted()
+    for part in robot_parts:
+        local = cam_inv @ part.matrix_world.translation
+        if local.z >= 0:
+            continue
+        l = min(math.sqrt(local.x**2 + local.y**2), 0.999)
+        if math.asin(l) <= fov / 2.0:
+            return True
+    return False
+
+
+def _ball_partially_visible(obj):
+    """Cheap, conservative check for whether the ball might be poking into the visible
+    frame. Uses a small margin around the strict frame boundary since the ball has real
+    size - its edge can be on screen even when its centre isn't quite."""
+    cam = bpy.context.scene.camera
+    scene = bpy.context.scene
+    world_center = obj.matrix_world.translation
+
+    if cam.data.type == "PERSP":
+        view = bpy_extras.object_utils.world_to_camera_view(scene, cam, world_center)
+        margin = 0.05
+        return view.z > 0 and -margin <= view.x <= 1 + margin and -margin <= view.y <= 1 + margin
+
+    fov = cam.data.cycles.fisheye_fov
+    cam_inv = cam.matrix_world.inverted()
+    local = cam_inv @ world_center
+    if local.z >= 0:
+        return False
+    l = min(math.sqrt(local.x**2 + local.y**2), 0.999)
+    return math.asin(l) <= fov / 2.0 + math.radians(3)
+
+
+def is_visible_but_unannotated(obj, is_robot):
+    """Returns True if obj would plausibly show up on screen but write_annotations would
+    reject it - i.e. rendering this frame as-is would produce an unlabelled visible
+    object. Only meaningful to call once the scene/camera for this frame has been fully
+    updated (positions set, view_layer updated)."""
+    if obj.hide_render:
+        return False
+
+    partially_visible = _robot_partially_visible(obj) if is_robot else _ball_partially_visible(obj)
+    if not partially_visible:
+        return False
+
+    return write_annotations(obj) is None
+
 
 def write_goal_post_annotations_from_mask(mask_path, scene):
     """Generate goal post annotations from segmentation mask"""

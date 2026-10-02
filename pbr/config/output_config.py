@@ -5,7 +5,20 @@ import os
 ##############################################
 
 # Number of images to generate
-num_images = 10
+num_images = 1000
+
+# If set, generate this many images for *each* ball found in the ball resource directory
+# (resources["ball"]["path"]), cycling through them in order, instead of using num_images with
+# a randomly-chosen ball each frame. Overrides num_images when set.
+# Can also be set from the command line, e.g.:
+#   blender -b --python pbr/pbr.py -- --images-per-ball 100
+images_per_ball = None
+
+# If a scene configuration would leave a robot or the ball visible on screen but without a
+# bounding box annotation (e.g. clipped at the frame edge, or occluded so only a sliver
+# shows), re-roll all positions and try again, up to this many attempts, before giving up
+# and rendering the last attempt anyway.
+max_frame_retries = 5000
 
 # Stereo output
 output_stereo = False

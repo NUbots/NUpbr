@@ -16,7 +16,7 @@ proj_path = path.abspath(
 res_path = path.join(proj_path, "resources")
 
 # Dictate how many randomly generated shape objects there will be
-num_shapes = 8
+num_shapes = 0
 
 # Number of robots to fill the scene
 num_robots = 3
@@ -24,6 +24,16 @@ num_misc_robots = 3
 
 # The radius that defines the personal space of a robot
 robot_radius = 0.7
+
+# Available camera projection types, and the parameters each is configured with
+camera_options = {
+    "EQUISOLID": {"type": "EQUISOLID", "focal_length": 10.5, "fov": pi},
+    "RECTILINEAR": {"type": "RECTILINEAR", "fov": 1.6},
+}
+
+# Which camera projection to use each frame. Set to a key of camera_options (e.g.
+# "RECTILINEAR") to always use that one, or None to randomly choose between them each frame.
+camera_type = "RECTILINEAR"
 
 # Field dimensions
 field_dims = {
@@ -183,7 +193,7 @@ resources = {
 
 def choose_misc_robot():
     choice = random.choice(list(resources["misc_robot"]["robot_list"].keys()))
-    return resources["misc_robot"]["robot_list"][choice]
+    return choice, resources["misc_robot"]["robot_list"][choice]
 
 
 def configure_scene():
@@ -251,15 +261,15 @@ def configure_scene():
     )
 
     # Add camera information
+    camera_cfg = (
+        camera_options[camera_type]
+        if camera_type is not None
+        else random.choice(list(camera_options.values()))
+    )
     cfg.update(
         {
             "camera": {
-                **random.choice(
-                    [
-                        {"type": "EQUISOLID", "focal_length": 10.5, "fov": pi},
-                        {"type": "RECTILINEAR", "fov": 1.6},
-                    ]
-                ),
+                **camera_cfg,
                 "stereo_camera_distance": 0.1,
             }
         }

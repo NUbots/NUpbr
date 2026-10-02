@@ -28,8 +28,8 @@ render = {
         "max_red": [0.8, 1.0],
         "min_noise_fac": 0.05,
         "max_noise_fac": 0.60,
-        "min_exposure": -2,
-        "max_exposure": 2,
+        "min_exposure": -0.3,
+        "max_exposure": 1.5,
     },
 }
 

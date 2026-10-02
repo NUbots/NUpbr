@@ -12,9 +12,11 @@ from config import scene_config as scene_cfg
 
 from scene.blender_object import BlenderObject
 
+import util
+
 
 class MiscRobot(BlenderObject):
-    def __init__(self, name, class_index, robot_info):
+    def __init__(self, name, class_index, model, robot_info):
         self.mat = {}
         self.sc_plane = None
         self.robot = None
@@ -23,9 +25,11 @@ class MiscRobot(BlenderObject):
         self.objs = {}
         self.obj = None
         self.name = name
+        self.model = model
         self.colour = randint(0, 1)  # 1. white or 0. black
+        self.jersey_rgb, self.jersey_colour = util.random_jersey_colour()
         self.height = 0
-        self.construct(robot_info)   
+        self.construct(robot_info)
 
     # Setup robot object
     def construct(self, robot_info):
@@ -65,13 +69,15 @@ class MiscRobot(BlenderObject):
             # Configure robot to have correct pass index
             obj.pass_index = self.pass_index
 
-            # Set material for robot
-            self.mat.update({obj.name: self.set_material(obj, self.name + "_tex")})
+            # Set material for robot (torso gets a random jersey colour)
+            self.mat.update(
+                {obj.name: self.set_material(obj, self.name + "_tex", jersey=(p == "Torso"))}
+            )
             obj.data.materials.append(self.mat[obj.name])
 
         self.initialise_kinematics()
 
-    def set_material(self, obj, mat_name):
+    def set_material(self, obj, mat_name, jersey=False):
         l_mat = bpy.data.materials.new(mat_name)
 
         # Enable use of material nodes
@@ -94,15 +100,11 @@ class MiscRobot(BlenderObject):
         n_principled.inputs["Roughness"].default_value = blend_cfg.darwin_robot["material"][
             "roughness"
         ]
-        n_principled.inputs[0].default_value = blend_cfg.darwin_robot["material"][
-            "base_col"
-        ]
 
         n_principled.inputs["Base Color"].default_value = (
-            self.colour,
-            self.colour,
-            self.colour,
-            1.0,
+            (*self.jersey_rgb, 1.0)
+            if jersey
+            else (self.colour, self.colour, self.colour, 1.0)
         )
 
         # Create output node
@@ -152,7 +154,18 @@ class MiscRobot(BlenderObject):
                 "{}_{}".format(self.name, k)
             ].delta_rotation_euler = delta_rot
 
+    def set_jersey_colour(self, rgb, hex_colour):
+        self.jersey_rgb, self.jersey_colour = rgb, hex_colour
+        torso_key = "{}_Torso".format(self.name)
+        if torso_key in self.mat:
+            self.mat[torso_key].node_tree.nodes["Principled BSDF"].inputs[
+                "Base Color"
+            ].default_value = (*self.jersey_rgb, 1.0)
+
     def update(self, cfg):
         self.update_kinematics()
         bpy.data.objects[self.name + "_Torso"].location = cfg["position"]
         bpy.data.objects[self.name + "_Torso"].delta_rotation_euler = cfg["rotation"]
+
+        # Randomly reassign the jersey colour (call set_jersey_colour afterwards to override)
+        self.set_jersey_colour(*util.random_jersey_colour())

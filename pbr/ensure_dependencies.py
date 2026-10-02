@@ -51,3 +51,8 @@ try:
     import cv2
 except:
     _install_package(["install", "--no-deps", "opencv-contrib-python"])
+
+try:
+    import yaml
+except:
+    _install_package(["install", "pyyaml"])
